@@ -35,9 +35,12 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        enableImmersiveGameMode();
         requestNeededPermissions();
 
         webView = new WebView(this);
+        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
         setContentView(webView);
 
         WebSettings ws = webView.getSettings();
@@ -108,10 +111,37 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void enableImmersiveGameMode() {
+        try {
+            android.view.View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(
+                android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+            );
+        } catch (Exception e) {}
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) enableImmersiveGameMode();
+    }
+
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
+        if (webView != null) {
+            webView.evaluateJavascript(
+                "(function(){ if(document.body.classList.contains('cinema-mode-active')){ window.setCinemaFullscreenMode(false); return 'EXITED'; } return 'NONE'; })()",
+                val -> {
+                    if (val != null && val.contains("EXITED")) return;
+                    if (webView.canGoBack()) webView.goBack();
+                    else MainActivity.super.onBackPressed();
+                }
+            );
         } else {
             super.onBackPressed();
         }

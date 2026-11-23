@@ -26,11 +26,31 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Sync latest HTML into Android Assets
+      - name: Sync latest HTML & Generate App Icon from image in F:/2D
         run: |
           mkdir -p app/src/main/assets
           cp -f stickman_2d_studio.html app/src/main/assets/stickman_2d_studio.html
           cp -f stickman_2d_studio.html app/src/main/assets/index.html
+          ICON_SRC=$(find . -maxdepth 1 -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" -o -iname "*.bmp" -o -iname "*.ico" \) | head -n 1)
+          for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+            mkdir -p "app/src/main/res/$dir"
+          done
+          if [ -n "$ICON_SRC" ] && command -v convert >/dev/null 2>&1; then
+            echo "Using user icon image: $ICON_SRC"
+            convert "$ICON_SRC" -resize 48x48! app/src/main/res/mipmap-mdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 72x72! app/src/main/res/mipmap-hdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 96x96! app/src/main/res/mipmap-xhdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 144x144! app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 192x192! app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+            for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+              cp -f "app/src/main/res/$dir/ic_launcher.png" "app/src/main/res/$dir/ic_launcher_round.png"
+            done
+          elif [ ! -f "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" ] && command -v convert >/dev/null 2>&1; then
+            for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+              convert -size 192x192 xc:"#0f172a" -fill "#ef4444" -draw "circle 96,96 96,20" "app/src/main/res/$dir/ic_launcher.png"
+              cp -f "app/src/main/res/$dir/ic_launcher.png" "app/src/main/res/$dir/ic_launcher_round.png"
+            done
+          fi
 
       - name: Build Android APK (Debug & Release)
         run: |

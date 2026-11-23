@@ -216,10 +216,67 @@
     #stageColumn.lg\:col-span-12 {
       grid-column: 1 / -1 !important;
     }
-    @media (max-width: 960px) {
+    @media (max-width: 539px) {
       #viewStudio.grid {
         grid-template-columns: 1fr;
       }
+    }
+    /* تصميم خاص لشاشات الهاتف بالعرض (Landscape Game Layout) لكي تظهر جميع المكونات والأزرار بوضوح تام دون اختفاء أي زر */
+    @media (max-height: 520px) and (orientation: landscape) {
+      header { padding: 3px 8px !important; }
+      header p { display: none !important; }
+      main { padding: 4px 8px !important; }
+      #viewStudio.grid {
+        grid-template-columns: 4.6fr 7.4fr !important;
+        gap: 8px !important;
+      }
+      #workspaceColumn, #stageColumn {
+        max-height: calc(100vh - 46px);
+        overflow-y: auto;
+      }
+      #scriptInput {
+        height: 82px !important;
+        padding: 6px !important;
+      }
+      .aspect-video {
+        max-height: calc(100vh - 105px) !important;
+      }
+    }
+    .pointer-events-auto { pointer-events: auto !important; }
+    /* وضع شاشة العرض الكاملة كالألعاب عند تشغيل المشهد: يختفي كل شيء وتظهر شاشة العرض فقط وفيها زر (🔙 عودة) */
+    body.cinema-mode-active {
+      overflow: hidden !important;
+      background: #000000 !important;
+    }
+    body.cinema-mode-active header,
+    body.cinema-mode-active #workspaceColumn,
+    body.cinema-mode-active #stageTopControlsBar,
+    body.cinema-mode-active #bgmSyncBar,
+    body.cinema-mode-active #timelineContainer,
+    body.cinema-mode-active #stageTopTitleBox {
+      display: none !important;
+    }
+    body.cinema-mode-active #stageCanvasWrapper {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      border: none !important;
+      z-index: 9999 !important;
+      background: #000000 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    body.cinema-mode-active #stageCanvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: contain !important;
     }
     .h-32 { height: 132px; }
     .h-8 { height: 32px; }
@@ -532,7 +589,7 @@
 
         <div class="glass-panel rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2">
           <!-- Minimal Stage Top Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-2">
+          <div id="stageTopControlsBar" class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-1.5">
               <button id="btnStagePlayPause" type="button" class="touch-btn px-3 py-1 rounded-xl bg-emerald-600 text-white text-xs font-black">
                 <span id="stagePlayPauseText">إيقاف مؤقت</span>
@@ -574,15 +631,20 @@
             </div>
           </div>
 
-          <!-- 2D Interactive Stage Canvas -->
-          <div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border-2">
-            <canvas id="stageCanvas" width="1100" height="620" class="w-full h-full block"></canvas>
+          <!-- 2D Interactive Stage Canvas (Full HD 1920x1080 High-DPI Vector Sharpness + Full-Screen Game Mode with "🔙 عودة" Button) -->
+          <div id="stageCanvasWrapper" class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border-2">
+            <canvas id="stageCanvas" width="1920" height="1080" class="w-full h-full block"></canvas>
             <div class="absolute top-2.5 right-3 left-3 flex items-center justify-between pointer-events-none">
-              <div class="px-3 py-1 rounded-xl bg-slate-950 border flex items-center gap-2">
+              <div id="stageTopTitleBox" class="px-3 py-1 rounded-xl bg-slate-950 border flex items-center gap-2">
                 <span id="stageActionTitle" class="text-[11px] sm:text-xs font-extrabold text-white">المشهد قيد التشغيل</span>
               </div>
-              <div id="galleryExportBadge" class="hidden px-3 py-1 rounded-xl bg-rose-600 text-white text-xs font-black">
-                🔴 جاري تسجيل وتحميل المشهد للمعرض...
+              <div class="flex items-center gap-2 pointer-events-auto">
+                <div id="galleryExportBadge" class="hidden px-3 py-1 rounded-xl bg-rose-600 text-white text-xs font-black">
+                  🔴 جاري تسجيل وتحميل المشهد للمعرض...
+                </div>
+                <button id="btnExitCinemaFullscreen" type="button" class="hidden touch-btn px-4 py-1.5 rounded-xl bg-slate-900 border-2 text-amber-300 text-xs sm:text-sm font-black">
+                  🔙 عودة
+                </button>
               </div>
             </div>
           </div>
@@ -6362,12 +6424,15 @@
       const canvas = document.getElementById('stageCanvas');
       if (canvas) {
         const ctx = canvas.getContext('2d');
-        const w = canvas.width;
-        const h = canvas.height;
+        const w = 1100;
+        const h = 620;
         const timeSec = now / 1000;
 
         ctx.save();
-        ctx.clearRect(0, 0, w, h);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.scale(canvas.width / w, canvas.height / h);
 
         if (state.cameraShake > 0) {
           ctx.translate((Math.random() - 0.5) * state.cameraShake, (Math.random() - 0.5) * state.cameraShake);
@@ -6511,11 +6576,13 @@
 
       function screenToWorld(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
-        const sx = ((clientX - rect.left) / rect.width) * canvas.width;
-        const sy = ((clientY - rect.top) / rect.height) * canvas.height;
+        const logicalW = 1100;
+        const logicalH = 620;
+        const sx = ((clientX - rect.left) / rect.width) * logicalW;
+        const sy = ((clientY - rect.top) / rect.height) * logicalH;
         const cam = state.camMain;
-        const wx = (sx - canvas.width * 0.5) / cam.zoom + cam.x;
-        const wy = (sy - canvas.height * 0.62) / cam.zoom + cam.y;
+        const wx = (sx - logicalW * 0.5) / cam.zoom + cam.x;
+        const wy = (sy - logicalH * 0.62) / cam.zoom + cam.y;
         return { x: wx, y: wy };
       }
 
@@ -6681,7 +6748,7 @@
                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">${arch.badge}</span>
               </div>
               <div class="w-full h-32 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center">
-                <canvas data-preview-arch="${arch.id}" width="170" height="125" class="char-preview-canvas"></canvas>
+                <canvas data-preview-arch="${arch.id}" width="340" height="250" class="char-preview-canvas"></canvas>
               </div>
               <p class="text-[11px] text-slate-400 mt-1.5">${arch.desc}</p>
             </div>
@@ -6731,9 +6798,11 @@
         const arch = CHARACTER_ARCHETYPES.find(a => a.id === archId);
         if (!arch) return;
         const ctx = cv.getContext('2d');
-        const w = cv.width || 170;
-        const h = cv.height || 125;
-        ctx.clearRect(0, 0, w, h);
+        const w = 170;
+        const h = 125;
+        ctx.save();
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        ctx.scale((cv.width || 340) / w, (cv.height || 250) / h);
 
         // خلفية استوديو مضيئة بضوء القمر داخل كل بطاقة لكي تظهر شخصية الظل السوداء والوحوش والديناصورات والكلاب بوضوح تام!
         const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
@@ -6778,6 +6847,7 @@
           auraColor: arch.auraColor || '#ef4444',
           auraShape: arch.auraShape || 'circle_light'
         }, timeSec || 1.0, true);
+        ctx.restore();
       });
     }
 
@@ -7053,6 +7123,7 @@
         const areaEl = document.getElementById('scriptInput');
         if (areaEl) areaEl.value = FULL_SHADOW_MOVIE_SCRIPT;
         document.getElementById('tabBtnStudio')?.click();
+        setCinemaFullscreenMode(true);
         parseArabicScript(FULL_SHADOW_MOVIE_SCRIPT);
         showToast('🎬 بدأ عرض الفيلم القصير الكامل: أسطورة الظل Shadow (6 دقائق و30 ثانية)!');
       };
@@ -7060,6 +7131,7 @@
       document.getElementById('btnPlayCafeXSlashScene')?.addEventListener('click', () => {
         const areaEl = document.getElementById('scriptInput');
         if (areaEl) areaEl.value = CAFE_XSLASH_PINGPONG_SCRIPT;
+        setCinemaFullscreenMode(true);
         parseArabicScript(CAFE_XSLASH_PINGPONG_SCRIPT);
         showToast('☕ بدأ عرض مشهد المقهى + تحول مدينة الظلام + ضربات X المخفية + ركل الكرة!');
       });
@@ -7362,9 +7434,24 @@
       document.getElementById('btnToggleWorkspace')?.addEventListener('click', toggleWorkspaceVisibility);
       document.getElementById('btnCollapseFromInside')?.addEventListener('click', toggleWorkspaceVisibility);
 
+      function setCinemaFullscreenMode(active) {
+        state.cinemaFullscreen = Boolean(active);
+        document.body.classList.toggle('cinema-mode-active', state.cinemaFullscreen);
+        const exitBtn = document.getElementById('btnExitCinemaFullscreen');
+        if (exitBtn) {
+          exitBtn.classList.toggle('hidden', !state.cinemaFullscreen);
+        }
+      }
+      window.setCinemaFullscreenMode = setCinemaFullscreenMode;
+
+      document.getElementById('btnExitCinemaFullscreen')?.addEventListener('click', () => {
+        setCinemaFullscreenMode(false);
+        showToast('🔙 تمت العودة إلى شاشة العمل والأدوات');
+      });
+
       document.getElementById('btnTopPlayScene')?.addEventListener('click', () => {
+        setCinemaFullscreenMode(true);
         parseArabicScript(document.getElementById('scriptInput').value);
-        showToast('▶️ تم تحليل وتشغيل المشهد!');
       });
 
       document.getElementById('btnStagePlayPause')?.addEventListener('click', () => {
@@ -7385,8 +7472,8 @@
       });
 
       document.getElementById('btnParseAndPlay')?.addEventListener('click', () => {
+        setCinemaFullscreenMode(true);
         parseArabicScript(document.getElementById('scriptInput').value);
-        showToast('✨ تم تحليل السيناريو وتشغيل الكاميرات والقوى الخارقة!');
       });
 
       document.getElementById('btnToggleSplitMode')?.addEventListener('click', () => {
@@ -7552,9 +7639,10 @@
         const cv = document.getElementById('stageCanvas');
         if (!cv) return;
         const val = e.target.value;
-        if (val.startsWith('9:16')) { cv.width = 620; cv.height = 1100; }
-        else if (val.startsWith('1:1')) { cv.width = 800; cv.height = 800; }
-        else { cv.width = 1100; cv.height = 620; }
+        if (val.startsWith('9:16')) { cv.width = 1080; cv.height = 1920; }
+        else if (val.startsWith('1:1')) { cv.width = 1440; cv.height = 1440; }
+        else if (val.endsWith('30')) { cv.width = 1280; cv.height = 720; }
+        else { cv.width = 1920; cv.height = 1080; }
         showToast(`📐 تم ضبط أبعاد الفيديو على: ${e.target.options[e.target.selectedIndex].text}`);
       });
 
