@@ -17,11 +17,14 @@
     textarea, input {
       user-select: text;
     }
-    body {
+    html, body {
       background-color: #060913;
       color: #f1f5f9;
       margin: 0;
-      overflow-x: hidden;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y !important;
     }
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
@@ -55,7 +58,7 @@
       50% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
     }
     #stageCanvas {
-      touch-action: none;
+      touch-action: pan-y !important;
     }
 
     /* ==================== 100% OFFLINE BUILT-IN UI ENGINE (NO INTERNET REQUIRED) ==================== */
@@ -221,31 +224,23 @@
         grid-template-columns: 1fr;
       }
     }
-    /* تصميم خاص لشاشات الهاتف بالعرض (Landscape Game Layout) لكي تظهر جميع المكونات والأزرار بوضوح تام دون اختفاء أي زر */
+    /* تصميم مريح لشاشات الهاتف بالعرض يسمح بالتجول والتمرير السلس من الأعلى إلى الأسفل باللمس دون أي حبس للتمرير! */
     @media (max-height: 520px) and (orientation: landscape) {
-      header { padding: 3px 8px !important; }
+      header { padding: 4px 8px !important; position: relative !important; }
       header p { display: none !important; }
-      main { padding: 4px 8px !important; }
+      main { padding: 6px 8px !important; }
       #viewStudio.grid {
-        grid-template-columns: 4.6fr 7.4fr !important;
-        gap: 8px !important;
-      }
-      #workspaceColumn, #stageColumn {
-        max-height: calc(100vh - 46px);
-        overflow-y: auto;
+        grid-template-columns: 5fr 7fr !important;
+        gap: 10px !important;
       }
       #scriptInput {
-        height: 82px !important;
-        padding: 6px !important;
-      }
-      .aspect-video {
-        max-height: calc(100vh - 105px) !important;
+        height: 95px !important;
+        padding: 8px !important;
       }
     }
     .pointer-events-auto { pointer-events: auto !important; }
-    /* وضع شاشة العرض الكاملة كالألعاب عند تشغيل المشهد: يختفي كل شيء وتظهر شاشة العرض فقط وفيها زر (🔙 عودة) */
+    /* وضع شاشة العرض الكاملة عند التشغيل (بدون position:fixed حتى لا تتحول شاشة WebView في الأندرويد للون الأسود!) */
     body.cinema-mode-active {
-      overflow: hidden !important;
       background: #000000 !important;
     }
     body.cinema-mode-active header,
@@ -256,27 +251,30 @@
     body.cinema-mode-active #stageTopTitleBox {
       display: none !important;
     }
+    body.cinema-mode-active main {
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+    }
+    body.cinema-mode-active #viewStudio.grid {
+      display: block !important;
+    }
+    body.cinema-mode-active #stageColumn,
+    body.cinema-mode-active #stageColumn > div {
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background: #000000 !important;
+    }
     body.cinema-mode-active #stageCanvasWrapper {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
       width: 100vw !important;
-      height: 100vh !important;
-      max-height: 100vh !important;
+      height: 98vh !important;
+      max-height: 98vh !important;
       border-radius: 0 !important;
       border: none !important;
-      z-index: 9999 !important;
       background: #000000 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    body.cinema-mode-active #stageCanvas {
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: contain !important;
     }
     .h-32 { height: 132px; }
     .h-8 { height: 32px; }
@@ -633,7 +631,7 @@
 
           <!-- 2D Interactive Stage Canvas (Full HD 1920x1080 High-DPI Vector Sharpness + Full-Screen Game Mode with "🔙 عودة" Button) -->
           <div id="stageCanvasWrapper" class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border-2">
-            <canvas id="stageCanvas" width="1920" height="1080" class="w-full h-full block"></canvas>
+            <canvas id="stageCanvas" width="1440" height="810" class="w-full h-full block"></canvas>
             <div class="absolute top-2.5 right-3 left-3 flex items-center justify-between pointer-events-none">
               <div id="stageTopTitleBox" class="px-3 py-1 rounded-xl bg-slate-950 border flex items-center gap-2">
                 <span id="stageActionTitle" class="text-[11px] sm:text-xs font-extrabold text-white">المشهد قيد التشغيل</span>
@@ -1318,7 +1316,8 @@
           }
         }
       }
-      if ('speechSynthesis' in window) {
+      // في تطبيق الهاتف (Android WebView)، استدعاء window.speechSynthesis يسبب تجميد الخيط الرئيسي (التطبيق لا يستجيب ANR)، لذلك نكتفي بالترجمة السينمائية السفلية والصوت المسجل!
+      if (!window.AndroidStudioBridge && 'speechSynthesis' in window) {
         try {
           window.speechSynthesis.cancel();
           const u = new SpeechSynthesisUtterance(dObj.text);
@@ -2431,7 +2430,7 @@
           try { state.voicePreviewAudio.pause(); } catch (e) {}
           state.voicePreviewAudio = null;
         }
-        if ('speechSynthesis' in window) {
+        if (!window.AndroidStudioBridge && 'speechSynthesis' in window) {
           try { window.speechSynthesis.cancel(); } catch (e) {}
         }
       }
@@ -6611,7 +6610,7 @@
 
       function onMove(e) {
         if (state.draggingCharSlot === null) return;
-        if (e.cancelable) e.preventDefault();
+        // allow native smooth vertical touch scrolling
         const cx = e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX;
         const cy = e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY;
         const pt = screenToWorld(cx, cy);
@@ -6627,12 +6626,9 @@
         state.draggingCharSlot = null;
       }
 
-      canvas.addEventListener('pointerdown', onDown);
-      canvas.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-      canvas.addEventListener('touchstart', onDown, { passive: false });
-      canvas.addEventListener('touchmove', onMove, { passive: false });
-      canvas.addEventListener('touchend', onUp);
+      canvas.addEventListener('pointerdown', onDown, { passive: true });
+      canvas.addEventListener('pointermove', onMove, { passive: true });
+      window.addEventListener('pointerup', onUp, { passive: true });
     }
 
     // =========================================================================
@@ -6873,7 +6869,7 @@
         try { state.voicePreviewAudio.pause(); } catch (e) {}
         state.voicePreviewAudio = null;
       }
-      if ('speechSynthesis' in window) {
+      if (!window.AndroidStudioBridge && 'speechSynthesis' in window) {
         try { window.speechSynthesis.cancel(); } catch (e) {}
       }
       renderVoiceStudioUI();
@@ -7440,6 +7436,9 @@
         const exitBtn = document.getElementById('btnExitCinemaFullscreen');
         if (exitBtn) {
           exitBtn.classList.toggle('hidden', !state.cinemaFullscreen);
+        }
+        if (state.cinemaFullscreen) {
+          try { window.scrollTo(0, 0); } catch (e) {}
         }
       }
       window.setCinemaFullscreenMode = setCinemaFullscreenMode;
