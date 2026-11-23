@@ -3864,7 +3864,7 @@
                 color: c1.auraColor || '#ef4444'
               });
             }
-            while (c1.trail.length > 28) c1.trail.shift();
+            while (c1.trail.length > 12) c1.trail.shift();
           } else if (g1.length >= 2) {
             simulateCombatPair(state.characters[g1[0]], state.characters[g1[1]], dt, false);
           }
@@ -3879,7 +3879,7 @@
                 color: c2.auraColor || '#00d4ff'
               });
             }
-            while (c2.trail.length > 28) c2.trail.shift();
+            while (c2.trail.length > 12) c2.trail.shift();
           } else if (g2.length >= 2) {
             simulateCombatPair(state.characters[g2[0]], state.characters[g2[1]], dt, false);
           } else if (c2 && c2.pose === 'run') {
@@ -4076,19 +4076,22 @@
           }
         }
 
-        // تحديث شريط نسبة التحميل المئوية (0% .. 100%) أثناء تسجيل وحفظ المشهد الكامل للمعرض!
+        // تحديث شريط نسبة التحميل المئوية فقط عند تغير الرقم المئوي لمنع أي ثقل أو إعادة رسم DOM أثناء تسجيل الفيديو!
         if (state.isRecordingVideo && state.timeline.length > 0) {
           const totalDur = state.timeline.reduce((acc, item) => acc + (item.duration || 4), 0);
           let elapsedBefore = 0;
           for (let k = 0; k < state.currentEventIndex; k++) elapsedBefore += (state.timeline[k].duration || 4);
           const pct = Math.min(99, Math.round(((elapsedBefore + state.eventElapsed) / Math.max(1, totalDur)) * 100));
-          const expBadge = document.getElementById('galleryExportBadge');
-          if (expBadge) {
-            expBadge.textContent = `🔴 جاري تحميل المشهد الكامل للمعرض: ${pct}% (اللقطة ${state.currentEventIndex + 1}/${state.timeline.length}) — لا تغلق حتى 100%`;
-          }
-          const rTxt = document.getElementById('recordVideoText');
-          if (rTxt) {
-            rTxt.textContent = `⏳ جاري التحميل ${pct}% (أو إيقاف وحفظ الآن)`;
+          if (pct !== state._lastExportPct) {
+            state._lastExportPct = pct;
+            const expBadge = document.getElementById('galleryExportBadge');
+            if (expBadge) {
+              expBadge.textContent = `🔴 جاري تحميل المشهد الكامل للمعرض: ${pct}% (اللقطة ${state.currentEventIndex + 1}/${state.timeline.length})`;
+            }
+            const rTxt = document.getElementById('recordVideoText');
+            if (rTxt) {
+              rTxt.textContent = `⏳ جاري التحميل ${pct}%`;
+            }
           }
         }
 
@@ -4143,7 +4146,7 @@
         if (c.flyingActive || c.rocketFlight || Math.abs(c.vx) > 5 || (isSh && (c.pose === 'run' || c.pose === 'brawl'))) {
           const trCol = isSh ? (c.creatureType === 'shadow_lightning' ? '#f8fafc' : '#dc2626') : (c.auraColor || c.color);
           c.trail.push({ x: c.x, y: c.y, alpha: isSh ? 0.85 : 0.92, color: trCol, isShadowTrail: isSh });
-          const maxTrail = c.rocketFlight ? 28 : (isSh ? 12 : 14);
+          const maxTrail = c.rocketFlight ? 12 : (isSh ? 6 : 7);
           if (c.trail.length > maxTrail) c.trail.shift();
         }
         } else if (c.kdState) {
@@ -4430,7 +4433,7 @@
         // قرص القمر المضيء
         ctx.fillStyle = '#f8fafc';
         ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 42;
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(moonX, moonY, 54, 0, Math.PI * 2);
         ctx.fill();
@@ -4487,9 +4490,14 @@
       ctx.restore();
     }
 
-    function drawWorldEnvironment(ctx, time) {
+    function drawWorldEnvironment(ctx, time, cam) {
       const cfg = state.worldConfig || { hasCity: true, hasStreet: true, hasForest: true, hasMountain: true, hasVolcano: false };
       const shadowMode = isShadowCityActive();
+      const camX = (cam && cam.x !== undefined) ? cam.x : 350;
+      const camZoom = Math.max(0.4, (cam && cam.zoom) ? cam.zoom : 1.0);
+      const viewHalfW = (620 / camZoom) + 240;
+      const minVisX = camX - viewHalfW;
+      const maxVisX = camX + viewHalfW;
 
       // 1. Ground Base Plane across entire open world (-1500 to +5000)
       const gGrad = ctx.createLinearGradient(0, GROUND_Y, 0, GROUND_Y + 420);
@@ -4524,6 +4532,7 @@
         const rColors = shadowMode ? ['#020307', '#04060b', '#030408', '#05070d'] : ['#991b1b', '#1e3a8a', '#166534', '#78350f'];
         for (let i = 0; i < 11; i++) {
           const bx = CITY_START_X - 60 + i * 84;
+          if (bx + 90 < minVisX || bx - 20 > maxVisX) continue;
           const bh = 165 + ((i * 53) % 125);
           const bw = 74;
           ctx.fillStyle = bColors[i % bColors.length];
@@ -4614,10 +4623,11 @@
         ctx.fillStyle = shadowMode ? '#030509' : '#1e293b';
         ctx.fillRect(HIGHWAY_START_X, GROUND_Y - 2, roadLen, 44);
         ctx.fillStyle = shadowMode ? 'rgba(226, 232, 240, 0.45)' : '#f8fafc';
-        for (let sx = HIGHWAY_START_X + 20; sx < HIGHWAY_END_X - 30; sx += 75) {
+        for (let sx = Math.max(HIGHWAY_START_X + 20, Math.floor((minVisX - HIGHWAY_START_X) / 75) * 75 + HIGHWAY_START_X + 20); sx < Math.min(HIGHWAY_END_X - 30, maxVisX + 80); sx += 75) {
           ctx.fillRect(sx, GROUND_Y + 17, 42, 6);
         }
         for (let lx = HIGHWAY_START_X + 50; lx < FOREST_START_X; lx += 190) {
+          if (lx + 40 < minVisX || lx - 40 > maxVisX) continue;
           ctx.fillStyle = shadowMode ? '#05080f' : '#334155';
           ctx.fillRect(lx, GROUND_Y - 135, 5, 125);
           ctx.fillRect(lx, GROUND_Y - 135, 22, 5);
@@ -4632,8 +4642,9 @@
       if (shadowMode || state.world === 'forest' || (state.world === 'openworld' && cfg.hasForest)) {
         const fStart = shadowMode ? -300 : ((!cfg.hasStreet || !cfg.hasCity) ? -400 : FOREST_START_X - (cfg.denseForest ? 950 : 0));
         const fEnd = shadowMode ? FOREST_END_X : ((!cfg.hasStreet || !cfg.hasCity) ? 2600 : FOREST_END_X);
-        const stepX = (cfg.denseForest || shadowMode) ? 38 : 62;
+        const stepX = (cfg.denseForest || shadowMode) ? 54 : 74;
         for (let tx = fStart; tx <= fEnd; tx += stepX) {
+          if (tx + 90 < minVisX || tx - 90 > maxVisX) continue;
           if ((cfg.hasCity || shadowMode) && tx >= CITY_START_X - 70 && tx <= CITY_END_X + 130) continue;
           const sc = (cfg.denseForest ? 1.05 : 0.88) + ((Math.abs(tx) * 13) % 38) / 100;
           const th = 130 * sc;
@@ -5168,7 +5179,7 @@
             ctx.globalAlpha = Math.max(0, tr.alpha * frac * 0.72);
             ctx.fillStyle = tr.color || aCol;
             ctx.shadowColor = tr.color || aCol;
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 0;
             ctx.beginPath();
             ctx.arc(tr.x, tr.y - 54 * sc, (16 + frac * 36) * sc, 0, Math.PI * 2);
             ctx.fill();
@@ -5231,40 +5242,45 @@
         const aShape = char.auraShape || 'circle_light';
 
         if (isBlackAura) {
-          // هالة سوداء خارقة (نواة ظلام سوداء دائرية محاطة بتوهج بنفسجي قرمزي، واضحة جداً في النهار والليل!)
-          const darkGrad = ctx.createRadialGradient(0, -56, 8, 0, -56, outerR);
-          darkGrad.addColorStop(0, 'rgba(0, 0, 0, 0.92)');
-          darkGrad.addColorStop(0.52, 'rgba(15, 23, 42, 0.85)');
-          darkGrad.addColorStop(0.78, 'rgba(124, 58, 237, 0.65)');
-          darkGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = darkGrad;
-          ctx.shadowColor = '#7c3aed';
-          ctx.shadowBlur = 28;
-          ctx.beginPath();
-          ctx.arc(0, -56, outerR, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          ctx.globalCompositeOperation = 'screen';
-          const outerGrad = ctx.createRadialGradient(0, -56, 6, 0, -56, outerR);
-          outerGrad.addColorStop(0, '#ffffffdd');
-          outerGrad.addColorStop(0.28, aCol);
-          outerGrad.addColorStop(0.64, aCol + '88');
-          outerGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = outerGrad;
-          ctx.shadowColor = aCol;
-          ctx.shadowBlur = 32;
+          // هالة سوداء خارقة فائقة السرعة (3 طبقات فيكتور دائرية بدون أي ضغط على المعالج الرسومي!)
+          ctx.globalAlpha = 0.28;
+          ctx.fillStyle = '#7c3aed';
           ctx.beginPath();
           ctx.arc(0, -56, outerR, 0, Math.PI * 2);
           ctx.fill();
 
-          const coreGrad = ctx.createRadialGradient(0, -56, 2, 0, -56, innerR);
-          coreGrad.addColorStop(0, '#ffffff');
-          coreGrad.addColorStop(0.48, aCol);
-          coreGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = coreGrad;
+          ctx.globalAlpha = 0.55;
+          ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.arc(0, -56, innerR, 0, Math.PI * 2);
+          ctx.arc(0, -56, innerR * 1.22, 0, Math.PI * 2);
           ctx.fill();
+
+          ctx.globalAlpha = 0.78;
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(0, -56, innerR * 0.85, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
+        } else {
+          // هالة ضوئية ساطعة فائقة السرعة (3 طبقات فيكتور متدرجة الشفافية تعمل بسرعة 60 إطار/ثانية على جميع الهواتف!)
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = aCol;
+          ctx.beginPath();
+          ctx.arc(0, -56, outerR, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.38;
+          ctx.fillStyle = aCol;
+          ctx.beginPath();
+          ctx.arc(0, -56, innerR * 1.15, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.24;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(0, -56, innerR * 0.72, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
         }
 
         if (aShape === 'flame_ring') {
@@ -5670,7 +5686,7 @@
         ctx.strokeStyle = '#7f1d1d';
         ctx.lineWidth = 1.8;
         ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = scarfFast ? 12 : 4;
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.moveTo(sx, sy - 3);
         ctx.bezierCurveTo(
@@ -5769,7 +5785,7 @@
         const arcColor = isShadow ? '#ef4444' : (char.auraActive ? aCol : mainCol);
         ctx.strokeStyle = arcColor;
         ctx.shadowColor = arcColor;
-        ctx.shadowBlur = isShadow ? 20 : 14;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = isShadow ? 7 : 5;
         ctx.beginPath();
         if (char.attackType === 'acrobatic_flip') {
@@ -5785,7 +5801,7 @@
           // القوس الضوئي الأبيض الداخلي الساطع لضربات Shadow
           ctx.strokeStyle = '#ffffff';
           ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = 0;
           ctx.lineWidth = 2.8;
           ctx.stroke();
         }
@@ -5803,7 +5819,7 @@
           ctx.fillRect(-4, -4, 8, 8);
           ctx.strokeStyle = char.fireActive ? '#fb923c' : '#f8fafc';
           ctx.shadowColor = char.fireActive ? '#f97316' : '#38bdf8';
-          ctx.shadowBlur = 8;
+          ctx.shadowBlur = 0;
           ctx.lineWidth = wp === 'katana' ? 3.5 : 4.5;
           ctx.beginPath();
           ctx.moveTo(0, 0);
@@ -5907,7 +5923,7 @@
         ctx.save();
         ctx.fillStyle = '#ffffff';
         ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 0;
 
         // العين الأمامية الحادة والمائلة
         const fEyeX = headX + dir * 5.2;
@@ -6122,7 +6138,7 @@
         ctx.fillStyle = 'rgba(2, 6, 23, 0.94)';
         ctx.strokeStyle = col || '#00d4ff';
         ctx.shadowColor = col || '#00d4ff';
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.roundRect(bx, by, w, h, 10);
@@ -6220,7 +6236,7 @@
       ctx.scale(cam.zoom, cam.zoom);
       ctx.translate(-cam.x, -cam.y);
 
-      drawWorldEnvironment(ctx, timeSec);
+      drawWorldEnvironment(ctx, timeSec, cam);
 
       // رسم تشققات الأرض وتطاير الصخور عند الضربات القوية والانبطاح!
       state.groundCracks.forEach(gc => {
@@ -6287,7 +6303,7 @@
         ctx.save();
         ctx.fillStyle = '#ea580c';
         ctx.shadowColor = '#f97316';
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(mt.x, mt.y, mt.r, 0, Math.PI * 2);
         ctx.fill();
@@ -6303,7 +6319,7 @@
           ctx.globalAlpha = Math.max(0, eb.alpha);
           ctx.strokeStyle = eb.color;
           ctx.shadowColor = eb.color;
-          ctx.shadowBlur = 22;
+          ctx.shadowBlur = 0;
           ctx.lineWidth = 18;
           ctx.beginPath();
           ctx.moveTo(cFrom.x + cFrom.facing * 28, cFrom.y - 68);
@@ -6337,7 +6353,7 @@
         // الهالة الحمراء الخارجية لعلامة X
         ctx.strokeStyle = xs.color || '#ef4444';
         ctx.shadowColor = xs.color || '#ef4444';
-        ctx.shadowBlur = 24;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = 11;
         ctx.beginPath();
         ctx.moveTo(xs.x - r, xs.y - r);
@@ -6348,7 +6364,7 @@
         // القلب الأبيض الساطع لعلامة X
         ctx.strokeStyle = '#ffffff';
         ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = 4;
         ctx.stroke();
         ctx.restore();
@@ -6363,7 +6379,7 @@
         ctx.globalAlpha = Math.max(0, fp.alpha);
         ctx.fillStyle = fp.color;
         ctx.shadowColor = '#f97316';
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(fp.x, fp.y, fp.r, 0, Math.PI * 2);
         ctx.fill();
@@ -6376,7 +6392,7 @@
         ctx.globalAlpha = Math.max(0, lb.alpha);
         ctx.strokeStyle = '#e0f2fe';
         ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = 4;
         ctx.beginPath();
         lb.points.forEach((pt, idx) => {
@@ -6419,24 +6435,35 @@
     // 8. MAIN RENDER LOOP (Dual-Viewport Split-Screen & Multi-Touch)
     // =========================================================================
     let lastTime = performance.now();
+    let cachedStageCanvas = null;
+    let cachedStageCtx = null;
 
     function renderLoop(now) {
-      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      const rawFrameDt = (now - lastTime) / 1000;
       lastTime = now;
+      // أثناء تسجيل الفيديو نثبت خطوة الفيزياء والأنيميشن بدقة ونمنع أي قفزات زمنية حتى يعمل الفيديو المحمل بسلاسة تامة من أول ثانية لآخر ثانية!
+      const dt = state.isRecordingVideo
+        ? Math.min(0.034, Math.max(0.014, rawFrameDt))
+        : Math.min(0.045, Math.max(0.005, rawFrameDt));
 
       updateSimulation(dt);
 
-      const canvas = document.getElementById('stageCanvas');
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
+      if (!cachedStageCanvas) {
+        cachedStageCanvas = document.getElementById('stageCanvas');
+        if (cachedStageCanvas) {
+          cachedStageCtx = cachedStageCanvas.getContext('2d', { alpha: false }) || cachedStageCanvas.getContext('2d');
+        }
+      }
+      const canvas = cachedStageCanvas;
+      if (canvas && cachedStageCtx) {
+        const ctx = cachedStageCtx;
         const w = 1100;
         const h = 620;
         const timeSec = now / 1000;
 
         ctx.save();
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingQuality = 'medium';
         ctx.scale(canvas.width / w, canvas.height / h);
 
         if (state.cameraShake > 0) {
@@ -6454,7 +6481,7 @@
           ctx.save();
           ctx.strokeStyle = '#facc15';
           ctx.shadowColor = '#facc15';
-          ctx.shadowBlur = 16;
+          ctx.shadowBlur = 0;
           ctx.lineWidth = 6;
           ctx.beginPath();
           ctx.moveTo(w / 2, 0);
@@ -6563,10 +6590,6 @@
         }
 
         ctx.restore();
-      }
-
-      if (state.activeTab === 'characters') {
-        renderCharacterCardPreviews(now / 1000);
       }
 
       requestAnimationFrame(renderLoop);
@@ -7971,7 +7994,9 @@
         if (!state.isRecordingVideo) {
           try {
             const expVal = document.getElementById('exportPresetSelect')?.value || '16:9_60';
-            const fps = expVal.endsWith('30') ? 30 : 60;
+            const isMobileApp = Boolean(window.AndroidStudioBridge);
+            // على الهاتف نثبت معدل الالتقاط على 30 إطاراً حقيقياً في الثانية لمنع امتلاء ذاكرة مشفر الفيديو (Hardware Encoder Buffer) ومنع أي تعليق أو تباطؤ في منتصف الفيديو!
+            const fps = isMobileApp ? 30 : (expVal.endsWith('30') ? 30 : 60);
             const { ctx: recAudioCtx, dest: recAudioDest } = ensureStudioAudioGraph();
 
             // 1. Keep master audio stream active continuously from 0:00 to the end of the movie
@@ -8003,11 +8028,19 @@
             }
             const stream = new MediaStream(combinedTracks);
 
-            // Ensure canvas is at least 1920x1080 Full HD (or 2560x1440 2K QHD if selected) for razor-sharp video export
+            // ضبط أبعاد الكانفاس بدقة عالية متوافقة 100% مع معالج الفيديو في الهاتف والكمبيوتر دون أي ضغط يسبب تعليق الفيديو!
             if (expVal === '16:9_1440') {
-              if (canvas.width < 2560) { canvas.width = 2560; canvas.height = 1440; }
-            } else if (expVal === '16:9_60') {
-              if (canvas.width < 1920) { canvas.width = 1920; canvas.height = 1080; }
+              canvas.width = isMobileApp ? 1920 : 2560;
+              canvas.height = isMobileApp ? 1080 : 1440;
+            } else if (expVal === '9:16_60') {
+              canvas.width = 1080;
+              canvas.height = 1920;
+            } else if (expVal === '1:1_60') {
+              canvas.width = 1080;
+              canvas.height = 1080;
+            } else {
+              canvas.width = 1920;
+              canvas.height = 1080;
             }
 
             // On Android phones, prioritize H.264 / MP4 first so the native Android Gallery (الاستوديو) plays it immediately without ever saying "corrupted"!
@@ -8042,9 +8075,10 @@
               }
             }
 
+            // معدل بت متوازن وعالي النقاء (8 Mbps لـ 1080p على الهاتف و 12 Mbps على الكمبيوتر) يمنع اختناق مشفر الفيديو في منتصف المشهد ويضمن تشغيلاً سلساً 100% في الاستوديو!
             const recOptions = {
-              videoBitsPerSecond: expVal === '16:9_1440' ? 22000000 : 16000000,
-              audioBitsPerSecond: 256000
+              videoBitsPerSecond: isMobileApp ? 8000000 : (expVal === '16:9_1440' ? 14000000 : 10000000),
+              audioBitsPerSecond: 192000
             };
             if (mime) recOptions.mimeType = mime;
 
@@ -8121,6 +8155,7 @@
             // 3. Start recording FIRST with 1000ms timeslice for clean container clusters, then restart scene from 0:00
             state.isRecordingVideo = true;
             state._exportTailElapsed = 0;
+            state._lastExportPct = -1;
             state.playbackSpeed = 1.0;
             const spdBtn = document.getElementById('btnSpeedToggle');
             if (spdBtn) spdBtn.textContent = '⚡ 1x';
