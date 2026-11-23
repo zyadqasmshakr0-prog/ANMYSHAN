@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -21,7 +20,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
@@ -113,8 +114,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    // No SYSTEM_UI_FLAG_HIDE_NAVIGATION so Android never intercepts or swallows the user's first touch tap!
-
     @Override
     public void onBackPressed() {
         if (webView != null) {
@@ -132,40 +131,119 @@ public class MainActivity extends Activity {
     }
 
     public class AndroidStudioBridge {
+        private File pendingTempFile;
+        private BufferedOutputStream pendingOutStream;
+        private String pendingFileName;
+        private String pendingMimeType;
+
         @JavascriptInterface
-        public void saveVideoToGallery(String base64Data, String fileName) {
+        public synchronized boolean startVideoSave(String fileName, String mimeType) {
             try {
-                byte[] videoBytes = Base64.decode(base64Data, Base64.DEFAULT);
-                String mimeType = fileName.endsWith(".mp4") ? "video/mp4" : "video/webm";
+                closePendingStreamQuietly();
+                pendingFileName = (fileName != null && !fileName.isEmpty()) ? fileName : ("Stickman_Studio_" + System.currentTimeMillis() + ".mp4");
+                pendingMimeType = (mimeType != null && !mimeType.isEmpty()) ? mimeType : (pendingFileName.endsWith(".mp4") ? "video/mp4" : "video/webm");
+                pendingTempFile = new File(getCacheDir(), "export_tmp_" + System.currentTimeMillis() + "_" + pendingFileName);
+                pendingOutStream = new BufferedOutputStream(new FileOutputStream(pendingTempFile), 262144);
+                return true;
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "⚠️ تعذر بدء ملف الفيديو: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public synchronized boolean appendVideoChunk(String base64Chunk) {
+            try {
+                if (pendingOutStream == null || base64Chunk == null || base64Chunk.isEmpty()) return false;
+                byte[] chunkBytes = Base64.decode(base64Chunk, Base64.DEFAULT);
+                pendingOutStream.write(chunkBytes);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public synchronized void finishVideoSave() {
+            try {
+                if (pendingOutStream != null) {
+                    pendingOutStream.flush();
+                    pendingOutStream.close();
+                    pendingOutStream = null;
+                }
+                if (pendingTempFile == null || !pendingTempFile.exists() || pendingTempFile.length() == 0) {
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "⚠️ ملف الفيديو فارغ!", Toast.LENGTH_LONG).show());
+                    return;
+                }
+
+                final long totalBytes = pendingTempFile.length();
+                final String finalName = pendingFileName;
+                final String finalMime = pendingMimeType;
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     ContentValues values = new ContentValues();
-                    values.put(MediaStore.Video.Media.DISPLAY_NAME, fileName);
-                    values.put(MediaStore.Video.Media.MIME_TYPE, mimeType);
+                    values.put(MediaStore.Video.Media.DISPLAY_NAME, finalName);
+                    values.put(MediaStore.Video.Media.MIME_TYPE, finalMime);
                     values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/StickmanStudio");
+                    values.put(MediaStore.Video.Media.IS_PENDING, 1);
+
                     Uri uri = getContentResolver().insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
                     if (uri != null) {
-                        OutputStream os = getContentResolver().openOutputStream(uri);
-                        if (os != null) {
-                            os.write(videoBytes);
-                            os.flush();
-                            os.close();
+                        try (OutputStream os = getContentResolver().openOutputStream(uri);
+                             FileInputStream fis = new FileInputStream(pendingTempFile)) {
+                            if (os != null) {
+                                byte[] buf = new byte[65536];
+                                int r;
+                                while ((r = fis.read(buf)) != -1) {
+                                    os.write(buf, 0, r);
+                                }
+                                os.flush();
+                            }
                         }
+                        ContentValues doneValues = new ContentValues();
+                        doneValues.put(MediaStore.Video.Media.IS_PENDING, 0);
+                        getContentResolver().update(uri, doneValues, null, null);
                     }
                 } else {
                     File moviesDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "StickmanStudio");
                     if (!moviesDir.exists()) moviesDir.mkdirs();
-                    File outFile = new File(moviesDir, fileName);
-                    FileOutputStream fos = new FileOutputStream(outFile);
-                    fos.write(videoBytes);
-                    fos.flush();
-                    fos.close();
-                    MediaScannerConnection.scanFile(MainActivity.this, new String[]{outFile.getAbsolutePath()}, new String[]{mimeType}, null);
+                    File outFile = new File(moviesDir, finalName);
+                    try (FileOutputStream fos = new FileOutputStream(outFile);
+                         FileInputStream fis = new FileInputStream(pendingTempFile)) {
+                        byte[] buf = new byte[65536];
+                        int r;
+                        while ((r = fis.read(buf)) != -1) {
+                            fos.write(buf, 0, r);
+                        }
+                        fos.flush();
+                    }
+                    MediaScannerConnection.scanFile(MainActivity.this, new String[]{outFile.getAbsolutePath()}, new String[]{finalMime}, null);
                 }
 
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, "✅ تم حفظ الفيديو في معرض الهاتف (Movies/StickmanStudio)!", Toast.LENGTH_LONG).show());
+                try { pendingTempFile.delete(); } catch (Exception ignored) {}
+                final String mbStr = String.format(java.util.Locale.US, "%.1f MB", totalBytes / (1024.0 * 1024.0));
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "✅ تم حفظ الفيديو فائق الدقة (" + mbStr + ") في الاستوديو (Movies/StickmanStudio)!", Toast.LENGTH_LONG).show());
             } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "⚠️ خطأ أثناء حفظ الفيديو: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            } finally {
+                closePendingStreamQuietly();
+            }
+        }
+
+        private void closePendingStreamQuietly() {
+            try {
+                if (pendingOutStream != null) {
+                    pendingOutStream.close();
+                }
+            } catch (Exception ignored) {}
+            pendingOutStream = null;
+        }
+
+        @JavascriptInterface
+        public void saveVideoToGallery(String base64Data, String fileName) {
+            if (startVideoSave(fileName, fileName.endsWith(".mp4") ? "video/mp4" : "video/webm")) {
+                appendVideoChunk(base64Data);
+                finishVideoSave();
             }
         }
     }

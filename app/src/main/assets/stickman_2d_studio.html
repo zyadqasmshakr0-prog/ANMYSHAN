@@ -209,33 +209,55 @@
       .sm\:grid-cols-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
       .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    /* Side-by-side layout on laptop screens: Stage on Left (7 cols), Script Editor on Right (5 cols) */
+    /* تحسين حساسية اللمس الفورية على الهاتف وإلغاء أي تأخير 300ms أو تصغير يهرب من تحت الإصبع */
+    button, select, input, textarea, .touch-btn, .tab-btn {
+      touch-action: manipulation !important;
+      -webkit-tap-highlight-color: rgba(56, 189, 248, 0.25);
+    }
+    .touch-btn {
+      min-height: 36px;
+      cursor: pointer;
+    }
+    .touch-btn:active {
+      transform: none !important;
+      filter: brightness(1.22);
+    }
+    /* نظام الشاشتين الرأسي (الشاشة الأولى للعرض في الأعلى ⬅ السحب للأسفل لإظهار شاشة الكتابة الثانية بنفس العرض الكامل!) */
     #viewStudio.grid {
-      display: grid;
-      grid-template-columns: 5fr 7fr;
-      gap: 14px;
-      align-items: start;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 18px !important;
+      align-items: stretch !important;
     }
-    #stageColumn.lg\:col-span-12 {
-      grid-column: 1 / -1 !important;
+    #stageColumn {
+      width: 100% !important;
+      order: 1 !important;
     }
-    @media (max-width: 539px) {
-      #viewStudio.grid {
-        grid-template-columns: 1fr;
-      }
+    #workspacePanel {
+      width: 100% !important;
+      order: 2 !important;
     }
-    /* تصميم مريح لشاشات الهاتف بالعرض يسمح بالتجول والتمرير السلس من الأعلى إلى الأسفل باللمس دون أي حبس للتمرير! */
+    .aspect-video {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      max-height: 76vh !important;
+    }
+    /* تصميم مريح لشاشات الهاتف بالعرض يسمح بالسحب السلس من شاشة العرض الأولى في الأعلى إلى شاشة الكتابة الثانية في الأسفل */
     @media (max-height: 520px) and (orientation: landscape) {
       header { padding: 4px 8px !important; position: relative !important; }
-      header p { display: none !important; }
-      main { padding: 6px 8px !important; }
+      main { padding: 6px 10px !important; }
       #viewStudio.grid {
-        grid-template-columns: 5fr 7fr !important;
-        gap: 10px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+      }
+      .aspect-video {
+        max-height: 74vh !important;
       }
       #scriptInput {
-        height: 95px !important;
-        padding: 8px !important;
+        height: 170px !important;
+        padding: 10px !important;
+        font-size: 13px !important;
       }
     }
     .pointer-events-auto { pointer-events: auto !important; }
@@ -244,6 +266,7 @@
       background: #000000 !important;
     }
     body.cinema-mode-active header,
+    body.cinema-mode-active #workspacePanel,
     body.cinema-mode-active #workspaceColumn,
     body.cinema-mode-active #stageTopControlsBar,
     body.cinema-mode-active #bgmSyncBar,
@@ -294,63 +317,57 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
 
-  <!-- Top Header -->
+  <!-- Top Header (السطر الأول: اسم التطبيق وبجانبه التبويبات الرئيسية فقط | الدرجة الثانية: زر الأدوات والتشغيل والتحميل فائق الدقة) -->
   <header class="glass-panel sticky top-0 z-40 border-b border-slate-800/90 px-3 py-2">
-    <div class="max-w-[1700px] mx-auto flex flex-wrap items-center justify-between gap-2">
-      <!-- Brand -->
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-600/30">
-          <i data-lucide="zap" class="w-5 h-5 text-amber-300"></i>
-        </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="text-sm sm:text-base font-black text-white">Stickman 2D Studio ULTRA</h1>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-extrabold">15 شخصية + انقسام / + لمس</span>
+    <div class="max-w-[1700px] mx-auto flex flex-col gap-2">
+      <!-- السطر الأول: اسم التطبيق صافي بدون كتابة جانبية + التبويبات الرئيسية بجانبه مباشرة -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-600/30">
+              <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+            </div>
+            <h1 class="text-sm sm:text-base font-black text-white">Stickman 2D Studio</h1>
           </div>
-          <p class="text-[10px] text-slate-400 hidden sm:block">محرك أنيميشن متعدد المفاصل، قوى خارقة (طيران، تكبير، هالة، نار، برق)، وانقسام شاشة سينمائي للهاتف والكمبيوتر</p>
+
+          <!-- التبويبات الرئيسية بجانب اسم التطبيق مباشرة -->
+          <nav class="flex items-center gap-1.5 bg-slate-900/95 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
+            <button id="tabBtnStudio" type="button" class="tab-btn active px-3.5 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition">
+              <span>🎬 المسرح والسيناريو</span>
+            </button>
+            <button id="tabBtnCharacters" type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-extrabold text-slate-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
+              <span>👥 الشخصيات</span>
+            </button>
+            <button id="tabBtnVoice" type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-extrabold text-slate-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
+              <span>🎙️ تسجيل الصوت</span>
+              <span id="voiceBadgeCount" class="px-1.5 rounded-full bg-rose-500/25 text-rose-300 text-[10px]">3</span>
+            </button>
+            <button id="tabBtnHelp" type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-extrabold text-amber-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
+              <span>📘 مساعدة</span>
+            </button>
+            <button id="tabBtnVscode" type="button" class="hidden"></button>
+          </nav>
         </div>
-      </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="flex items-center gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
-        <button id="tabBtnStudio" type="button" class="tab-btn active px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition">
-          <i data-lucide="clapperboard" class="w-3.5 h-3.5"></i>
-          <span>المسرح والسيناريو</span>
-        </button>
-        <button id="tabBtnCharacters" type="button" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-extrabold text-slate-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
-          <i data-lucide="users" class="w-3.5 h-3.5"></i>
-          <span>الشخصيات (15)</span>
-        </button>
-        <button id="tabBtnVoice" type="button" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-extrabold text-slate-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
-          <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-          <span>تسجيل الصوت</span>
-          <span id="voiceBadgeCount" class="px-1.5 rounded-full bg-rose-500/25 text-rose-300 text-[10px]">3</span>
-        </button>
-        <button id="tabBtnHelp" type="button" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-extrabold text-amber-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
-          <span>📘 مساعدة (شرح + 5 سيناريوهات)</span>
-        </button>
-        <button id="tabBtnVscode" type="button" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-extrabold text-emerald-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
-          <span>💻 أمر F:/2D</span>
-        </button>
-      </nav>
-
-      <!-- Top Critical Buttons: Play Scene + Show/Hide Workspace + Save to Gallery/Studio -->
-      <div class="flex items-center gap-1.5">
-        <button id="btnTopPlayScene" type="button" class="touch-btn px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black flex items-center gap-1.5">
-          <span id="topPlayLabel">▶️ تشغيل المشهد</span>
-        </button>
-        <button id="btnToggleWorkspace" type="button" class="touch-btn px-3 py-1.5 rounded-xl bg-blue-600/25 text-blue-300 border text-xs font-extrabold flex items-center gap-1.5">
-          <span id="toggleWorkspaceLabel">👁️ إخفاء شاشة العمل</span>
-        </button>
-        <select id="exportPresetSelect" class="bg-slate-900 border rounded-xl px-2 py-1.5 text-[11px] font-extrabold text-amber-300" title="إعدادات دقة وأبعاد تصدير الفيديو">
-          <option value="16:9_60" selected>📺 1080p أفقي (60 FPS)</option>
-          <option value="9:16_60">📱 9:16 عمودي ريلز/تيك توك</option>
-          <option value="1:1_60">🔲 1:1 فيديو مربع</option>
-          <option value="16:9_30">🎬 720p سريع (30 FPS)</option>
-        </select>
-        <button id="btnRecordVideo" type="button" class="touch-btn px-3.5 py-1.5 rounded-xl bg-rose-600 text-xs font-black text-white flex items-center gap-1.5" title="تسجيل وتحميل المشهد كاملاً كفيديو إلى المعرض/الاستوديو">
-          <span id="recordVideoText">📥 حفظ للمعرض (الاستوديو)</span>
-        </button>
+        <!-- الدرجة الثانية (بجانبهم أو أسفل قليل بعد اسم التطبيق): زر الأدوات + تشغيل المشهد + حفظ الفيديو فائق الدقة للمعرض -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button id="btnToggleToolsDrawer" type="button" class="touch-btn px-3.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black flex items-center gap-1.5">
+            <span id="toolsBtnLabel">🛠️ الأدوات</span>
+          </button>
+          <button id="btnTopPlayScene" type="button" class="touch-btn px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black flex items-center gap-1.5">
+            <span id="topPlayLabel">▶️ تشغيل المشهد</span>
+          </button>
+          <select id="exportPresetSelect" class="bg-slate-900 border rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold text-amber-300" title="إعدادات دقة وأبعاد تصدير الفيديو">
+            <option value="16:9_1440">💎 2K QHD فائق الدقة (2560×1440 - 60 FPS)</option>
+            <option value="16:9_60" selected>📺 1080p Full HD فائق الدقة (60 FPS)</option>
+            <option value="9:16_60">📱 9:16 عمودي ريلز/تيك توك (1080×1920)</option>
+            <option value="1:1_60">🔲 1:1 فيديو مربع عالي الدقة (1440×1440)</option>
+          </select>
+          <button id="btnRecordVideo" type="button" class="touch-btn px-3.5 py-1.5 rounded-xl bg-rose-600 text-xs font-black text-white flex items-center gap-1.5" title="تسجيل وتحميل المشهد كاملاً بدقة عالية جداً إلى المعرض/الاستوديو">
+            <span id="recordVideoText">📥 حفظ للمعرض (الاستوديو)</span>
+          </button>
+          <button id="btnToggleWorkspace" type="button" class="hidden"><span id="toggleWorkspaceLabel"></span></button>
+        </div>
       </div>
     </div>
   </header>
@@ -374,7 +391,7 @@
           <!-- Header + Single Select/Clear actions -->
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-              <h2 class="text-xs sm:text-sm font-black text-white">🎬 كتابة السيناريو والمشهد</h2>
+              <h2 class="text-xs sm:text-sm font-black text-amber-300">✍️ الشاشة الثانية: كتابة السيناريو والمشهد (اسحب للأعلى لشاشة العرض ⬆️)</h2>
             </div>
             <div class="flex flex-wrap items-center gap-1">
               <button id="btnInsertNarrator" type="button" class="touch-btn px-2 py-1 rounded-lg bg-purple-500/25 text-purple-300 border text-[10px] font-black" title="إضافة رمز الراوي » لبداية السطر">🎙️ الراوي »</button>
@@ -388,15 +405,7 @@
             </div>
           </div>
 
-          <!-- أزرار المشاهد الاحترافية الجاهزة: مشهد المقهى وعلامة X ولعب الكرة + الفيلم الكامل -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            <button id="btnPlayCafeXSlashScene" type="button" class="touch-btn w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 text-white text-[11px] font-black flex items-center justify-center gap-1.5">
-              <span>☕ مشهد المقهى + تحول مدينة الظلام + ضربات X + لعب الكرة</span>
-            </button>
-            <button id="btnPlayFullShadowMovie" type="button" class="touch-btn w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 text-white text-[11px] font-black flex items-center justify-center gap-1.5">
-              <span>🎬 الفيلم الطويل الكامل (6:30 دقائق)</span>
-            </button>
-          </div>
+
 
           <textarea id="scriptInput" rows="8" class="w-full rounded-xl bg-slate-950 border p-3 text-xs leading-relaxed text-white custom-scroll" placeholder="اكتب وصف المشهد هنا...">المشهد في مدينة مشمسة مع مقهى وجبل كبير في البعيد ويضم 3 شخصيات حيث الشخصية رقم 3 هو الظل.
 » وفي يوم صافي يجلس رقم 1 مع رقم 2 في المقهى على الكراسي بلا قتال كأصدقاء ويتحدثون عن الأسطورة لمدة 5 ثوان.
@@ -409,38 +418,25 @@
 ينهض رقم 1 ورقم 2 من الأرض ويتحولون إلى خارقين مع هالة مختلفة وشحن الهالة لمدة 6 ثوان.
 يحاول رقم 3 المظلم أن يسدد نفس الضربات السابقة ولكن يركله رقم 1 بقوة لعند الشخصية الثانية ويلعبون فيه كرة بالركلات المتبادلة حتى ينبطح على الأرض وينتهي المشهد "1" لمدة 13 ثانية.</textarea>
 
-          <!-- Clean Primary Action Row: Play Scene + ONE "🛠️ أدوات" Button! -->
-          <!-- Two Main Action Buttons Only: Play Scene + Single "🛠️ أدوات" Button -->
-          <div class="grid grid-cols-2 gap-2">
-            <button id="btnParseAndPlay" type="button" class="touch-btn py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center gap-1.5">
-              <span>▶️ تحليل وتشغيل المشهد</span>
+          <!-- زر تشغيل المشهد من شاشة الكتابة الثانية + زر الصعود لشاشة العرض الأولى -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button id="btnParseAndPlay" type="button" class="touch-btn py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2">
+              <span>▶️ تطبيق السيناريو وتشغيل شاشة العرض</span>
             </button>
-            <button id="btnToggleToolsDrawer" type="button" class="touch-btn py-2.5 px-3 rounded-xl bg-amber-500/20 text-amber-300 border font-black text-xs flex items-center justify-center gap-1.5">
-              <span id="toolsBtnLabel">🛠️ أدوات (الهالات والقوى والحوار)</span>
+            <button id="btnScrollToStageTop" type="button" class="touch-btn py-3 px-4 rounded-xl bg-slate-800 text-amber-300 border font-black text-xs sm:text-sm flex items-center justify-center gap-2" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+              <span>⬆️ الصعود إلى شاشة العرض الأولى</span>
             </button>
           </div>
 
-          <!-- شريط تسجيل وسماع وإعادة تسجيل الصوت السريع داخل شاشة العمل مباشرة -->
-          <div class="p-2.5 rounded-xl bg-slate-900 border flex flex-col gap-2">
-            <div class="flex items-center justify-between text-[11px]">
-              <span id="quickVoiceSpeakerInstruction" class="font-black text-amber-300">🎙️ تسجيل صوت الحوار:</span>
-              <span id="quickVoiceCounter" class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">1 / 1</span>
-            </div>
-            <div id="quickVoiceLineText" class="text-xs font-extrabold text-white bg-slate-950 p-2 rounded-lg border text-center">« ... »</div>
-            <div class="grid grid-cols-4 gap-1.5">
-              <button id="btnQuickVoiceMain" type="button" class="touch-btn py-1.5 px-2 rounded-lg bg-rose-600 text-white font-black text-[11px] flex items-center justify-center">
-                <span id="btnQuickVoiceLabel">🔴 تسجيل</span>
-              </button>
-              <button id="btnQuickVoiceListen" type="button" class="touch-btn py-1.5 px-2 rounded-lg bg-emerald-600 text-white font-black text-[11px] flex items-center justify-center">
-                <span>🔊 سماع الصوت</span>
-              </button>
-              <button id="btnQuickVoiceRerecord" type="button" class="touch-btn py-1.5 px-2 rounded-lg bg-amber-600 text-white font-black text-[11px] flex items-center justify-center">
-                <span>🔄 إعادة التسجيل</span>
-              </button>
-              <button id="btnQuickVoiceSkip" type="button" class="touch-btn py-1.5 px-2 rounded-lg bg-blue-600 text-white font-black text-[11px] flex items-center justify-center">
-                <span>⬆️ رفع والتالي</span>
-              </button>
-            </div>
+          <!-- عناصر مخفية للتوافق الداخلي فقط (جميع أزرار الصوت موجودة حصرياً في تبويب 🎙️ تسجيل الصوت) -->
+          <div class="hidden">
+            <span id="quickVoiceSpeakerInstruction"></span>
+            <span id="quickVoiceCounter"></span>
+            <div id="quickVoiceLineText"></div>
+            <button id="btnQuickVoiceMain" type="button"><span id="btnQuickVoiceLabel"></span></button>
+            <button id="btnQuickVoiceListen" type="button"></button>
+            <button id="btnQuickVoiceRerecord" type="button"></button>
+            <button id="btnQuickVoiceSkip" type="button"></button>
           </div>
         </div>
 
@@ -596,13 +592,12 @@
               <button id="btnToggleSplitMode" type="button" class="touch-btn px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-extrabold">
                 <span id="splitModeLabel">انقسام الشاشة: تلقائي</span>
               </button>
-              <button id="btnPickBgmFile" type="button" class="touch-btn px-2.5 py-1 rounded-xl bg-purple-500/25 text-purple-300 border text-xs font-extrabold flex items-center gap-1" title="اختيار موسيقى خلفية من ملفات جهازك">
-                <span id="bgmBtnLabel">🎵 إضافة موسيقى</span>
-              </button>
               <button id="btnDeleteCharFromScreen" type="button" class="touch-btn px-2.5 py-1 rounded-xl bg-rose-600/25 text-rose-300 border text-xs font-extrabold flex items-center gap-1" title="حذف الشخصية المحددة من الشاشة (وتعود تلقائياً إذا كان لها دور مهم في المشهد القادم)">
                 <span id="deleteCharScreenLabel">🗑️ حذف الشخصية من الشاشة</span>
               </button>
-              <input id="bgmFileInput" type="file" accept="audio/*" class="hidden">
+              <button id="btnScrollToWritingScreen" type="button" class="touch-btn px-3 py-1 rounded-xl bg-blue-600/25 text-blue-300 border text-xs font-extrabold flex items-center gap-1" onclick="document.getElementById('workspacePanel')?.scrollIntoView({behavior:'smooth'})">
+                <span>⬇️ شاشة الكتابة</span>
+              </button>
             </div>
 
             <div class="flex items-center gap-1.5">
@@ -631,7 +626,7 @@
 
           <!-- 2D Interactive Stage Canvas (Full HD 1920x1080 High-DPI Vector Sharpness + Full-Screen Game Mode with "🔙 عودة" Button) -->
           <div id="stageCanvasWrapper" class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border-2">
-            <canvas id="stageCanvas" width="1440" height="810" class="w-full h-full block"></canvas>
+            <canvas id="stageCanvas" width="1920" height="1080" class="w-full h-full block"></canvas>
             <div class="absolute top-2.5 right-3 left-3 flex items-center justify-between pointer-events-none">
               <div id="stageTopTitleBox" class="px-3 py-1 rounded-xl bg-slate-950 border flex items-center gap-2">
                 <span id="stageActionTitle" class="text-[11px] sm:text-xs font-extrabold text-white">المشهد قيد التشغيل</span>
@@ -647,42 +642,7 @@
             </div>
           </div>
 
-          <!-- شريط وزن ومزامنة الموسيقى مع المشهد (مخفي تماماً ولا يظهر إلا عند إضافة موسيقى من الملفات!) -->
-          <div id="bgmSyncBar" class="hidden rounded-xl bg-slate-900 border p-3 flex-col gap-2.5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-lg bg-purple-500/25 text-purple-300 text-[11px] font-black">🎵 موسيقى المشهد</span>
-                <span id="bgmFileNameLabel" class="text-xs font-extrabold text-white truncate">ملف موسيقى</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <span id="bgmTimeStatusBadge" class="px-2 py-0.5 rounded-lg bg-slate-950 border text-[11px] font-bold text-cyan-300">00:00 / 00:00</span>
-                <button id="btnBgmPreviewPlay" type="button" class="touch-btn px-2.5 py-1 rounded-lg bg-emerald-600/25 text-emerald-300 text-[11px] font-black">▶️ استماع</button>
-                <button id="btnRemoveBgm" type="button" class="touch-btn px-2.5 py-1 rounded-lg bg-rose-600/25 text-rose-300 text-[11px] font-black" title="إزالة الموسيقى وإخفاء الشريط">✖ إزالة</button>
-              </div>
-            </div>
 
-            <!-- شريط وزن بداية الموسيقى مع المشهد -->
-            <div class="flex flex-col gap-1 bg-slate-950 p-2 rounded-xl border">
-              <div class="flex items-center justify-between text-[11px]">
-                <span class="font-extrabold text-amber-300">🎚️ شريط وزن الموسيقى مع المشهد (اختر المقطع الذي يبدأ مع المشهد):</span>
-                <span id="bgmOffsetValueLabel" class="font-black text-emerald-300">تبدأ الموسيقى من: 00:00</span>
-              </div>
-              <input id="bgmOffsetSlider" type="range" min="0" max="100" step="0.1" value="0" class="w-full">
-            </div>
-
-            <!-- شريط التزامن الحي للموسيقى أثناء حركة المشهد + مستوى الصوت -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-xl border">
-                <span class="text-[11px] font-bold text-cyan-300 shrink-0">⏱️ موضع الموسيقى الآن:</span>
-                <input id="bgmLiveProgressSlider" type="range" min="0" max="100" step="0.1" value="0" class="w-full">
-              </div>
-              <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-xl border">
-                <span class="text-[11px] font-bold text-purple-300 shrink-0">🔊 صوت الموسيقى:</span>
-                <input id="bgmVolumeSlider" type="range" min="0" max="1" step="0.02" value="0.75" class="w-full">
-                <span id="bgmVolumeLabel" class="text-[11px] font-black text-white shrink-0">75%</span>
-              </div>
-            </div>
-          </div>
 
           <!-- Compact Timeline Strip -->
           <div id="timelineContainer" class="flex items-center gap-1.5 overflow-x-auto custom-scroll py-1"></div>
@@ -749,9 +709,50 @@
     <!-- ==================== TAB 3: SEQUENTIAL VOICE STUDIO (رفع الصوت + تشغيل الصوت + إعادة التسجيل) ==================== -->
     <section id="viewVoice" class="hidden flex-col gap-4">
       <div class="glass-panel rounded-2xl p-5">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h2 class="text-base font-black text-white">🎙️ استوديو تسجيل ورفع وتشغيل الصوت للشخصيات</h2>
-          <span id="voiceRecStatusHint" class="text-xs font-bold text-emerald-300">جاهز للتسجيل أو رفع ملف صوتي</span>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h2 class="text-base font-black text-white">🎙️ استوديو تسجيل الصوت وموسيقى المشهد</h2>
+          <div class="flex items-center gap-2">
+            <button id="btnPickBgmFile" type="button" class="touch-btn px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-black flex items-center gap-1.5" title="اختيار موسيقى خلفية للمشهد من ملفات جهازك">
+              <span id="bgmBtnLabel">🎵 إضافة موسيقى للمشهد</span>
+            </button>
+            <input id="bgmFileInput" type="file" accept="audio/*" class="hidden">
+            <span id="voiceRecStatusHint" class="text-xs font-bold text-emerald-300">جاهز للتسجيل أو رفع ملف صوتي</span>
+          </div>
+        </div>
+
+        <!-- شريط وزن ومزامنة الموسيقى مع المشهد داخل تبويب الصوت (يظهر عند إضافة موسيقى) -->
+        <div id="bgmSyncBar" class="hidden rounded-xl bg-slate-900 border p-3.5 mb-4 flex-col gap-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-lg bg-purple-500/25 text-purple-300 text-[11px] font-black">🎵 موسيقى المشهد</span>
+              <span id="bgmFileNameLabel" class="text-xs font-extrabold text-white truncate">ملف موسيقى</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span id="bgmTimeStatusBadge" class="px-2 py-0.5 rounded-lg bg-slate-950 border text-[11px] font-bold text-cyan-300">00:00 / 00:00</span>
+              <button id="btnBgmPreviewPlay" type="button" class="touch-btn px-2.5 py-1 rounded-lg bg-emerald-600/25 text-emerald-300 text-[11px] font-black">▶️ استماع</button>
+              <button id="btnRemoveBgm" type="button" class="touch-btn px-2.5 py-1 rounded-lg bg-rose-600/25 text-rose-300 text-[11px] font-black" title="إزالة الموسيقى وإخفاء الشريط">✖ إزالة</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1 bg-slate-950 p-2 rounded-xl border">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-extrabold text-amber-300">🎚️ شريط وزن الموسيقى مع المشهد (اختر المقطع الذي يبدأ مع المشهد):</span>
+              <span id="bgmOffsetValueLabel" class="font-black text-emerald-300">تبدأ الموسيقى من: 00:00</span>
+            </div>
+            <input id="bgmOffsetSlider" type="range" min="0" max="100" step="0.1" value="0" class="w-full">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-xl border">
+              <span class="text-[11px] font-bold text-cyan-300 shrink-0">⏱️ موضع الموسيقى الآن:</span>
+              <input id="bgmLiveProgressSlider" type="range" min="0" max="100" step="0.1" value="0" class="w-full">
+            </div>
+            <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-xl border">
+              <span class="text-[11px] font-bold text-purple-300 shrink-0">🔊 صوت الموسيقى:</span>
+              <input id="bgmVolumeSlider" type="range" min="0" max="1" step="0.02" value="0.75" class="w-full">
+              <span id="bgmVolumeLabel" class="text-[11px] font-black text-white shrink-0">75%</span>
+            </div>
+          </div>
         </div>
         <div class="max-w-xl mx-auto p-5 rounded-2xl bg-slate-900 border text-center mb-5 flex flex-col gap-3">
           <div>
@@ -864,13 +865,18 @@
           </div>
         </div>
 
-        <!-- الفيلم القصير الكامل (6 دقائق و30 ثانية) + 5 سيناريوهات تدريبية جاهزة -->
-        <div class="p-4 rounded-2xl bg-slate-950 border-2 flex flex-col gap-2">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-sm font-black text-rose-400">🧣 الفيلم القصير الكامل: أسطورة الظل (Shadow) وحرب العوالم (6 دقائق و30 ثانية - 29 مشهداً متصلاً)</span>
-            <button id="btnHelpRunShadowMovie" type="button" class="touch-btn px-3.5 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-black">▶️ نسخ وتشغيل الفيلم الكامل الآن (6:30 دقائق)</button>
+        <!-- المشاهد الاحترافية الجاهزة (تم نقلها إلى تبويب المساعدة لتبقى الصفحة الرئيسية صافية تماماً!) -->
+        <div class="p-4 rounded-2xl bg-slate-950 border-2 flex flex-col gap-3">
+          <h3 class="text-sm font-black text-amber-300">🎬 المشاهد الاحترافية الجاهزة للتجربة الفورية:</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button id="btnPlayCafeXSlashScene" type="button" class="touch-btn w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 text-white text-xs font-black flex items-center justify-center gap-1.5">
+              <span>☕ تشغيل مشهد المقهى + مدينة الظلام + ضربات X + لعب الكرة</span>
+            </button>
+            <button id="btnPlayFullShadowMovie" type="button" class="touch-btn w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 text-white text-xs font-black flex items-center justify-center gap-1.5">
+              <span>🎬 تشغيل الفيلم الطويل الكامل: أسطورة الظل (6:30 دقائق)</span>
+            </button>
           </div>
-          <p class="text-[11px] text-slate-300 leading-relaxed">قصة سينمائية كاملة تختبر كل ميزة في الاستوديو: شخصية <strong>Shadow – الظل</strong> بجسمه الأسود الرياضي وشعره الشوكي وعينيه البيضاوين المتوهجتين بلا فم أو أنف ووشاحه الأحمر المتحرك، الركض 100 متر في الغابة، مطاردة السيارة والشاص مع انقسام الشاشة، حرب العصابات، كمين الكلاب والزومبي والديناصور العملاق (مع الاختفاء ونسخ الظل والتجميد)، صعود الجبل الكبير بجانب البركان المشتعل، الهالة السوداء والثقب الأسود والنيازك، والطيران الصاروخي لمسافة 4 كيلومتر في وضع انقسام الشاشة للتصادم مع المتحول الفضائي!</p>
+          <button id="btnHelpRunShadowMovie" type="button" class="hidden"></button>
         </div>
 
         <!-- 5 Ready-to-Use Learning Scenarios -->
@@ -7125,13 +7131,14 @@
       };
       const CAFE_XSLASH_PINGPONG_SCRIPT = 'المشهد في مدينة مشمسة مع مقهى وجبل كبير في البعيد ويضم 3 شخصيات حيث الشخصية رقم 3 هو الظل.\n» وفي يوم صافي يجلس رقم 1 مع رقم 2 في المقهى على الكراسي بلا قتال كأصدقاء ويتحدثون عن الأسطورة لمدة 5 ثوان.\nيقول رقم 1 {هل سمعت عن الشخصية المظلمة التي تظهر فوق الجبل؟} لمدة 5 ثوان.\nيرد رقم 2 {يقولون إنه مقاتل خارق يختفي كالشبح ولا يستطيع أحد رؤيته!} لمدة 5 ثوان.\n» وفجأة تنتقل الكاميرا إلى الجبل ليتغير لون السماء والشمس لتصبح مدينة الظلام تحت ضوء القمر لمدة 7 ثوان.\nينتقل رقم 3 الظل بسرعة الرصاصة إلى المقهى عند رقم 1 ورقم 2 لمدة 3 ثوان.\nيقول رقم 3 الظل {أنا الأسطورة!} فيقوم الاثنان معاً على المظلم لمدة 5 ثوان.\nيستخدم رقم 3 الظل حركة الاختفاء مع الضرب ولا يظهر أي شيء منه وتظهر علامة إكس ضربة على رقم 1 وعلى رقم 2 حتى ينبطحون على الأرض "1" لمدة 9 ثوان.\nينهض رقم 1 ورقم 2 من الأرض ويتحولون إلى خارقين مع هالة مختلفة وشحن الهالة لمدة 6 ثوان.\nيحاول رقم 3 المظلم أن يسدد نفس الضربات السابقة ولكن يركله رقم 1 بقوة لعند الشخصية الثانية ويلعبون فيه كرة بالركلات المتبادلة حتى ينبطح على الأرض وينتهي المشهد "1" لمدة 13 ثانية.';
       document.getElementById('btnPlayCafeXSlashScene')?.addEventListener('click', () => {
+        if (state.activeTab !== 'studio') document.getElementById('tabBtnStudio')?.click();
         const areaEl = document.getElementById('scriptInput');
         if (areaEl) areaEl.value = CAFE_XSLASH_PINGPONG_SCRIPT;
         setCinemaFullscreenMode(true);
         parseArabicScript(CAFE_XSLASH_PINGPONG_SCRIPT);
         showToast('☕ بدأ عرض مشهد المقهى + تحول مدينة الظلام + ضربات X المخفية + ركل الكرة!');
       });
-      document.getElementById('btnPlayFullShadowMovie')?.addEventListener('click', runFullShadowMovie);
+      document.getElementById('btnPlayFullShadowMovie')?.addEventListener('click', () => { if (state.activeTab !== 'studio') document.getElementById('tabBtnStudio')?.click(); runFullShadowMovie(); });
       document.getElementById('btnHelpRunShadowMovie')?.addEventListener('click', runFullShadowMovie);
 
       document.getElementById('toolCreatureTypeSelect')?.addEventListener('change', e => {
@@ -7186,6 +7193,9 @@
       });
 
       function toggleToolsDrawer(forceState) {
+        if (state.activeTab !== 'studio' && forceState !== false) {
+          document.getElementById('tabBtnStudio')?.click();
+        }
         state.toolsDrawerOpen = forceState !== undefined ? forceState : !state.toolsDrawerOpen;
         const drawer = document.getElementById('toolsDrawerPanel');
         const lbl = document.getElementById('toolsBtnLabel');
@@ -7194,13 +7204,16 @@
             drawer.classList.remove('hidden');
             drawer.classList.add('flex');
             updateToolsActiveCharacterUI();
+            setTimeout(() => {
+              try { drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+            }, 60);
           } else {
             drawer.classList.add('hidden');
             drawer.classList.remove('flex');
           }
         }
         if (lbl) {
-          lbl.textContent = state.toolsDrawerOpen ? '✖ إخفاء الأدوات' : '🛠️ أدوات (الهالات والقوى والحوار)';
+          lbl.textContent = state.toolsDrawerOpen ? '✖ إخفاء الأدوات' : '🛠️ الأدوات';
         }
       }
 
@@ -7638,11 +7651,12 @@
         const cv = document.getElementById('stageCanvas');
         if (!cv) return;
         const val = e.target.value;
-        if (val.startsWith('9:16')) { cv.width = 1080; cv.height = 1920; }
+        if (val === '16:9_1440') { cv.width = 2560; cv.height = 1440; }
+        else if (val.startsWith('9:16')) { cv.width = 1080; cv.height = 1920; }
         else if (val.startsWith('1:1')) { cv.width = 1440; cv.height = 1440; }
         else if (val.endsWith('30')) { cv.width = 1280; cv.height = 720; }
         else { cv.width = 1920; cv.height = 1080; }
-        showToast(`📐 تم ضبط أبعاد الفيديو على: ${e.target.options[e.target.selectedIndex].text}`);
+        showToast(`📐 تم ضبط دقة الفيديو على: ${e.target.options[e.target.selectedIndex].text}`);
       });
 
       document.getElementById('touchTargetCharSelect')?.addEventListener('change', e => {
@@ -7989,41 +8003,98 @@
             }
             const stream = new MediaStream(combinedTracks);
 
-            // Use WebM VP8/VP9 + Opus first for 100% full-duration canvas+WebAudio recording reliability on Windows/Android!
-            let mime = 'video/webm';
-            let ext = 'webm';
+            // Ensure canvas is at least 1920x1080 Full HD (or 2560x1440 2K QHD if selected) for razor-sharp video export
+            if (expVal === '16:9_1440') {
+              if (canvas.width < 2560) { canvas.width = 2560; canvas.height = 1440; }
+            } else if (expVal === '16:9_60') {
+              if (canvas.width < 1920) { canvas.width = 1920; canvas.height = 1080; }
+            }
+
+            // On Android phones, prioritize H.264 / MP4 first so the native Android Gallery (الاستوديو) plays it immediately without ever saying "corrupted"!
+            const isAndroidBridge = Boolean(window.AndroidStudioBridge);
+            const mp4Candidates = [
+              { mime: 'video/mp4;codecs=avc1.64002A,mp4a.40.2', ext: 'mp4' },
+              { mime: 'video/mp4;codecs=avc1.42E01E,mp4a.40.2', ext: 'mp4' },
+              { mime: 'video/mp4;codecs=avc1,mp4a.40.2', ext: 'mp4' },
+              { mime: 'video/mp4;codecs=avc1', ext: 'mp4' },
+              { mime: 'video/mp4;codecs=h264', ext: 'mp4' },
+              { mime: 'video/mp4', ext: 'mp4' }
+            ];
+            const webmCandidates = [
+              { mime: 'video/webm;codecs=h264,opus', ext: 'mp4' },
+              { mime: 'video/webm;codecs=vp9,opus', ext: 'webm' },
+              { mime: 'video/webm;codecs=vp8,opus', ext: 'webm' },
+              { mime: 'video/webm', ext: 'webm' }
+            ];
+            const candidateOrder = isAndroidBridge ? [...mp4Candidates, ...webmCandidates] : [...mp4Candidates, ...webmCandidates];
+
+            let mime = '';
+            let ext = 'mp4';
             if (window.MediaRecorder) {
-              if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-                mime = 'video/webm;codecs=vp8,opus';
-                ext = 'webm';
-              } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
-                mime = 'video/webm;codecs=vp9,opus';
-                ext = 'webm';
-              } else if (MediaRecorder.isTypeSupported('video/webm')) {
-                mime = 'video/webm';
-                ext = 'webm';
-              } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-                mime = 'video/mp4';
-                ext = 'mp4';
+              for (const cand of candidateOrder) {
+                try {
+                  if (MediaRecorder.isTypeSupported(cand.mime)) {
+                    mime = cand.mime;
+                    ext = cand.ext;
+                    break;
+                  }
+                } catch (err) {}
               }
             }
 
-            state.videoRecorder = new MediaRecorder(stream, {
-              mimeType: mime,
-              videoBitsPerSecond: 4500000
-            });
+            const recOptions = {
+              videoBitsPerSecond: expVal === '16:9_1440' ? 22000000 : 16000000,
+              audioBitsPerSecond: 256000
+            };
+            if (mime) recOptions.mimeType = mime;
+
+            state.videoRecorder = new MediaRecorder(stream, recOptions);
             state.videoChunks = [];
             state.videoRecorder.ondataavailable = e => {
               if (e.data && e.data.size > 0) state.videoChunks.push(e.data);
             };
-            state.videoRecorder.onstop = () => {
+            state.videoRecorder.onstop = async () => {
               if (state._keepAliveOsc) {
                 try { state._keepAliveOsc.stop(); } catch (e) {}
                 state._keepAliveOsc = null;
               }
-              const blob = new Blob(state.videoChunks, { type: mime });
-              const fileName = `Anime_Studio_Full_Movie_${Date.now()}.${ext}`;
-              if (window.AndroidStudioBridge && window.AndroidStudioBridge.saveVideoToGallery) {
+              const actualMime = (state.videoRecorder && state.videoRecorder.mimeType) ? state.videoRecorder.mimeType : (mime || 'video/mp4');
+              const finalExt = (actualMime.includes('mp4') || actualMime.includes('h264') || actualMime.includes('avc1')) ? 'mp4' : ext;
+              const cleanMime = finalExt === 'mp4' ? 'video/mp4' : 'video/webm';
+              const blob = new Blob(state.videoChunks, { type: cleanMime });
+              const fileName = `Stickman_Studio_UHD_${Date.now()}.${finalExt}`;
+
+              if (window.AndroidStudioBridge && window.AndroidStudioBridge.startVideoSave) {
+                try {
+                  showToast('⏳ جاري حفظ الفيديو فائق الدقة في استوديو الهاتف (بدون تلف)...');
+                  const startOk = window.AndroidStudioBridge.startVideoSave(fileName, cleanMime);
+                  if (startOk !== false) {
+                    const CHUNK_SIZE = 256 * 1024; // 256 KB per chunk prevents any Binder IPC truncation!
+                    const totalBytes = blob.size;
+                    let offset = 0;
+                    while (offset < totalBytes) {
+                      const slice = blob.slice(offset, Math.min(totalBytes, offset + CHUNK_SIZE));
+                      const b64Chunk = await new Promise((resolve, reject) => {
+                        const r = new FileReader();
+                        r.onloadend = () => {
+                          const res = String(r.result || '');
+                          resolve(res.includes(',') ? res.split(',')[1] : res);
+                        };
+                        r.onerror = reject;
+                        r.readAsDataURL(slice);
+                      });
+                      window.AndroidStudioBridge.appendVideoChunk(b64Chunk);
+                      offset += CHUNK_SIZE;
+                      const pct = Math.min(99, Math.round((offset / Math.max(1, totalBytes)) * 100));
+                      const recTxt = document.getElementById('recordVideoText');
+                      if (recTxt) recTxt.textContent = `💾 جاري الحفظ للاستوديو ${pct}%`;
+                    }
+                    window.AndroidStudioBridge.finishVideoSave();
+                  }
+                } catch (err) {
+                  showToast('⚠️ حدث خطأ أثناء نقل الفيديو للاستوديو: ' + err);
+                }
+              } else if (window.AndroidStudioBridge && window.AndroidStudioBridge.saveVideoToGallery) {
                 try {
                   const reader = new FileReader();
                   reader.onloadend = () => {
@@ -8044,16 +8115,16 @@
               }
               document.getElementById('galleryExportBadge')?.classList.add('hidden');
               document.getElementById('recordVideoText').textContent = '📥 حفظ للمعرض (الاستوديو)';
-              showToast('✅ اكتمل تحميل وحفظ الفيلم الكامل مع الصوت في المعرض/الاستوديو بنجاح!');
+              showToast('✅ اكتمل حفظ الفيديو فائق الدقة (1080p) مع الصوت في الاستوديو بنجاح!');
             };
 
-            // 3. Start recording FIRST, then restart the scene from 0:00 so Event #1 and its voice are 100% captured!
+            // 3. Start recording FIRST with 1000ms timeslice for clean container clusters, then restart scene from 0:00
             state.isRecordingVideo = true;
             state._exportTailElapsed = 0;
             state.playbackSpeed = 1.0;
             const spdBtn = document.getElementById('btnSpeedToggle');
             if (spdBtn) spdBtn.textContent = '⚡ 1x';
-            state.videoRecorder.start(150);
+            state.videoRecorder.start(1000);
 
             // Switch to Studio tab if user was on another tab so the canvas renders every frame
             if (state.activeTab !== 'studio') {

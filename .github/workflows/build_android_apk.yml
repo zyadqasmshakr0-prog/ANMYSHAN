@@ -67,7 +67,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: always()
         with:
-          tag_name: v2.0-ultra-${{ github.run_number }}
+          tag_name: v3.0-ultra-${{ github.run_number }}
           name: "Stickman 2D Studio ULTRA - Android APK #${{ github.run_number }}"
           files: Stickman_2D_Studio_ULTRA.apk
           prerelease: false
