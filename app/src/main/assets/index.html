@@ -1094,8 +1094,29 @@
           archetypeId: arch.id,
           color: DEFAULT_15_COLORS[i],
           defaultColor: DEFAULT_15_COLORS[i],
-          weapon: arch.weapon,
-          defaultWeapon: arch.weapon,
+          weapon: 'none',
+          defaultWeapon: 'none',
+          manualWeapon: '',
+          weaponColor: '',
+          customAuraColor: '',
+          initialAuraActive: false,
+          customPantColor: '',
+          customHairColor: '',
+          customHairStyle: '',
+          customEyeColor: '',
+          customHasScarf: null,
+          customScarfColor: '',
+          customHasCape: false,
+          customCapeColor: '',
+          customHasMask: false,
+          customHasGlasses: false,
+          customHatType: '',
+          customHasWings: false,
+          customHasHeadband: null,
+          hitReactionType: 'high_snap',
+          hitFlashTimer: 0,
+          flyTiltAngle: 0,
+          stayProne: false,
           teamId: i % 2 === 0 ? 1 : 2,
           x: CITY_CENTER_X + (i === 0 ? -90 : i === 1 ? 90 : (i - 1) * 75),
           y: GROUND_Y,
@@ -1428,35 +1449,193 @@
       return matched && total > 0 ? Math.max(0.8, total) : fallbackSec;
     }
 
+    function extractHeightAboveGroundMeters(clause, fallbackH = 2.0) {
+      if (!clause) return fallbackH;
+      const hm = clause.match(/(?:بارتفاع|بإرتفاع|على\s*ارتفاع|ارتفاع[هه]?)\s*(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م)?/);
+      if (hm) return Math.max(0.3, parseFloat(hm[1]));
+      if (/(?:بارتفاع|بإرتفاع|على\s*ارتفاع)\s*مترين/.test(clause)) return 2.0;
+      if (/(?:بارتفاع|بإرتفاع|على\s*ارتفاع)\s*متر(?:\s|$)/.test(clause)) return 1.0;
+      return fallbackH;
+    }
+
     function extractDistanceMeters(clause, fallbackM = 3.0) {
-      const clean = clause.replace(/\d+\s*متر\s*مربع/g, '');
+      // استبعاد عبارة "بارتفاع X متر" أو "X متر مربع" حتى لا تختلط بالمسافة الأفقية!
+      const clean = (clause || '')
+        .replace(/\d+\s*متر\s*مربع/g, '')
+        .replace(/(?:بارتفاع|بإرتفاع|على\s*ارتفاع|ارتفاع[هه]?)\s*\d+(?:\.\d+)?\s*(?:متر|أمتار|امتار|م)?/g, '');
       const km = clean.match(/(\d+(?:\.\d+)?)\s*(?:كيلومتر|كيلو\s*متر|كيلو|كم)/);
       if (km) return Math.max(100, parseFloat(km[1]) * 1000);
       if (/أربع[ةه]?\s*(?:كيلومتر|كيلو)/.test(clean)) return 4000;
+      // يدعم "لمسافة 100" حتى بدون كتابة كلمة "متر" بعدها!
+      const mExplicitWord = clean.match(/(?:لمساف[ةه]|مساف[ةه]|ل\s*بعد|على\s*بعد|يبعد|تبعد)\s*(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م|خطو[ةه]|خطوات)?/);
+      if (mExplicitWord) return Math.max(0.5, parseFloat(mExplicitWord[1]));
       const m = clean.match(/(?:ل\s*|لمساف[ةه]\s*)?(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|خطو[ةه]|خطوات)/);
       if (m) return Math.max(0.5, parseFloat(m[1]));
-      if (/مئ[ةه]\s*متر|مائ[ةه]\s*متر/.test(clean)) return 100.0;
+      const mFlyNum = clean.match(/(?:يطير|يطيير|تطير|طار|طارت)\s*(?:به|بها)?\s*(?:ل\s*)?(\d+(?:\.\d+)?)/);
+      if (mFlyNum) return Math.max(0.5, parseFloat(mFlyNum[1]));
+      if (/مئ[ةه]\s*متر|مائ[ةه]\s*متر|لمساف[ةه]\s*مئ[ةه]|لمساف[ةه]\s*مائ[ةه]/.test(clean)) return 100.0;
       if (/مترين/.test(clean)) return 2.0;
       if (/ثلاث[ةه]?\s*(?:أمتار|امتار|متر)/.test(clean)) return 3.0;
       if (/خمس[ةه]?\s*(?:أمتار|امتار|متر)/.test(clean)) return 5.0;
       return fallbackM;
     }
 
+    function extractKnockbackTrajectoryConfig(clause) {
+      const c = clause || '';
+      const hasSemicircle = /نصف\s*دائر[ةه]|نص\s*دائر[ةه]|شبه\s*دائر[ةه]|بشكل\s*دائر|بشكل\s*قوس|قوس\s*دائري/.test(c);
+      const hasStraight = /بخط\s*مستقيم|خط\s*مستقيم|بشكل\s*مستقيم|بارتفاع\s*\d+|بإرتفاع\s*\d+/.test(c);
+      const hasHybrid = /مزيج|مدمج|الاثنين|الأثنين|سابقين|سابقيات/.test(c) || (hasSemicircle && hasStraight);
+      let trajectoryType = 'hybrid';
+      if (hasHybrid) trajectoryType = 'hybrid';
+      else if (hasSemicircle) trajectoryType = 'semicircle';
+      else if (hasStraight) trajectoryType = 'straight';
+
+      let explicitDir = 0;
+      if (/باتجاه\s*اليمين|ب\s*إتجاه\s*اليمين|ب\s*اتجاه\s*اليمين|نحو\s*اليمين|إلى\s*اليمين|الى\s*اليمين|لليمين|باتجاه\s*الشرق|نحو\s*الشرق/.test(c) || (/يمين|شرق/.test(c) && !/يسار|غرب/.test(c))) {
+        explicitDir = 1;
+      } else if (/باتجاه\s*اليسار|ب\s*إتجاه\s*اليسار|ب\s*اتجاه\s*اليسار|نحو\s*اليسار|إلى\s*اليسار|الى\s*اليسار|لليسار|باتجاه\s*الغرب|نحو\s*الغرب/.test(c) || (/يسار|غرب/.test(c) && !/يمين|شرق/.test(c))) {
+        explicitDir = -1;
+      }
+      const heightMeters = extractHeightAboveGroundMeters(c, 2.0);
+      return { trajectoryType, explicitDir, heightMeters };
+    }
+
+    function extractColorFromArabicText(txt, fallbackColor = '') {
+      if (!txt) return fallbackColor;
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:سود[اءهة]?|أسود|اسود|ظلامي?[ةه]?|ضلامي?[ةه]?|قاتم[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#111827';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:حمر[اءهة]?|أحمر|احمر|قرمزي[ةه]?|دموي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#ef4444';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:زرق[اءهة]?|أزرق|ازرق|سماوي[ةه]?|لبني[ةه]?|كهربائي[ةه]?|جليدي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#00d4ff';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:صفر[اءهة]?|أصفر|اصفر|ذهبي[ةه]?|شمسي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#facc15';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:خضر[اءهة]?|أخضر|اخضر|زمردي[ةه]?|عشبي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#10b981';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:بيض[اءهة]?|أبيض|ابيض|فضي[ةه]?|نقي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#f8fafc';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:بنفسجي[ةه]?|أرجواني[ةه]?|ارجواني[ةه]?|موف)(?=$|[^؀-ۿ])/.test(txt)) return '#a855f7';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:برتقالي[ةه]?|ناري[ةه]?|ملتهب[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#f97316';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:وردي[ةه]?|زهري[ةه]?|فوشي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#ec4899';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:بني[ةه]?|ترابي[ةه]?|خشبي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#92400e';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:رمادي[ةه]?|رصاصي[ةه]?|فولاذي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#94a3b8';
+      return fallbackColor;
+    }
+
+    function extractAuraColorFromClause(clause, fallbackColor = '') {
+      if (!clause) return fallbackColor;
+      const auraNearMatch = clause.match(/(?:هال[ةه]|هالته|هالتها|طاق[ةه]|توهج)\s+(?:ضوئي[ةه]\s+|دائري[ةه]\s+|مشتعل[ةه]\s+|قوي[ةه]\s+|خارق[ةه]\s+)?([؀-ۿ]+(?:\s+[؀-ۿ]+)?)/);
+      if (auraNearMatch) {
+        const nearCol = extractColorFromArabicText(auraNearMatch[1], '');
+        if (nearCol) return nearCol;
+      }
+      return extractColorFromArabicText(clause, fallbackColor);
+    }
+
+    function isExplicitNoWeaponText(clause) {
+      if (!clause) return false;
+      return /(?:بلا|بدون|دون|من\s*غير|ما\s*معه|ليس\s*معه|لا\s*يحمل|لا\s*يمسك|خالي\s*من|يرمي|يسقط|يترك)\s*(?:أي\s*|اي\s*|أية\s*|ايه\s*)?(?:سلاح|سلاحه|أسلح[ةه]|اسلح[ةه]|سيوف|سيفه)|بيده\s*العاري|بيديه\s*فقط|أعزل|اعزل/.test(clause);
+    }
+
     function extractWeaponFromClause(clause) {
-      if (/بلا\s*سلاح|بدون\s*سلاح|بيده\s*العاري|بلا\s*أسلح|بدون\s*أسلح|بلا\s*اسلح|بدون\s*اسلح/.test(clause)) return 'none';
+      if (isExplicitNoWeaponText(clause)) return 'none';
       if (/مطرقة|مطرقه/.test(clause)) return 'hammer';
       if (/كاتانا|ساموراي/.test(clause)) return 'katana';
-      if (/سيف/.test(clause)) return 'sword';
+      if (/سيف|سيوف/.test(clause)) return 'sword';
       if (/رمح|حرب[ةه]/.test(clause)) return 'spear';
       if (/فأس|فاس|بلط[ةه]/.test(clause)) return 'axe';
       if (/خنجر|سكين/.test(clause)) return 'dagger';
       if (/منجل/.test(clause)) return 'scythe';
       if (/عصا|صولجان/.test(clause)) return 'staff';
-      if (/رشاش|بندقي[ةه]|كلاشنكوف/.test(clause)) return 'rifle';
-      if (/مسدس|قناص[ةه]/.test(clause)) return 'gun';
+      if (/رشاش|بندقي[ةه]|كلاشنكوف|سلاح\s*ناري/.test(clause)) return 'rifle';
+      if (/مسدس|قناص[ةه]|فرد/.test(clause)) return 'gun';
       if (/درع|ترس/.test(clause)) return 'shield';
       if (/مضرب|هراو[ةه]/.test(clause)) return 'bat';
+      if (/قوس|سهم/.test(clause)) return 'bow';
       return '';
+    }
+
+    function applyCharacterDescriptionTraits(c, clause, isSetupPhase = false) {
+      if (!c || !clause) return;
+      const w = extractWeaponFromClause(clause);
+      if (w === 'none') {
+        c.weapon = 'none';
+      } else if (w) {
+        c.weapon = w;
+        const wColMatch = clause.match(/(?:سيف|كاتانا|مطرقة|مطرقه|رمح|فأس|فاس|خنجر|سكين|منجل|عصا|درع|قوس|سلاح)\s+([؀-ۿ]+)/);
+        if (wColMatch) {
+          const wc = extractColorFromArabicText(wColMatch[1], '');
+          if (wc) c.weaponColor = wc;
+        }
+      }
+      if (/بلا\s*(?:أي\s*|اي\s*)?هال[ةه]|بدون\s*(?:أي\s*|اي\s*)?هال[ةه]|تختفي\s*الهال[ةه]/.test(clause)) {
+        c.auraActive = false;
+        if (isSetupPhase) c.initialAuraActive = false;
+      } else if (/هال[ةه]|هالته|هالتها/.test(clause)) {
+        const aCol = extractAuraColorFromClause(clause, '');
+        if (aCol) {
+          c.auraColor = aCol;
+          c.customAuraColor = aCol;
+          c.auraShape = (aCol === '#111827') ? 'dark_void' : 'circle_light';
+        }
+        if (isSetupPhase || /بهال[ةه]|مع\s*هال[ةه]|له\s*هال[ةه]|حوله\s*هال[ةه]|يشحن|تشحن|تظهر\s*هال[ةه]|تضهر\s*هال[ةه]/.test(clause)) {
+          c.auraActive = true;
+          if (isSetupPhase) c.initialAuraActive = true;
+        }
+      }
+      const outfitMatch = clause.match(/(?:ملابس[هه]?|ثوب[هه]?|قميص[هه]?|سترت[هه]?|بدلت[هه]?|رداء[هه]?|يرتدي|يلبس|لون[هه]?|بلون)\s+(?:ملابس\s+)?([؀-ۿ]+)/);
+      if (outfitMatch) {
+        const oCol = extractColorFromArabicText(outfitMatch[1], '');
+        if (oCol) c.color = oCol;
+      }
+      const pantMatch = clause.match(/(?:بنطلون[هه]?|سروال[هه]?)\s+([؀-ۿ]+)/);
+      if (pantMatch) {
+        const pCol = extractColorFromArabicText(pantMatch[1], '');
+        if (pCol) c.customPantColor = pCol;
+      }
+      if (/أصلع|اصلع|صلعاء|بلا\s*شعر|بدون\s*شعر/.test(clause)) {
+        c.customHairStyle = 'bald';
+      } else if (/شعر\s*طويل/.test(clause)) {
+        c.customHairStyle = 'long';
+      } else if (/شعر\s*شوكي|شعر\s*واقف/.test(clause)) {
+        c.customHairStyle = 'spiky';
+      }
+      const hairColMatch = clause.match(/شعر[هه]?\s+(?:طويل\s+|قصير\s+|شوكي\s+)?([؀-ۿ]+)/);
+      if (hairColMatch) {
+        const hCol = extractColorFromArabicText(hairColMatch[1], '');
+        if (hCol) c.customHairColor = hCol;
+      }
+      const eyeColMatch = clause.match(/(?:عيون[هه]?|عيناه|عينيه|عين)\s+(?:متوهج[ةه]\s+)?([؀-ۿ]+)/);
+      if (eyeColMatch) {
+        const eCol = extractColorFromArabicText(eyeColMatch[1], '');
+        if (eCol) c.customEyeColor = eCol;
+      }
+      if (/بلا\s*وشاح|بدون\s*وشاح/.test(clause)) {
+        c.customHasScarf = false;
+      } else if (/وشاح|شال/.test(clause)) {
+        c.customHasScarf = true;
+        const scMatch = clause.match(/(?:وشاح[هه]?|شال[هه]?)\s+(?:طويل\s+)?([؀-ۿ]+)/);
+        if (scMatch) {
+          const scCol = extractColorFromArabicText(scMatch[1], '');
+          if (scCol) c.customScarfColor = scCol;
+        }
+      }
+      if (/عباء[ةه]|معطف/.test(clause)) {
+        c.customHasCape = true;
+        const cpMatch = clause.match(/(?:عباء[ةه]|معطف)\s+([؀-ۿ]+)/);
+        if (cpMatch) {
+          const cpCol = extractColorFromArabicText(cpMatch[1], '');
+          if (cpCol) c.customCapeColor = cpCol;
+        }
+      }
+      if (/قناع|ملثم|لثام/.test(clause)) c.customHasMask = true;
+      if (/نظار[ةه]|نظارات/.test(clause)) c.customHasGlasses = true;
+      if (/خوذ[ةه]/.test(clause)) c.customHatType = 'helmet';
+      else if (/قبع[ةه]|طاقي[ةه]|كاب/.test(clause)) c.customHatType = 'cap';
+      if (/أجنح[ةه]|اجنح[ةه]|جناحين|مجنح/.test(clause)) c.customHasWings = true;
+      if (/بلا\s*عصاب[ةه]|بدون\s*عصاب[ةه]/.test(clause)) c.customHasHeadband = false;
+      else if (/عصاب[ةه]\s*رأس|ربط[ةه]\s*رأس/.test(clause)) c.customHasHeadband = true;
+      if (/ضخم|عملاق|كبير\s*الحجم/.test(clause)) {
+        c.scale = 1.42;
+        c.targetScale = 1.42;
+      } else if (/صغير\s*الحجم|قصير\s*القام|طفل/.test(clause)) {
+        c.scale = 0.78;
+        c.targetScale = 0.78;
+      }
     }
 
     function isShadowType(cType) {
@@ -1488,7 +1667,7 @@
         .replace(/\{[^}]*\}/g, ' ')
         .replace(/(?:"|“|”|«|'')\s*[^"”»']+\s*(?:"|“|”|»|'')/g, ' ')
         .replace(/(\d+(?:\.\d+)?)\s*(?:متر\s*مربع|متر|أمتار|امتار|كيلومتر|كيلو|كم|خطو[ةه]|خطوات|زوايا|لقطات|درج[ةه]|ثاني[ةه]|ثواني|ثوان|دقيق[ةه]|دقائق|دقايق|شخصي[ةه]|شخصيات|أشخاص|اشخاص)/g, ' ')
-        .replace(/(?:لمد[ةه]|مساف[ةه]|يضم)\s*\d+/g, ' ')
+        .replace(/(?:لمد[ةه]|لمساف[ةه]|مساف[ةه]|بارتفاع|بإرتفاع|ارتفاع|على\s*بعد|يبعد|يضم)\s*\d+(?:\.\d+)?/g, ' ')
         .replace(/القطع[ةه]\s*رقم\s*\d+/g, ' ');
 
       const genericPhrases = [
@@ -1787,14 +1966,15 @@
         state.characters[i].customStartFacing = null;
         state.characters[i].zLaneOffset = 0;
       }
-      const commonArabicNames = ['الطيب', 'الشرير', 'علي', 'أحمد', 'احمد', 'خالد', 'محمد', 'عمر', 'زيد', 'سارة', 'ساره', 'حمزة', 'حمزه', 'فهد', 'سلمان', 'ياسر', 'طارق'];
+      const commonArabicNames = ['الطيب', 'الشرير', 'علي', 'أحمد', 'احمد', 'حمد', 'خالد', 'محمد', 'عمر', 'زيد', 'سارة', 'ساره', 'حمزة', 'حمزه', 'فهد', 'سلمان', 'ياسر', 'طارق', 'سعيد', 'ناصر', 'ماجد'];
       const foundCommonNames = [];
       commonArabicNames.forEach(cn => {
-        const idxPos = norm0.indexOf(cn);
-        if (idxPos >= 0) {
+        const nameRg = new RegExp(`(?:^|[^؀-ۿ])(${cn})(?=$|[^؀-ۿ])`);
+        const mName = nameRg.exec(norm0);
+        if (mName) {
           const canonical = (cn === 'احمد') ? 'أحمد' : ((cn === 'ساره') ? 'سارة' : ((cn === 'حمزه') ? 'حمزة' : cn));
           if (!foundCommonNames.some(x => x.name === canonical)) {
-            foundCommonNames.push({ name: canonical, raw: cn, pos: idxPos });
+            foundCommonNames.push({ name: canonical, raw: cn, pos: mName.index });
           }
         }
       });
@@ -1844,8 +2024,8 @@
       const countSel = document.getElementById('activeCharCountSelect');
       if (countSel) countSel.value = String(state.activeCharCount);
 
-      // Apply global weapon override if requested e.g. "بلا سلاح"
-      const globalNoWeapon = /الشخصيات\s*بلا\s*سلاح|شخصيات\s*بلا\s*سلاح|شخصيتين\s*بلا\s*سلاح|بدون\s*سلاح|بلا\s*سلاح/.test(norm0);
+      // Apply global weapon override if requested e.g. "بلا أي سلاح" / "بدون سلاح"
+      const globalNoWeapon = isExplicitNoWeaponText(norm0) && !/يحمل\s*سيف|معه\s*سيف|معه\s*مطرقة|يحمل\s*كاتانا/.test(norm0);
       const halfTeam = Math.floor(state.activeCharCount / 2);
       const is1v2ReinforceTeams = (state.activeCharCount === 6 && (hasCarReinforcements || /أصحاب\s*الشخصي[ةه]\s*1|اصحاب\s*الشخصي[ةه]\s*1|أصحاب\s*رقم\s*1/.test(norm0)));
 
@@ -1853,11 +2033,29 @@
         const c = state.characters[i];
         c.hiddenAtStart = (startsWithOneOnly && i >= 1) || (startsWithTwoOnly && i >= 2);
         if (startsWithCafeFriends && i <= 1) c.hiddenAtStart = false;
+        c.weaponColor = '';
+        c.customAuraColor = '';
+        c.initialAuraActive = false;
+        c.customPantColor = '';
+        c.customHairColor = '';
+        c.customHairStyle = '';
+        c.customEyeColor = '';
+        c.customHasScarf = null;
+        c.customScarfColor = '';
+        c.customHasCape = false;
+        c.customCapeColor = '';
+        c.customHasMask = false;
+        c.customHasGlasses = false;
+        c.customHatType = '';
+        c.customHasWings = false;
+        c.customHasHeadband = null;
+        c.scale = 1.0;
+        c.targetScale = 1.0;
         if (isGangWar && state.activeCharCount >= 6) {
           const isTeamA = is1v2ReinforceTeams ? [0, 2, 3].includes(i) : (i < halfTeam);
           c.teamId = isTeamA ? 1 : 2;
           c.color = isTeamA ? '#00b4d8' : '#ef233c';
-          if (!globalNoWeapon) {
+          if (!globalNoWeapon && /سلاح|أسلح|سيوف|كاتانا|مطرقة|فأس|رمح/.test(norm0)) {
             const wepsA = ['katana', 'sword', 'spear', 'dagger', 'staff'];
             const wepsB = ['sword', 'hammer', 'axe', 'scythe', 'katana'];
             c.weapon = isTeamA ? wepsA[i % wepsA.length] : wepsB[i % wepsB.length];
@@ -1867,7 +2065,8 @@
         } else {
           c.teamId = i % 2 === 0 ? 1 : 2;
           c.color = c.defaultColor;
-          c.weapon = globalNoWeapon ? 'none' : c.defaultWeapon;
+          // افتراضياً تكون الشخصية بلا سلاح إلا إذا طلب الكاتب سلاحاً في الوصف أو اختاره يدوياً من الأدوات ولم يكتب "بلا أي سلاح"!
+          c.weapon = globalNoWeapon ? 'none' : (c.manualWeapon || 'none');
         }
       }
 
@@ -1968,7 +2167,22 @@
         .replace(/ \?= /g, '|?= ').replace(/ ؟= /g, '|؟= ').replace(/ \?=/g, '|?=').replace(/ ؟=/g, '|؟=')
         .replace(/ \? /g, '|? ').replace(/ ؟ /g, '|؟ ').replace(/ #/g, '|#');
 
-      const rawClauses = work.split('|').map(s => s.trim()).filter(Boolean);
+      const rawClausesInit = work.split('|').map(s => s.trim()).filter(Boolean);
+      const rawClauses = [];
+      for (let i = 0; i < rawClausesInit.length; i++) {
+        const curC = rawClausesInit[i];
+        const prevC = rawClauses.length > 0 ? rawClauses[rawClauses.length - 1] : '';
+        const prevIsStrike = /ركل|يركل|تركل|لكم|يلكم|تلكم|ضرب|يضرب|تضرب|قاضي[ةه]|يطيح|هاجم|يهاجم/.test(prevC);
+        const curIsKnockContinuation = (
+          /^(?:و|ف)?(?:يطير|يطيير|تطير|طار|طارت|يعني\s*يطير|بشكل\s*نص|بشكل\s*نصف|بخط\s*مستقيم|بارتفاع|مزيج)/.test(curC) ||
+          (/نصف\s*دائر[ةه]|نص\s*دائر[ةه]|بخط\s*مستقيم|بارتفاع\s*\d+.*عن\s*الأرض|مزيج\s*من/.test(curC) && !/ركل|يركل|لكم|يلكم|ضرب|يضرب|يتعارك|عراك/.test(curC))
+        );
+        if (prevIsStrike && curIsKnockContinuation && !curC.startsWith('[PARALLEL]')) {
+          rawClauses[rawClauses.length - 1] = prevC + ' ' + curC;
+        } else {
+          rawClauses.push(curC);
+        }
+      }
       const events = [];
 
       // 🏃💨 فحص المطاردة الفيزيائية الذكية بالسرعات والمسافة الابتدائية والانعطافات في الثنائي 2D
@@ -2335,15 +2549,18 @@
         lastActor = actor;
         const target = mentioned.length > 1 ? mentioned[1] : ((actor + 1) % Math.max(2, state.activeCharCount));
 
-        // Weapon equipping clause e.g. "رقم 2 معه مطرقة عملاقة"
-        const reqWep = extractWeaponFromClause(clause);
-        if (reqWep && /بلا\s*سلاح|بدون\s*سلاح|معه|معاه|يحمل|يمسك|سلاحه/.test(clause)) {
-          if (mentioned.length === 0 || /الشخصيات|الجميع|الكل/.test(clause)) {
-            state.characters.forEach(c => { c.weapon = reqWep; });
-          } else {
-            mentioned.forEach(s => { if (state.characters[s]) state.characters[s].weapon = reqWep; });
+        // تطبيق وصف الشخصية حرفياً (بلا أي سلاح / نوع السلاح / لون الهالة / لون الملابس / الشعر / العيون / الوشاح / العباءة / الحجم)
+        const targetSlotsForDesc = (mentioned.length === 0 || /الشخصيات|شخصيات|شخصيتين|الجميع|الكل|كلاهما/.test(clause))
+          ? (mentioned.length > 0 ? mentioned : Array.from({ length: state.activeCharCount }, (_, i) => i))
+          : mentioned;
+        const isPureSetupClause = !/يتعارك|عراك|يشتبك|يضرب|يركل|يهاجم|يهجم|يمشي|يركض|يكرض|يجري|ينعطف|يلتف|يقفز|يتشقلب|يطير|تطير|يحلق|يهبط|يصعد|ينزل|يقول|تقول|يرد/.test(clause);
+        targetSlotsForDesc.forEach(s => {
+          if (state.characters[s]) {
+            applyCharacterDescriptionTraits(state.characters[s], clause, events.length === 0 || isPureSetupClause);
           }
-          if (!/يتعارك|عراك|يضرب|يهاجم/.test(clause)) return;
+        });
+        if (isPureSetupClause && (isExplicitNoWeaponText(clause) || extractWeaponFromClause(clause) || /ملابس|يرتدي|يلبس|شعر[هه]?|أصلع|اصلع|عيون[هه]?|وشاح|عباء[ةه]|قناع|ملثم|نظار[ةه]|قبع[ةه]|خوذ[ةه]|ضخم|عملاق|بلا\s*سلاح|بدون\s*سلاح/.test(clause)) && !/يشحن|تشحن|هال[ةه]/.test(clause)) {
+          return;
         }
 
         // ☕ 1. الجلوس في المقهى بلا قتال كأصدقاء ("يجلس رقم 1 مع رقم 2 في المقهى" / "اثنين جالسين بلا قتال أصدقاء")
@@ -2637,10 +2854,12 @@
         // 🤸 القفز والشقلبة الهوائية في الثنائي 2D (مثل: "يقفز" أو "يتشقلب" أو "شقلبة هوائية")
         if (/يقفز|تقفز|قفز[ةه]|يتشقلب|تتشقلب|تشقلب|شقلب[ةه]/.test(clause) && !/يركل|يضرب/.test(clause)) {
           const jmpDur = explicitDur > 0 ? explicitDur : 0.85;
+          const isFlip = /يتشقلب|تتشقلب|تشقلب|شقلب[ةه]/.test(clause);
           const jEv = {
             type: 'jump_flip_2d',
             actorSlot: actor,
-            title: `🤸 قفزة وشقلبة هوائية للمقاتل #${actor + 1} (${state.characters[actor]?.name || ''})`,
+            isFlip,
+            title: `🤸 ${isFlip ? 'شقلبة هوائية 360°' : 'قفزة عالية'} للمقاتل #${actor + 1} (${state.characters[actor]?.name || ''})`,
             duration: jmpDur
           };
           if (isParallel && events.length > 0) {
@@ -2648,6 +2867,85 @@
           } else {
             events.push(jEv);
           }
+          return;
+        }
+
+        //🦅🚀 نظام الطيران الكامل في الثنائي 2D (يطير للأعلى، يطير يمين/يسار/شمال/جنوب، يطير نحو خصمه، يحلق في السماء، طيران صاروخي، أو يهبط للأرض)
+        const isKnockbackFly = /ركل|يركل|تركل|لكم|يلكم|تلكم|ضرب|يضرب|تضرب|يطير\s*للخلف|تطير\s*ب|طار\s*لمساف|طارت\s*لمساف|يطيير|نصف\s*دائر|نص\s*دائر|بخط\s*مستقيم|بارتفاع.*عن\s*الأرض|ليركل.*حتى\s*يطير|يجعلونه\s*يطير|قاضي[ةه]/.test(clause);
+        const isLandingVerb2D = /يهبط|تهبط|يهبطان|هبوط|ينزل\s*للأرض|ينزل\s*على\s*الأرض|يعود\s*للأرض/.test(clause);
+        const isFlyVerb2D = !isKnockbackFly && (/يطير|تطير|يطيران|تطيران|يطيرون|يحلق|تحلق|طيران|يرتفع\s*في\s*(?:الهواء|الجو|السماء)|يرتفع\s*للأعلى|يرتفع\s*للاعلى|يعلو\s*في\s*السماء/.test(clause));
+        if ((isFlyVerb2D || isLandingVerb2D) && !/يتعارك|تتعارك|يتعاركان|يتعاركون|عراك|يشتبك|تشتبك/.test(clause)) {
+          const isRocketFly = /صاروخ|بسرع[ةه]\s*خارق|بسرع[ةه]\s*كبير|بسرع[ةه]\s*البرق|كيلومتر|كيلو|كم|ذيل/.test(clause);
+          const flyMeters = extractDistanceMeters(clause, isRocketFly ? 80 : 16);
+          const flyDur = explicitDur > 0 ? explicitDur : (isLandingVerb2D ? 1.2 : Math.min(6.0, Math.max(1.3, isRocketFly ? 3.2 : flyMeters * 0.14)));
+          let flyDir2D = isLandingVerb2D ? 'land' : 'forward_face';
+          let targetAltitude = isLandingVerb2D ? 0 : (/عالي|عالياً|السماء|قمة/.test(clause) ? 215 : 168);
+          let targetLane2D = null;
+          if (!isLandingVerb2D) {
+            if (/للأعلى|للاعلى|فوق|يرتفع/.test(clause) && !/يمين|يسار|شرق|غرب|نحو/.test(clause)) {
+              flyDir2D = 'ascend_up';
+              targetAltitude = Math.min(265, Math.max(175, flyMeters * 11));
+            } else if (/للأسفل|للاسفل|ينخفض/.test(clause)) {
+              flyDir2D = 'descend_low';
+              targetAltitude = 65;
+            } else if (/مركز\s*العالم|نقط[ةه]\s*الصفر/.test(clause)) {
+              flyDir2D = 'world_center';
+              targetLane2D = 0;
+            } else if ((/نحو|باتجاه|وراء|خلف|إلى|الى/.test(clause)) && mentioned.length >= 2) {
+              flyDir2D = 'towards_target';
+            } else if (/يبتعد|يهرب|للخلف/.test(clause)) {
+              flyDir2D = 'away_from_target';
+            } else if (/يمين|اليمين|شرق|الشرق/.test(clause)) {
+              flyDir2D = 'right';
+            } else if (/يسار|اليسار|غرب|الغرب/.test(clause)) {
+              flyDir2D = 'left';
+            } else if (/شمال|الشمال/.test(clause)) {
+              flyDir2D = 'north_lane';
+              targetLane2D = -22;
+            } else if (/جنوب|الجنوب/.test(clause)) {
+              flyDir2D = 'south_lane';
+              targetLane2D = 18;
+            }
+          }
+          const flyPowers = parseClausePowers(clause);
+          const flyActors = (/يطيران|تطيران|يطيرون|يحلقان|يهبطان/.test(clause) && mentioned.length < 2)
+            ? [0, 1]
+            : (mentioned.length >= 2 && /يطيران|تطيران|يطيرون|معاً|معا/.test(clause) ? [...mentioned] : [actor]);
+
+          flyActors.forEach((fSlot, fIdx) => {
+            const fPartner = flyActors.length >= 2 ? flyActors[(fIdx + 1) % flyActors.length] : target;
+            const flyLabels = {
+              land: 'يهبط إلى الأرض بقوة',
+              ascend_up: `يرتفع ويحلق عالياً في السماء`,
+              descend_low: 'ينخفض في طيرانه',
+              right: `يطير يميناً (+X) لمسافة ${flyMeters}م`,
+              left: `يطير يساراً (-X) لمسافة ${flyMeters}م`,
+              north_lane: 'يطير نحو المسار العلوي (شمال)',
+              south_lane: 'يطير نحو المسار السفلي (جنوب)',
+              world_center: 'يطير نحو مركز العالم (0)',
+              towards_target: `يطير منقضاً نحو ${state.characters[fPartner]?.name || ''}`,
+              away_from_target: 'يطير مبتعداً في الجو',
+              forward_face: `يطير للأمام في الجو (${flyMeters}م)`
+            };
+            const fEv = {
+              type: 'fly_move_2d',
+              actorSlot: fSlot,
+              targetSlot: fPartner,
+              flyDir2D,
+              meters: flyMeters,
+              targetAltitude,
+              targetLane2D,
+              rocket: isRocketFly,
+              powers: flyPowers,
+              title: `${isLandingVerb2D ? '🛬' : (isRocketFly ? '🚀' : '🦅')} ${state.characters[fSlot]?.name || '#' + (fSlot + 1)} ${flyLabels[flyDir2D] || 'يطير في الجو'}`,
+              duration: flyDur
+            };
+            if ((isParallel || fIdx > 0) && events.length > 0) {
+              mergeWithPreviousParallelEvent(events, fEv, currentSplitMode);
+            } else {
+              events.push(fEv);
+            }
+          });
           return;
         }
 
@@ -2799,35 +3097,69 @@
           return;
         }
 
-        // 💥 Knockout / Single heavy strike flying X meters
-        if (/قاضي[ةه]|تطير\s*ب|يطير\s*للخلف|يطير\s*لمساف/.test(clause) && !/يجعلونه\s*يطير/.test(clause)) {
-          const att = mentioned.length > 0 ? mentioned[0] : 0;
+        // ⚔️ فحص الفرق بين (العراك المتبادل المستمر: عراك / عارك / يتعاركان / قتال / اشتباك) وبين (الضربة المفردة باتجاه واحد: أحمد يركل علي / ركل أحمد خالد يطير لمسافة 100 متر بدون تأليف رد تلقائي!)
+        const isMutualBrawl = /يتعارك|تتعارك|تتعراك|يتعاركان|يتعاركون|تتعاركان|عراك|عارك|يتقاتل|يتقاتلان|يتقاتلون|قتال|يشتبك|تشتبك|يشتبكان|يشتبكون|اشتباك|يتضارب|يتضاربان|يتضاربون|مضارب[ةه]|معرك[ةه]|حرب|يبادله/.test(clause);
+        const isChase = /مطارد[ةه]|يطارد|يلحق|يهرب/.test(clause);
+        const isOneWayStrike = !isMutualBrawl && !isChase && (/يركل|تركل|ركل|ركل[ةه]|يلكم|تلكم|لكم|لكم[ةه]|يضرب|تضرب|ضرب|ضرب[ةه]|يهاجم|تهاجم|هاجم|يهجم|تهجم|هجم|يصفع|صفع|قاضي[ةه]|تطير\s*ب|يطير\s*للخلف|طار\s*لمساف|طارت\s*لمساف|يطيير/.test(clause)) && !/يجعلونه\s*يطير/.test(clause);
+
+        if (isOneWayStrike) {
+          const att = mentioned.length > 0 ? mentioned[0] : lastActor;
           const vic = mentioned.length > 1 ? mentioned[1] : (att === 0 ? 1 : 0);
-          const meters = extractDistanceMeters(clause, 3.0);
+          lastActor = att;
           lastKnockedChar = vic;
-          events.push({
+          const hasExplicitFlyKnock = /يطير|يطيير|تطير|طار|طارت|لمساف[ةه]|مساف[ةه]|نصف\s*دائر|نص\s*دائر|بخط\s*مستقيم|بارتفاع|مزيج|قاضي[ةه]|بقو[ةه]/.test(clause);
+          const meters = hasExplicitFlyKnock ? extractDistanceMeters(clause, 6.0) : extractDistanceMeters(clause, 1.8);
+          const kbCfg = extractKnockbackTrajectoryConfig(clause);
+          let attackMove = 'punch';
+          if (/ركل|يركل|تركل/.test(clause)) {
+            attackMove = /طائر|يقفز/.test(clause) ? 'jump_kick' : 'roundhouse_kick';
+          } else if (/صاعد|للأعلى/.test(clause)) {
+            attackMove = 'uppercut';
+          } else if (/سيف|كاتانا|مطرقة|رمح|فأس|خنجر|سلاح/.test(clause) || (state.characters[att]?.weapon && state.characters[att].weapon !== 'none')) {
+            attackMove = 'weapon';
+          }
+          const trajLabelMap = {
+            semicircle: 'بشكل نصف دائرة ⌒',
+            straight: `بخط مستقيم ━ (بارتفاع ${kbCfg.heightMeters}م عن الأرض)`,
+            hybrid: 'مسار مدمج (مستقيم + نصف دائرة) ━⌒'
+          };
+          const dirTxt = kbCfg.explicitDir === 1 ? ' باتجاه اليمين (+X)' : (kbCfg.explicitDir === -1 ? ' باتجاه اليسار (-X)' : '');
+          const koDur = explicitDur > 0 ? explicitDur : Math.min(7.5, Math.max(2.2, 1.4 + meters * 0.038));
+          const koEv = {
             type: 'knockout',
-            title: `💥 ضربة قاضية من #${att + 1} تطير بـ #${vic + 1} مسافة ${meters} متر!`,
+            title: hasExplicitFlyKnock
+              ? `💥 ${state.characters[att]?.name || '#' + (att + 1)} يضرب ${state.characters[vic]?.name || '#' + (vic + 1)} فيطير ${meters} متر${dirTxt} [${trajLabelMap[kbCfg.trajectoryType]}]`
+              : `🦵 ${state.characters[att]?.name || '#' + (att + 1)} يوجه ضربة (${attackMove === 'roundhouse_kick' ? 'ركلة' : 'لكمة'}) إلى ${state.characters[vic]?.name || '#' + (vic + 1)} (بدون رد تلقائي)`,
             actorSlot: att,
             victimSlot: vic,
+            attackMove,
             meters,
+            hasExplicitFlyKnock,
+            trajectoryType: kbCfg.trajectoryType,
+            heightMeters: kbCfg.heightMeters,
+            explicitDir: kbCfg.explicitDir,
+            stayDown: true,
             powers,
-            duration: explicitDur > 0 ? explicitDur : 2.8
-          });
+            duration: koDur
+          };
+          if (isParallel && events.length > 0) {
+            mergeWithPreviousParallelEvent(events, koEv, currentSplitMode);
+          } else {
+            events.push(koEv);
+          }
           return;
         }
 
-        // ⚔️ Continuous Brawl / Chase / Attack
-        const isChase = /مطارد[ةه]|يطارد|يلحق|يهرب/.test(clause);
+        // ⚔️ Continuous Mutual Brawl / Chase (عند كتابة "عراك" أو "عارك" أو "يتعاركان" أو "قتال" أو "اشتباك" فقط!)
         const isSkyFight = /في\s*الجو|في\s*السماء|فوق\s*أسطح|فوق\s*اسطح|في\s*الهواء/.test(clause);
-        if (powers.brawl || isChase || /هاجم|هجم|ضرب|لكم|ركل|شتبك|يتعارك|عراك|قتال/.test(clause)) {
+        if (isMutualBrawl || isChase) {
           const brawlActors = mentioned.length >= 2 ? [...mentioned] : [0, 1];
           const bDur = explicitDur > 0 ? explicitDur : 10.0;
           const bEv = {
             type: isChase ? 'chase' : 'brawl',
             title: isChase
               ? `🏃💨 مطاردة سريعة بين [${brawlActors.map(i => '#' + (i + 1)).join(' و ')}]`
-              : `⚔️ عراك ${isSkyFight ? 'جوي في السماء' : 'شرس باللكم والركل'} بين [${brawlActors.map(i => '#' + (i + 1)).join(' و ')}] (${Math.round(bDur)}ث)`,
+              : `⚔️ عراك متبادل ${isSkyFight ? 'جوي في السماء' : 'شرس باللكم والركل'} بين [${brawlActors.map(i => '#' + (i + 1)).join(' و ')}] (${Math.round(bDur)}ث)`,
             actors: brawlActors,
             inSky: isSkyFight,
             powers,
@@ -2942,15 +3274,12 @@
       const freeze = /يجمد|تجميد|جليد|صقيع/.test(clause);
       const blackhole = /ثقب\s*أسود|ثقب\s*اسود|جاذبي[ةه]/.test(clause);
       const meteors = /نيازك|نيزك|شهب/.test(clause);
-      const aura = /هال[ةه]|يشحن\s*طاق|تشحن\s*طاق|توهج/.test(clause);
-      let auraColor = '#facc15';
+      const aura = /هال[ةه]|هالته|هالتها|يشحن\s*طاق|تشحن\s*طاق|توهج/.test(clause);
+      const parsedAuraCol = extractAuraColorFromClause(clause, '');
+      const auraColorExplicit = Boolean(parsedAuraCol);
+      let auraColor = parsedAuraCol || '#ef4444';
       let auraShape = 'circle_light';
-      if (/سوداء|أسود|اسود|ظلام/.test(clause)) { auraColor = '#111827'; auraShape = 'dark_void'; }
-      else if (/حمراء|أحمر|احمر/.test(clause)) auraColor = '#ef4444';
-      else if (/زرقاء|أزرق|ازرق|كهربائي/.test(clause)) auraColor = '#00d4ff';
-      else if (/خضراء|أخضر|اخضر/.test(clause)) auraColor = '#10b981';
-      else if (/بيضاء|أبيض|ابيض/.test(clause)) auraColor = '#f8fafc';
-      else if (/بنفسجي/.test(clause)) auraColor = '#a855f7';
+      if (auraColor === '#111827') { auraShape = 'dark_void'; }
 
       const fire = /نار|لهب|حريق/.test(clause);
       const beam = /شعاع|ليزر|كاميهاميها|موج[ةه]\s*طاق/.test(clause);
@@ -2958,7 +3287,7 @@
       const teleport = /ينتقل\s*خلف|انتقال\s*آني|انتقال\s*اني|يظهر\s*خلف/.test(clause);
       const shield = /درع\s*طاق|يفجر\s*طاق|انفجار\s*طاق/.test(clause);
       const run = /يركض|تركض|يجري|يندفع/.test(clause);
-      const brawl = /يتعارك|تتعراك|عراك|قتال|يشتبك|تشتبك|يهجم|هاجم|لكم|ركل/.test(clause);
+      const brawl = /يتعارك|تتعارك|تتعراك|يتعاركان|يتعاركون|عراك|عارك|يتقاتل|يتقاتلان|قتال|يشتبك|تشتبك|يشتبكان|اشتباك|يتضارب|مضارب[ةه]|معرك[ةه]|حرب/.test(clause);
 
       const isSuperpowerOnly = !brawl && (fly || land || giant || monster || invisible || clones || freeze || blackhole || meteors || aura || fire || beam || lightning || teleport || shield);
       let label = 'طاقة خارقة';
@@ -2979,7 +3308,7 @@
       return {
         fly, rocket, flyMeters, land, giant, monster,
         invisible, clones, freeze, blackhole, meteors,
-        aura, auraColor, auraShape,
+        aura, auraColor, auraColorExplicit, auraShape,
         fire, beam, lightning, teleport, shield, run, brawl,
         isSuperpowerOnly, label
       };
@@ -3072,17 +3401,19 @@
         c.pose = 'idle';
         c.kdState = null;
         c.kdTimer = 0;
+        c.stayProne = false;
         c.attackType = 'punch';
         c.speech = null;
-        c.scale = 1.0;
-        c.targetScale = 1.0;
         c.visible = !c.hiddenAtStart && !c.manuallyDeletedFromScreen;
         c.inVehicle = false;
-        c.auraActive = false;
+        c.auraActive = Boolean(c.initialAuraActive);
+        if (c.customAuraColor) c.auraColor = c.customAuraColor;
         c.fireActive = false;
         c.lightningActive = false;
         c.flyingActive = false;
         c.flyHeight = 0;
+        c.flyTiltAngle = 0;
+        c.hitFlashTimer = 0;
         c.rocketFlight = false;
         c.beamActive = false;
         c.shieldActive = false;
@@ -3140,7 +3471,14 @@
       if (!powers || !c) return;
       if (powers.aura) {
         c.auraActive = true;
-        if (powers.auraColor) c.auraColor = powers.auraColor;
+        if (powers.auraColorExplicit && powers.auraColor) {
+          c.auraColor = powers.auraColor;
+          c.customAuraColor = powers.auraColor;
+        } else if (c.customAuraColor) {
+          c.auraColor = c.customAuraColor;
+        } else if (powers.auraColor && !c.auraColor) {
+          c.auraColor = powers.auraColor;
+        }
         if (powers.auraShape) c.auraShape = powers.auraShape;
         playSfx('aura');
         spawnShockwave(c.x, c.y - 50, c.auraColor === '#111827' ? '#a855f7' : c.auraColor);
@@ -3215,12 +3553,12 @@
       }
       if (powers.fly) {
         c.flyingActive = true;
-        c.flyHeight = 165;
+        if (!c.flyHeight || c.flyHeight < 60) c.flyHeight = 168;
         c.rocketFlight = Boolean(powers.rocket);
         c.pose = 'fly';
         if (!c.auraActive && powers.rocket) {
           c.auraActive = true;
-          c.auraColor = c.slot % 2 === 0 ? '#ef4444' : '#00d4ff';
+          c.auraColor = c.customAuraColor || c.auraColor || (c.slot % 2 === 0 ? '#ef4444' : '#00d4ff');
         }
       }
       if (powers.land) {
@@ -3321,10 +3659,65 @@
       c.visible = true;
       c.manuallyDeletedFromScreen = false;
       c.inVehicle = false;
+      c.stayProne = false;
+      if (c.kdState) { c.kdState = null; c.kdTimer = 0; }
       if (ev.type === 'jump_flip_2d') {
         c._jumpStartX = c.x;
         c._jumpTargetX = c.x + (c.facing || 1) * 145;
-        c.pose = 'flying';
+        c._isFlipJump = Boolean(ev.isFlip);
+        c._jumpProgress = 0;
+        c.pose = 'jump_arc';
+        return;
+      }
+      if (ev.type === 'fly_move_2d') {
+        if (ev.powers) applyPowersToChar(c, ev.powers, ev.targetSlot);
+        c._flyMoveStartX = c.x;
+        c._flyMoveStartHeight = c.flyingActive ? (c.flyHeight || 168) : 0;
+        c._flyMoveStartLane = c.zLaneOffset || 0;
+        c._flyMoveTargetLane = (ev.targetLane2D !== null && ev.targetLane2D !== undefined) ? ev.targetLane2D : c._flyMoveStartLane;
+        const fd = ev.flyDir2D || 'forward_face';
+        const pxDist = Math.min(760, Math.max(115, (ev.meters || 14) * 24));
+        if (fd === 'land') {
+          c._flyMoveTargetX = c.x + (c.facing || 1) * 45;
+          c._flyMoveTargetHeight = 0;
+          c.flyingActive = true;
+          c.pose = 'fly';
+        } else {
+          c.flyingActive = true;
+          c.rocketFlight = Boolean(ev.rocket);
+          c.pose = 'fly';
+          c._flyMoveTargetHeight = ev.targetAltitude || 172;
+          if (fd === 'ascend_up') {
+            c._flyMoveTargetX = c.x + (c.facing || 1) * 65;
+          } else if (fd === 'descend_low') {
+            c._flyMoveTargetX = c.x + (c.facing || 1) * 120;
+          } else if (fd === 'right') {
+            c.facing = 1;
+            c._flyMoveTargetX = c.x + pxDist;
+          } else if (fd === 'left') {
+            c.facing = -1;
+            c._flyMoveTargetX = c.x - pxDist;
+          } else if (fd === 'world_center') {
+            c._flyMoveTargetX = CITY_CENTER_X;
+            c.facing = CITY_CENTER_X >= c.x ? 1 : -1;
+          } else if (fd === 'towards_target') {
+            const tChar = state.characters[ev.targetSlot ?? 1];
+            const tx = tChar ? tChar.x : CITY_CENTER_X;
+            const dir = tx >= c.x ? 1 : -1;
+            c.facing = dir;
+            c._flyMoveTargetX = tx - dir * 58;
+            if (tChar && tChar.flyingActive) c._flyMoveTargetHeight = tChar.flyHeight || 172;
+          } else if (fd === 'away_from_target') {
+            const tChar = state.characters[ev.targetSlot ?? 1];
+            const tx = tChar ? tChar.x : CITY_CENTER_X;
+            const awayDir = c.x >= tx ? 1 : -1;
+            c.facing = awayDir;
+            c._flyMoveTargetX = c.x + awayDir * pxDist;
+          } else {
+            c._flyMoveTargetX = c.x + (c.facing || 1) * pxDist;
+          }
+        }
+        playSfx('aura');
         return;
       }
       c.pose = 'run';
@@ -3374,7 +3767,47 @@
         c.x = (c._jumpStartX ?? c.x) + ((c._jumpTargetX ?? c.x) - (c._jumpStartX ?? c.x)) * progress;
         const baseG = getGroundYAt(c.x) + (c.zLaneOffset || 0);
         c.y = baseG - Math.sin(progress * Math.PI) * 135;
-        c.pose = progress < 0.92 ? 'flying' : 'idle';
+        c._jumpProgress = progress;
+        c.pose = progress < 0.92 ? 'jump_arc' : 'idle';
+        return;
+      }
+      if (ev.type === 'fly_move_2d') {
+        const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        const sX = c._flyMoveStartX ?? c.x;
+        const tX = c._flyMoveTargetX ?? c.x;
+        const sH = c._flyMoveStartHeight ?? (c.flyHeight || 0);
+        const tH = c._flyMoveTargetHeight ?? 172;
+        const sL = c._flyMoveStartLane ?? (c.zLaneOffset || 0);
+        const tL = c._flyMoveTargetLane ?? sL;
+        c.x = sX + (tX - sX) * ease;
+        c.zLaneOffset = sL + (tL - sL) * ease;
+        c.flyHeight = sH + (tH - sH) * ease;
+        const groundY = getGroundYAt(c.x) + c.zLaneOffset;
+        c.y = groundY - c.flyHeight + Math.sin((c.poseTimer || 0) * 0.6) * 8;
+        const dx = tX - sX;
+        const dy = -(tH - sH);
+        if (Math.abs(dx) > 6) c.facing = dx >= 0 ? 1 : -1;
+        c.flyTiltAngle = Math.max(-0.45, Math.min(0.45, (dx * 0.0008) + (dy * 0.0012) * (c.facing || 1)));
+        if (ev.flyDir2D === 'land' && progress >= 0.94) {
+          c.flyingActive = false;
+          c.flyHeight = 0;
+          c.flyTiltAngle = 0;
+          c.rocketFlight = false;
+          c.y = groundY;
+          c.pose = 'idle';
+          if (!ev._landedDone) {
+            ev._landedDone = true;
+            spawnShockwave(c.x, groundY, c.auraColor || '#94a3b8', 75);
+            state.cameraShake = 7;
+          }
+        } else {
+          c.flyingActive = true;
+          c.pose = 'fly';
+          const trCol = c.auraActive ? c.auraColor : c.color;
+          c.trail.push({ x: c.x, y: c.y, alpha: 0.88, color: trCol });
+          const maxTr = c.rocketFlight ? 14 : 8;
+          while (c.trail.length > maxTr) c.trail.shift();
+        }
         return;
       }
       if (ev.type === 'run_distance') {
@@ -3746,7 +4179,7 @@
             c.pose = 'knockdown';
             c.targetScale = 1.15;
             c.auraActive = true;
-            c.auraColor = idx === 0 ? '#facc15' : '#00d4ff';
+            c.auraColor = c.customAuraColor || (idx === 0 ? '#facc15' : '#00d4ff');
             c.auraShape = idx === 0 ? 'flame_ring' : 'electric_orb';
             spawnShockwave(c.x, c.y - 50, c.auraColor, 110);
             spawnLightningBolt(c.x, c.y - 55);
@@ -3857,15 +4290,14 @@
       }
 
       if (ev.type === 'jump_flip_2d') {
-        const c = state.characters[ev.actorSlot];
-        if (c) {
-          c.visible = true;
-          c.inVehicle = false;
-          c._jumpStartX = c.x;
-          c._jumpTargetX = c.x + (c.facing || 1) * 145;
-          c.pose = 'flying';
-          playSfx('whoosh');
-        }
+        initSingleMovementSubEvent2D(ev);
+        playSfx('whoosh');
+        return;
+      }
+
+      if (ev.type === 'fly_move_2d') {
+        ev._landedDone = false;
+        initSingleMovementSubEvent2D(ev);
         return;
       }
 
@@ -3981,6 +4413,7 @@
             c.fullyInvisible = false;
             c.inVehicle = false;
             c.kdState = null;
+            c.stayProne = false;
             if (ev.type === 'gang_war') {
               // توزيع جميع المقاتلين في ساحة المعركة كأزواج متقابلة ومتداخلة مع اختلاف توقيت الضربات لتشتعل فوضى عارمة!
               const pairIdx = Math.floor(idxA / 2);
@@ -4019,13 +4452,36 @@
         return;
       }
 
+      if (ev.type === 'stand') {
+        (ev.actors || [0]).forEach(slot => {
+          const c = state.characters[slot];
+          if (c) {
+            c.visible = true;
+            c.stayProne = false;
+            c.kdState = 'getting_up';
+            c.kdTimer = 0;
+            c.pose = 'knockdown';
+          }
+        });
+        return;
+      }
+
       if (ev.type === 'knockout') {
         ev._koDone = false;
+        ev._landImpactDone = false;
         const att = state.characters[ev.actorSlot];
+        const vic = state.characters[ev.victimSlot];
         if (att) {
           att.visible = true;
+          att.stayProne = false;
+          if (att.kdState) { att.kdState = null; att.kdTimer = 0; }
           att.pose = 'brawl';
+          att.attackType = ev.attackMove || 'roundhouse_kick';
           applyPowersToChar(att, ev.powers, ev.victimSlot);
+        }
+        if (vic) {
+          vic.visible = true;
+          ev._vicInitialX = vic.x;
         }
       }
     }
@@ -4050,17 +4506,37 @@
     // Dynamic 4-Phase Anime Combat Choreography (Wind-up -> Lunge Strike -> Hit Recoil -> Knockback!)
     function triggerKnockdownSequence(victim, dir, power = 1.0) {
       if (!victim) return;
+      victim.hitFlashTimer = 0.16;
+      if (victim.flyingActive) {
+        // ارتداد جوي احترافي أثناء القتال في السماء دون السقوط المفاجئ للأرض!
+        victim.kdState = 'air_recover';
+        victim.kdTimer = 0;
+        victim.kdDir = dir;
+        victim.vx = dir * (9.5 * power);
+        victim.vy = -2.5;
+        victim.pose = 'knockdown';
+        victim.facing = -dir;
+        return;
+      }
       victim.kdState = 'airborne';
       victim.kdTimer = 0;
       victim.kdDir = dir;
-      victim.vx = dir * (7.2 * power);
-      victim.vy = -7.8 * Math.min(1.25, power);
+      victim.vx = dir * (7.6 * power);
+      victim.vy = -8.2 * Math.min(1.28, power);
       victim.pose = 'knockdown';
       victim.facing = -dir;
     }
 
     function simulateCombatPair(cA, cB, dt, heavyKnockback = false) {
       if (!cA || !cB || !cA.visible || !cB.visible) return;
+      // إذا كان أحدهما يطير أثناء القتال، يحلق الاثنان معاً في قتال جوي متكامل!
+      if (cA.flyingActive || cB.flyingActive) {
+        cA.flyingActive = true;
+        cB.flyingActive = true;
+        const skyWave = Math.sin((state.sceneTotalElapsed || 0) * 2.2) * 24;
+        cA.flyHeight = Math.max(135, (cA.flyHeight || 175)) + skyWave * 0.04;
+        cB.flyHeight = Math.max(135, (cB.flyHeight || 175)) - skyWave * 0.04;
+      }
       const dx = cB.x - cA.x;
       const dir = dx >= 0 ? 1 : -1;
       const idealDist = 58;
@@ -4174,6 +4650,14 @@
           playSfx('hit');
 
           attacker._comboCount = (attacker._comboCount || 0) + 1;
+          defender.hitFlashTimer = 0.14;
+          // تنويع حركة تلقي الضرب بين ارتداد الرأس والصدر للخلف (high_snap) وانطواء البطن للأمام من الألم (gut_fold)!
+          if (attacker.attackType === 'kick' || attacker.attackType === 'roundhouse_kick' || attacker._comboCount % 2 === 1) {
+            defender.hitReactionType = 'gut_fold';
+          } else {
+            defender.hitReactionType = 'high_snap';
+          }
+
           const isKickOrHeavy = (
             heavyKnockback ||
             attacker.attackType === 'roundhouse_kick' ||
@@ -4181,13 +4665,13 @@
             attacker.attackType === 'acrobatic_flip' ||
             attacker._comboCount % 3 === 0
           );
-          if (isKickOrHeavy && !defender.flyingActive) {
-            // يطير قليلاً للخلف ثم ينبطح على الأرض ثم ينهض بشكل احترافي!
+          if (isKickOrHeavy) {
+            // يطير للخلف بقوس فيزيائي ثم ينبطح على الأرض (أو يتشقلب في الهواء إذا كان يطير) ثم ينهض بشكل احترافي!
             triggerKnockdownSequence(defender, atkDir, heavyKnockback ? 1.25 : 0.95);
             state.cameraShake = 9.5;
           } else {
-            defender.vx = atkDir * 4.5;
-            state.cameraShake = 4.5;
+            defender.vx = atkDir * 5.2;
+            state.cameraShake = 4.8;
           }
         }
       } else {
@@ -4208,7 +4692,8 @@
           const shadowMoves = ['rapid_punch', 'roundhouse_kick', 'acrobatic_flip', 'flash_dash', 'jump_kick', 'uppercut'];
           nextAtk.attackType = shadowMoves[Math.floor(Math.random() * shadowMoves.length)];
         } else {
-          const moves = ['punch', 'kick', 'jump_kick', 'uppercut', 'weapon'];
+          const hasWep = nextAtk.weapon && nextAtk.weapon !== 'none';
+          const moves = hasWep ? ['punch', 'kick', 'jump_kick', 'uppercut', 'weapon'] : ['punch', 'kick', 'roundhouse_kick', 'jump_kick', 'uppercut'];
           nextAtk.attackType = moves[Math.floor(Math.random() * moves.length)];
         }
       }
@@ -4497,7 +4982,7 @@
                 c.pose = 'brawl';
                 c.combatPhase = 'windup';
                 c.auraActive = true;
-                c.auraColor = idx === 0 ? '#facc15' : '#00d4ff';
+                c.auraColor = c.customAuraColor || (idx === 0 ? '#facc15' : '#00d4ff');
                 if (Math.random() < 0.18) {
                   spawnShockwave(c.x, c.y - 52, c.auraColor, 85);
                 }
@@ -4622,17 +5107,28 @@
             rC.facing = rSample.dir;
             const rGround = getGroundYAt(rC.x) + rC.zLaneOffset;
             rC.y = rSample.jump ? (rGround - Math.sin(rSample.segT * Math.PI) * 115) : rGround;
-            rC.pose = rSample.jump ? 'flying' : 'run';
+            rC._jumpProgress = rSample.segT;
+            rC.pose = rSample.jump ? 'jump_arc' : 'run';
 
             cC.x = cSample.x;
             cC.zLaneOffset = cSample.lane;
             cC.facing = cSample.dir;
             const cGround = getGroundYAt(cC.x) + cC.zLaneOffset;
             cC.y = cSample.jump ? (cGround - Math.sin(cSample.segT * Math.PI) * 115) : cGround;
-            cC.pose = cSample.jump ? 'flying' : 'run';
+            cC._jumpProgress = cSample.segT;
+            cC.pose = cSample.jump ? 'jump_arc' : 'run';
           }
-        } else if (ev.type === 'jump_flip_2d') {
+        } else if (ev.type === 'jump_flip_2d' || ev.type === 'fly_move_2d') {
           stepSingleMovementSubEvent2D(ev, progress, dt);
+        } else if (ev.type === 'superpower' && ev.powers && ev.powers.fly) {
+          const c = state.characters[ev.actorSlot ?? 0];
+          if (c) {
+            c.flyingActive = true;
+            c.pose = 'fly';
+            c.x += (c.facing || 1) * (ev.powers.rocket ? 260 : 140) * dt;
+            const groundY = getGroundYAt(c.x) + (c.zLaneOffset || 0);
+            c.y = groundY - (c.flyHeight || 170) + Math.sin((c.poseTimer || 0) * 0.6) * 10;
+          }
         } else if (ev.type === 'shock_reaction_2d') {
           const c = state.characters[ev.actorSlot];
           if (c) {
@@ -4850,26 +5346,176 @@
             runner.x += 220 * dt;
             chaser.x = runner.x - 95;
           }
+        } else if (ev.type === 'stand') {
+          (ev.actors || [0]).forEach(slot => {
+            const c = state.characters[slot];
+            if (c) {
+              c.stayProne = false;
+              if (progress < 0.85) {
+                c.kdState = 'getting_up';
+                c.kdTimer = (progress / 0.85) * 0.62;
+                c.pose = 'knockdown';
+              } else {
+                c.kdState = null;
+                c.kdTimer = 0;
+                c.pose = 'idle';
+              }
+            }
+          });
         } else if (ev.type === 'knockout') {
           const att = state.characters[ev.actorSlot];
           const vic = state.characters[ev.victimSlot];
           if (att && vic) {
-            const dir = vic.x >= att.x ? 1 : -1;
+            const dir = (ev.explicitDir && ev.explicitDir !== 0) ? ev.explicitDir : (vic.x >= att.x ? 1 : -1);
             att.facing = dir;
             vic.facing = -dir;
-            if (state.eventElapsed < 0.45) {
-              att.x += ((vic.x - dir * 52) - att.x) * 0.24;
-            } else if (!ev._koDone) {
-              ev._koDone = true;
-              const meters = ev.meters || 3.0;
-              const origX = vic.x;
-              const destX = origX + dir * meters * PIXELS_PER_METER;
-              triggerKnockdownSequence(vic, dir, Math.min(1.45, Math.max(0.9, meters * 0.32)));
-              state.activeDistanceMarker = { startX: origX, endX: destX, meters, victimSlot: vic.slot };
-              state.cameraShake = 15;
-              playSfx('ko');
-              spawnShockwave(vic.x, vic.y - 60, '#f43f5e', 90);
-              spawnHitText(vic.x, vic.y - 115, `💥 طيران (${meters} متر)!`, '#f43f5e');
+            const strikeMoment = 0.38;
+            if (state.eventElapsed < strikeMoment) {
+              // المهاجم يندفع إلى موقع الضحية الحالي ويسدد الركلة أو اللكمة بالاتجاه المطلوب تماماً!
+              const approachProg = state.eventElapsed / strikeMoment;
+              const targetAttX = vic.x - dir * 50;
+              att.x += (targetAttX - att.x) * 0.28;
+              att.y = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+              att.pose = 'brawl';
+              att.attackType = ev.attackMove || 'roundhouse_kick';
+              att.combatPhase = approachProg < 0.48 ? 'windup' : 'strike';
+              att.phaseProgress = approachProg < 0.48 ? (approachProg / 0.48) : ((approachProg - 0.48) / 0.52);
+            } else {
+              if (!ev._koDone) {
+                ev._koDone = true;
+                const meters = ev.meters || 2.0;
+                // حساب نقطة الانطلاق من موقع الضحية الحالي بالضبط (vic.x) إلى بعد المسافة المحددة!
+                const origX = vic.x;
+                const pxPerM = meters > 25 ? 24 : PIXELS_PER_METER;
+                const destX = origX + dir * meters * pxPerM;
+                const trajType = ev.trajectoryType || 'hybrid';
+                const heightM = ev.heightMeters || 2.0;
+                const elevPx = Math.min(240, Math.max(32, heightM * 24));
+                const peakH = Math.min(320, Math.max(130, Math.abs(destX - origX) * 0.20));
+
+                ev._origX = origX;
+                ev._destX = destX;
+                ev._dir = dir;
+                ev._trajType = trajType;
+                ev._elevPx = elevPx;
+                ev._peakH = peakH;
+
+                att.combatPhase = 'recover';
+                att.phaseProgress = 0.5;
+                vic.hitFlashTimer = 0.18;
+                vic.stayProne = Boolean(ev.stayDown);
+                vic.kdDir = dir;
+                vic.pose = 'knockdown';
+
+                const trajNames = {
+                  semicircle: 'نصف دائرة ⌒',
+                  straight: `خط مستقيم بارتفاع ${heightM}م ━`,
+                  hybrid: 'مسار مدمج (مستقيم + نصف دائرة) ━⌒'
+                };
+                state.activeDistanceMarker = {
+                  startX: origX,
+                  endX: destX,
+                  meters,
+                  victimSlot: vic.slot,
+                  trajectoryType: trajType,
+                  heightMeters: heightM,
+                  elevPx,
+                  peakH,
+                  dir,
+                  label: trajNames[trajType] || ''
+                };
+                state.cameraShake = meters >= 10 ? 16 : 10;
+                playSfx('ko');
+                spawnShockwave(vic.x, vic.y - 60, '#f43f5e', meters >= 10 ? 105 : 70);
+                if (ev.hasExplicitFlyKnock) {
+                  spawnHitText(vic.x, vic.y - 120, `💥 طيران ${meters} متر (${trajNames[trajType]})!`, '#f43f5e');
+                } else {
+                  spawnHitText(vic.x, vic.y - 115, `💥 ضربة قوية!`, '#f43f5e');
+                }
+              }
+
+              // تحريك الضحية على المسار الفيزيائي المحدد من موقعه الحالي (origX) إلى (destX) بدقة 100%!
+              const flightDur = Math.max(0.45, ev.duration - strikeMoment - 0.18);
+              const u = Math.max(0, Math.min(1, (state.eventElapsed - strikeMoment) / flightDur));
+              const origX = ev._origX ?? vic.x;
+              const destX = ev._destX ?? vic.x;
+              const trajType = ev._trajType || 'hybrid';
+              const elevPx = ev._elevPx || 48;
+              const peakH = ev._peakH || 150;
+              const laneOff = vic.zLaneOffset || 0;
+
+              att.combatPhase = 'guard';
+              att.pose = 'brawl';
+              vic.stayProne = Boolean(ev.stayDown);
+
+              if (trajType === 'semicircle') {
+                // النوع الأول: يطير بشكل نصف دائرة (قوس نصف دائري كامل من موقع الضحية إلى نقطة الهبوط)
+                vic.x = origX + (destX - origX) * u;
+                const gY = getGroundYAt(vic.x) + laneOff;
+                const semiCircle = 0.60 * Math.sin(u * Math.PI) + 0.40 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * u - 1, 2)));
+                vic.y = gY - peakH * semiCircle;
+                vic.kdState = u < 0.96 ? 'airborne' : 'prone';
+                vic.kdTimer = u * 0.34;
+              } else if (trajType === 'straight') {
+                // النوع الثاني: يطير بخط مستقيم أفقي موازٍ للأرض بارتفاع محدد (مثلاً 2 متر عن الأرض)
+                if (u < 0.90) {
+                  const k = u / 0.90;
+                  vic.x = origX + (destX - origX) * (0.94 * k);
+                  const gY = getGroundYAt(vic.x) + laneOff;
+                  vic.y = gY - elevPx;
+                  vic.kdState = 'straight_fly';
+                  vic.kdTimer = k * 0.34;
+                } else {
+                  const k = (u - 0.90) / 0.10;
+                  vic.x = origX + (destX - origX) * (0.94 + 0.06 * k);
+                  const gY = getGroundYAt(vic.x) + laneOff;
+                  vic.y = gY - elevPx * (1 - k);
+                  vic.kdState = u < 0.97 ? 'airborne' : 'prone';
+                }
+              } else {
+                // النوع الثالث: مزيج من الاثنين (ينطلق أولاً بخط مستقيم منخفض بارتفاع 2م ثم يرتفع في قوس نصف دائري ويهبط في النهاية!)
+                if (u < 0.44) {
+                  const k = u / 0.44;
+                  vic.x = origX + (destX - origX) * (0.44 * k);
+                  const gY = getGroundYAt(vic.x) + laneOff;
+                  vic.y = gY - elevPx * Math.min(1, k * 3.2);
+                  vic.kdState = 'straight_fly';
+                  vic.kdTimer = k * 0.25;
+                } else if (u < 0.94) {
+                  const k = (u - 0.44) / 0.50;
+                  vic.x = origX + (destX - origX) * (0.44 + 0.50 * k);
+                  const gY = getGroundYAt(vic.x) + laneOff;
+                  const semiArch = Math.sin(k * Math.PI);
+                  const baseH = elevPx * (1 - k);
+                  vic.y = gY - (baseH + peakH * semiArch);
+                  vic.kdState = 'airborne';
+                  vic.kdTimer = k * 0.34;
+                } else {
+                  const k = (u - 0.94) / 0.06;
+                  vic.x = origX + (destX - origX) * (0.94 + 0.06 * k);
+                  vic.y = getGroundYAt(vic.x) + laneOff;
+                  vic.kdState = 'prone';
+                }
+              }
+
+              vic.vx = 0;
+              vic.vy = 0;
+              vic.pose = 'knockdown';
+
+              // آثار سرعة وغبار أثناء الطيران لمسافات طويلة
+              if (u < 0.95) {
+                vic.trail.push({ x: vic.x, y: vic.y, alpha: 0.78, color: '#f43f5e' });
+                if (vic.trail.length > 12) vic.trail.shift();
+              } else if (!ev._landImpactDone) {
+                ev._landImpactDone = true;
+                vic.x = destX;
+                vic.y = getGroundYAt(destX) + laneOff;
+                vic.kdState = 'prone';
+                vic.stayProne = Boolean(ev.stayDown);
+                spawnGroundCrackAndRocks(vic.x, vic.y);
+                spawnShockwave(vic.x, vic.y, '#94a3b8', 75);
+                state.cameraShake = 11;
+              }
             }
           }
         }
@@ -4931,13 +5577,29 @@
         const c = state.characters[i];
         if (!c.visible || c.inVehicle) continue;
         c.poseTimer += dt * 9.5;
+        if (c.hitFlashTimer > 0) c.hitFlashTimer = Math.max(0, c.hitFlashTimer - rawDt);
         c.scale += (c.targetScale - c.scale) * 0.12;
         const groundHere = getGroundYAt(c.x) + (c.zLaneOffset || 0);
 
-        if (c.flyingActive || c.pose === 'fly') {
-          const targetFlyY = groundHere - (c.flyHeight || 165) + Math.sin(c.poseTimer * 0.5) * 14;
-          c.y += (targetFlyY - c.y) * 0.12;
+        if (c.kdState === 'air_recover') {
+          // ارتداد جوي مع شقلبة استعادة توازن في السماء أثناء القتال الجوي!
+          c.kdTimer += dt;
+          c.pose = 'knockdown';
           c.x += c.vx;
+          c.vx *= 0.89;
+          const targetFlyY = groundHere - (c.flyHeight || 170) - Math.sin(Math.min(1, c.kdTimer / 0.48) * Math.PI) * 32;
+          c.y += (targetFlyY - c.y) * 0.22;
+          if (c.kdTimer >= 0.48) {
+            c.kdState = null;
+            c.kdTimer = 0;
+            c.vx = 0;
+            c.pose = 'brawl';
+          }
+        } else if (c.flyingActive || c.pose === 'fly') {
+          const targetFlyY = groundHere - (c.flyHeight || 165) + Math.sin(c.poseTimer * 0.5) * 14;
+          c.y += (targetFlyY - c.y) * 0.14;
+          c.x += c.vx;
+          c.vx *= 0.88;
           c.vy = 0;
         // Record Comet Aura Tail / Crimson Afterimage Trail for Shadow (آثار حمراء خلف الشخصية أثناء الاندفاع!)
         const isSh = isShadowType(c.creatureType);
@@ -4948,34 +5610,38 @@
           if (c.trail.length > maxTrail) c.trail.shift();
         }
         } else if (c.kdState) {
-          // محرك أنيميشن تلقي الضربات الاحترافي: 1) يطير قليلاً في الهواء -> 2) ينبطح على الأرض -> 3) ينهض بارتكاز اليدين والركبة بشكل احترافي!
-          c.kdTimer += dt;
-          c.pose = 'knockdown';
-          if (c.kdState === 'airborne') {
-            c.x += c.vx;
-            c.y += c.vy;
-            c.vy += 0.65;
-            c.vx *= 0.94;
-            if (c.y >= groundHere && c.kdTimer > 0.1) {
+          // إذا كانت الضحية تطير حالياً عبر مسار الضربة المبرمج (نصف دائرة / خط مستقيم / مزيج)، نترك تحكم الموقع لمحرك المسار الدقيق!
+          if (ev && ev.type === 'knockout' && ev.victimSlot === c.slot && ev._koDone && !ev._landImpactDone) {
+            c.pose = 'knockdown';
+          } else {
+            // محرك أنيميشن تلقي الضربات الاحترافي: 1) يطير في الهواء -> 2) ينبطح على الأرض -> 3) ينهض فقط في العراك المتبادل (أو يبقى ساقطاً إذا كانت ضربة مفردة بدون رد تلقائي!)
+            c.kdTimer += dt;
+            c.pose = 'knockdown';
+            if (c.kdState === 'airborne') {
+              c.x += c.vx;
+              c.y += c.vy;
+              c.vy += 0.65;
+              c.vx *= 0.94;
+              if (c.y >= groundHere && c.kdTimer > 0.1) {
+                c.y = groundHere;
+                c.vy = 0;
+                c.vx *= 0.4;
+                c.kdState = 'prone';
+                c.kdTimer = 0;
+                state.cameraShake = 8;
+                spawnShockwave(c.x, groundHere, '#94a3b8', 48);
+                spawnGroundCrackAndRocks(c.x, groundHere);
+              }
+            } else if (c.kdState === 'prone') {
+              // منبطح على الأرض: إذا كان stayProne مفعلاً (ضربة مفردة بدون كلمة عراك)، يبقى ساقطاً ولا ينهض ولا يرد من عنده!
+              c.x += c.vx;
+              c.vx *= 0.75;
               c.y = groundHere;
-              c.vy = 0;
-              c.vx *= 0.4;
-              c.kdState = 'prone';
-              c.kdTimer = 0;
-              state.cameraShake = 8;
-              spawnShockwave(c.x, groundHere, '#94a3b8', 48);
-              spawnGroundCrackAndRocks(c.x, groundHere);
-            }
-          } else if (c.kdState === 'prone') {
-            // منبطح على الأرض
-            c.x += c.vx;
-            c.vx *= 0.75;
-            c.y = groundHere;
-            if (c.kdTimer >= 0.68) {
-              c.kdState = 'getting_up';
-              c.kdTimer = 0;
-            }
-          } else if (c.kdState === 'getting_up') {
+              if (!c.stayProne && c.kdTimer >= 0.68) {
+                c.kdState = 'getting_up';
+                c.kdTimer = 0;
+              }
+            } else if (c.kdState === 'getting_up') {
             // ينهض بشكل احترافي بارتكاز اليدين والركبة ثم يعود للقتال
             c.y = groundHere;
             c.vx = 0;
@@ -4984,6 +5650,7 @@
               c.kdTimer = 0;
               c.pose = 'brawl';
             }
+          }
           }
         } else {
           c.x += c.vx;
@@ -5170,6 +5837,14 @@
           state.camMain.y += (desY - state.camMain.y) * 0.15;
           state.camMain.zoom += (desZ - state.camMain.zoom) * 0.14;
         }
+      } else if (ev && ev.type === 'knockout' && ev._koDone && (ev.meters || 0) >= 8) {
+        const vic = state.characters[ev.victimSlot];
+        if (vic) {
+          const targetZ = (ev.meters || 0) >= 40 ? 0.68 : 0.82;
+          state.camMain.x += (vic.x - state.camMain.x) * 0.24;
+          state.camMain.y += (Math.min(GROUND_Y - 120, vic.y - 70) - state.camMain.y) * 0.22;
+          state.camMain.zoom += (targetZ - state.camMain.zoom) * 0.14;
+        }
       } else if (state.camOverrideTarget) {
         state.camMain.x += (state.camOverrideTarget.x - state.camMain.x) * 0.08;
         state.camMain.y += (state.camOverrideTarget.y - state.camMain.y) * 0.08;
@@ -5344,7 +6019,7 @@
         gGrad.addColorStop(1, '#020617');
       }
       ctx.fillStyle = gGrad;
-      ctx.fillRect(-1500, GROUND_Y, 6800, 450);
+      ctx.fillRect(-15000, GROUND_Y, 35000, 500);
 
       if (shadowMode) {
         // انعكاس ضوء القمر الفضي على الأرض السوداء في مدينة الظل
@@ -6336,11 +7011,11 @@
         ctx.restore();
       }
 
-      // Monster Wings
-      if (char.isMonster) {
+      // Monster / Custom Wings (أجنحة الوحش أو الأجنحة الموصوفة للشخصية!)
+      if (char.isMonster || char.customHasWings) {
         ctx.save();
-        ctx.fillStyle = '#7f1d1d';
-        ctx.strokeStyle = '#ef4444';
+        ctx.fillStyle = char.customHasWings && !char.isMonster ? (char.auraActive ? aCol : '#38bdf8') : '#7f1d1d';
+        ctx.strokeStyle = char.customHasWings && !char.isMonster ? '#f8fafc' : '#ef4444';
         ctx.lineWidth = 2;
         [-1, 1].forEach(side => {
           ctx.beginPath();
@@ -6355,14 +7030,16 @@
       }
 
       // =========================================================================
-      // TRUE 2-BONE IK TARGETS FOR FEET & HANDS (تماماً مثل solve_legs_ground_ik في Godot!)
+      // TRUE 2-BONE IK TARGETS FOR FEET & HANDS + REALISTIC HIT-REACTION ENGINE
       // =========================================================================
       let torsoTilt = 0;
+      let headAngle = 0;
       let hipX = 0, hipY = -43;
       let shoulderX = 0, shoulderY = -83;
       let headX = 0, headY = -101;
       let showStrikeArc = false;
       let isRecoilPose = false;
+      let customKneeBendDir = -dir; // افتراضياً تنثني الركبة للأمام (-dir)، وفي السقوط تنثني للأعلى دائماً لمنع اختراق الأرض!
 
       // Default Foot & Hand Targets in character local space (where y = 0 is the exact ground!)
       let footFrontX = dir * 11, footFrontY = 0, footFrontAngle = 0;
@@ -6371,15 +7048,12 @@
       let handBackX = -dir * 10, handBackY = -62;
 
       if (char.pose === 'sit') {
-        // وضعية الجلوس الهادئة على كرسي المقهى مع تحريك اليدين الخفيف أثناء الحديث
         const talkWave = Math.sin(t * 1.4) * 3;
         hipX = -dir * 4; hipY = -26;
         shoulderX = -dir * 2; shoulderY = -66;
         headX = 0; headY = -84;
-        // الفخذان على مقعد الكرسي والقدمان على الأرض أمام الكرسي
         footFrontX = dir * 18; footFrontY = 0; footFrontAngle = 0;
         footBackX = dir * 11; footBackY = 0; footBackAngle = 0;
-        // اليدان ممدودتان نحو طاولة المقهى وكوب القهوة
         handFrontX = dir * 22; handFrontY = -44 + talkWave;
         handBackX = dir * 14; handBackY = -42;
       } else if (char.pose === 'idle' || char.pose === 'talk') {
@@ -6387,7 +7061,6 @@
         hipY = -43 + breathe;
         shoulderY = -83 + breathe;
         headY = -101 + breathe;
-        // القدمان ثابتتان 100% على الأرض (y = 0) والركبتان تنثنيان بنعومة!
         footFrontX = dir * 12; footFrontY = 0;
         footBackX = -dir * 11; footBackY = 0;
         handFrontX = dir * 22; handFrontY = -68 + breathe;
@@ -6397,7 +7070,6 @@
           handFrontY = -76 + Math.cos(t * 2.2) * 5;
         }
       } else if (char.pose === 'run') {
-        // دورة مشي/ركض بشرية حقيقية: قدم تدفع الأرض (y = 0) بينما القدم الأخرى ترتفع وتتقدم للأمام!
         const walkCycle = t * 1.85;
         const s1 = Math.sin(walkCycle);
         const c1 = Math.cos(walkCycle);
@@ -6406,46 +7078,78 @@
 
         const bounce = Math.abs(Math.cos(walkCycle)) * 3.5;
         torsoTilt = dir * 0.16;
+        headAngle = dir * 0.08;
         hipY = -42 + bounce;
         shoulderX = dir * 6;
         shoulderY = -81 + bounce;
         headX = dir * 8;
         headY = -99 + bounce;
 
-        // القدم الأمامية
         const lift1 = Math.max(0, c1) * 14;
         footFrontX = dir * (s1 * 22 + 3);
         footFrontY = -lift1;
         footFrontAngle = dir * (-s1 * 0.28 + (lift1 > 2 ? 0.22 : 0));
 
-        // القدم الخلفية
         const lift2 = Math.max(0, c2) * 14;
         footBackX = dir * (s2 * 22 - 3);
         footBackY = -lift2;
         footBackAngle = dir * (-s2 * 0.28 + (lift2 > 2 ? 0.22 : 0));
 
-        // حركة الأذرع متعاكسة مع الأرجل بتناسق طبيعي
         handFrontX = dir * (-s1 * 20 + 8);
         handFrontY = -62 - Math.abs(s1) * 6;
         handBackX = dir * (-s2 * 18 + 4);
         handBackY = -60 - Math.abs(s2) * 5;
+      } else if (char.pose === 'jump_arc') {
+        // 🤸 قفزة رياضية أو شقلبة هوائية احترافية (ثني الركبتين للبطن، واندفاع الأذرع دون ميلان خشبي للخلف!)
+        const jp = char._jumpProgress !== undefined ? char._jumpProgress : 0.5;
+        if (char._isFlipJump) {
+          ctx.translate(0, -54);
+          ctx.rotate(dir * jp * Math.PI * 2);
+          ctx.translate(0, 54);
+        }
+        torsoTilt = dir * 0.22;
+        headAngle = dir * 0.14;
+        hipX = -dir * 3; hipY = -45;
+        shoulderX = dir * 7; shoulderY = -83;
+        headX = dir * 10; headY = -100;
+        footFrontX = dir * 15; footFrontY = -18; footFrontAngle = dir * 0.35;
+        footBackX = -dir * 13; footBackY = -22; footBackAngle = dir * 0.45;
+        handFrontX = dir * 24; handFrontY = -84;
+        handBackX = -dir * 16; handBackY = -74;
       } else if (char.pose === 'brawl') {
         const cPhase = char.combatPhase || 'strike';
         const pProg = char.phaseProgress !== undefined ? char.phaseProgress : ((Math.sin(t * 3.0) + 1) * 0.5);
 
         if (cPhase === 'recoil') {
-          // الخصم يتراجع وينحني للخلف عند تلقي الضربة والقدمان تنزلقان على الأرض
+          // 💥 أنميشن تلقي الضرب الواقعي والاحترافي (نوعان ديناميكيان: ارتداد الرأس للخلف أو انطواء البطن من الألم!)
           isRecoilPose = true;
-          torsoTilt = -dir * 0.24;
-          hipX = -dir * 4; hipY = -41;
-          shoulderX = -dir * 12; shoulderY = -79;
-          headX = -dir * 16; headY = -97;
-          footFrontX = dir * 14; footFrontY = -3; footFrontAngle = -dir * 0.25;
-          footBackX = -dir * 16; footBackY = 0; footBackAngle = 0;
-          handFrontX = dir * 14; handFrontY = -76;
-          handBackX = -dir * 8; handBackY = -72;
+          const recoilWave = Math.sin(pProg * Math.PI);
+          if (char.hitReactionType === 'gut_fold') {
+            // 1. ضربة في البطن/الجسم: ينطوي الجذع للأمام حول المعدة وترتد الحوض للخلف مع إمساك البطن!
+            hipX = -dir * (8 + recoilWave * 6);
+            hipY = -39 + recoilWave * 3;
+            shoulderX = -dir * (1 - recoilWave * 3);
+            shoulderY = -75 + recoilWave * 4;
+            headX = dir * (4 + recoilWave * 4);
+            headY = -90 + recoilWave * 5;
+            headAngle = dir * (0.28 + recoilWave * 0.14);
+            footFrontX = dir * 9; footFrontY = 0; footFrontAngle = 0;
+            footBackX = -dir * 16; footBackY = 0; footBackAngle = 0;
+            handFrontX = dir * 2; handFrontY = -56; // يد تمسك البطن من قوة الضربة
+            handBackX = -dir * 15; handBackY = -68;
+          } else {
+            // 2. ضربة في الوجه/الصدر: يرتد الرأس والصدر بقوة للخلف وترتفع القدم الأمامية مع انزلاق على الأرض!
+            torsoTilt = -dir * (0.26 + recoilWave * 0.12);
+            headAngle = -dir * (0.38 + recoilWave * 0.18);
+            hipX = -dir * 4; hipY = -41;
+            shoulderX = -dir * (12 + recoilWave * 5); shoulderY = -78 + recoilWave * 2;
+            headX = -dir * (18 + recoilWave * 6); headY = -94 + recoilWave * 3;
+            footFrontX = dir * 16; footFrontY = -4 * recoilWave; footFrontAngle = -dir * 0.28;
+            footBackX = -dir * 17; footBackY = 0; footBackAngle = 0;
+            handFrontX = dir * 10; handFrontY = -84;
+            handBackX = -dir * 16; handBackY = -74;
+          }
         } else if (cPhase === 'guard') {
-          // وقفة قتالية ثابتة على الأرض
           hipY = -41;
           shoulderX = dir * 3; shoulderY = -80;
           headX = dir * 4; headY = -98;
@@ -6454,13 +7158,12 @@
           handFrontX = dir * 22; handFrontY = -78;
           handBackX = dir * 10; handBackY = -72;
         } else if (cPhase === 'windup') {
-          // مرحلة التحضير: في الركل يرفع ركبته للأعلى (Chambering)، وفي اللكم يسحب قبضته للخلف!
           if (char.attackType === 'kick' || char.attackType === 'jump_kick') {
             torsoTilt = -dir * 0.14;
+            headAngle = -dir * 0.08;
             hipY = -43;
             shoulderX = -dir * 4; shoulderY = -82;
             headX = -dir * 4; headY = -100;
-            // القدم الخلفية ثابتة على الأرض تماماً (y = 0) والقدم الراكلة ترتفع تحضيراً للركل!
             footBackX = -dir * 10; footBackY = 0; footBackAngle = 0;
             footFrontX = dir * 14; footFrontY = -24 * pProg; footFrontAngle = dir * 0.35;
             handFrontX = dir * 18; handFrontY = -74;
@@ -6478,7 +7181,6 @@
         } else if (cPhase === 'strike') {
           showStrikeArc = true;
           if (char.attackType === 'acrobatic_flip') {
-            // حركة بهلوانية وانقلاب 360 درجة في الهواء مع ركلة دائرية خاصة بـ Shadow – الظل!
             const jumpOff = -28 * Math.sin(pProg * Math.PI);
             hipY = -45 + jumpOff;
             shoulderX = dir * 6; shoulderY = -83 + jumpOff;
@@ -6488,25 +7190,23 @@
             handFrontX = dir * 24; handFrontY = -76 + jumpOff;
             handBackX = -dir * 22; handBackY = -70 + jumpOff;
           } else if (char.attackType === 'roundhouse_kick' || char.attackType === 'kick' || char.attackType === 'jump_kick') {
-            // ركلة أنمي احترافية: رجل الارتكاز ثابتة على الأرض، والرجل الراكلة تمتد بالكامل نحو صدر/رأس الخصم مع دوران الحذاء!
             const jumpOff = char.attackType === 'jump_kick' ? -18 : 0;
             torsoTilt = -dir * 0.26;
+            headAngle = -dir * 0.12;
             hipY = -43 + jumpOff;
             shoulderX = -dir * 10; shoulderY = -81 + jumpOff;
             headX = -dir * 11; headY = -99 + jumpOff;
-
             footBackX = -dir * 8;
             footBackY = char.attackType === 'jump_kick' ? -22 : 0;
             footBackAngle = char.attackType === 'jump_kick' ? dir * 0.4 : 0;
-
             footFrontX = dir * 42;
             footFrontY = -54 + jumpOff;
-            footFrontAngle = -dir * 0.55; // توجيه مشط/نعل الحذاء نحو الخصم مباشرة!
-
+            footFrontAngle = -dir * 0.55;
             handFrontX = dir * 16; handFrontY = -72 + jumpOff;
             handBackX = -dir * 18; handBackY = -64 + jumpOff;
           } else if (char.attackType === 'uppercut') {
             torsoTilt = dir * 0.18;
+            headAngle = dir * 0.10;
             hipY = -45;
             shoulderX = dir * 6; shoulderY = -85;
             headX = dir * 7; headY = -103;
@@ -6515,8 +7215,8 @@
             handFrontX = dir * 32; handFrontY = -104;
             handBackX = -dir * 10; handBackY = -64;
           } else {
-            // تسديد لكمة أو ضربة سلاح مستقيمة مع اندفاع الجذع للأمام وثبات القدمين على الأرض!
             torsoTilt = dir * 0.22;
+            headAngle = dir * 0.12;
             hipY = -41;
             shoulderX = dir * 9; shoulderY = -80;
             headX = dir * 11; headY = -98;
@@ -6526,7 +7226,6 @@
             handBackX = -dir * 12; handBackY = -66;
           }
         } else {
-          // مرحلة الاسترجاع
           hipY = -42;
           shoulderX = dir * 3; shoulderY = -81;
           headX = dir * 4; headY = -99;
@@ -6537,61 +7236,101 @@
         }
       } else if (char.pose === 'fly' || char.flyingActive) {
         const hover = Math.sin(t * 0.9) * 3.5;
+        const fTilt = char.flyTiltAngle || 0;
+        if (Math.abs(fTilt) > 0.01) {
+          ctx.translate(0, -58);
+          ctx.rotate(fTilt);
+          ctx.translate(0, 58);
+        }
+        headAngle = dir * (char.rocketFlight ? 0.28 : 0.14);
         hipY = -44 + hover;
-        shoulderX = dir * (char.rocketFlight ? 16 : 8);
+        shoulderX = dir * (char.rocketFlight ? 16 : 9);
         shoulderY = -82 + hover;
-        headX = dir * (char.rocketFlight ? 22 : 10);
+        headX = dir * (char.rocketFlight ? 22 : 12);
         headY = -99 + hover;
         footFrontX = -dir * 14; footFrontY = -6 + hover; footFrontAngle = dir * 0.45;
         footBackX = -dir * 22; footBackY = -4 + hover; footBackAngle = dir * 0.55;
         handFrontX = char.rocketFlight ? -dir * 16 : dir * 34;
         handFrontY = char.rocketFlight ? -58 + hover : -78 + hover;
         handBackX = -dir * 18; handBackY = -60 + hover;
-      } else if (char.pose === 'knockdown' || char.kdState) {
-        // ==================== أنيميشن تلقي الضربات الاحترافي: 1) يطير قليلاً -> 2) ينبطح على الأرض -> 3) ينهض بشكل احترافي! ====================
+      } else if (char.pose === 'knockdown' || char.kdState || char.pose === 'flying' || char.pose === 'down') {
+        // ==================== محرك أنيميشن تلقي الضربات والسقوط الاحترافي (بدون تسطح الجذع أو اختراق الركبة للأرض!) ====================
         isRecoilPose = true;
-        const kdPhase = char.kdState || 'prone';
-        if (kdPhase === 'airborne') {
-          // 1. يطير قليلاً في الهواء مع ميلان الجذع للخلف وارتفاع الرجلين
-          const airP = Math.min(1, (char.kdTimer || 0) / 0.32);
-          hipX = 0; hipY = -36 + airP * 14;
-          shoulderX = -dir * (14 + airP * 18);
-          shoulderY = -72 + airP * 38;
-          headX = -dir * (20 + airP * 26);
-          headY = -88 + airP * 48;
-          footFrontX = dir * (18 + airP * 16); footFrontY = -12 - airP * 6; footFrontAngle = -dir * 0.4;
-          footBackX = dir * (6 + airP * 14); footBackY = -8 - airP * 4; footBackAngle = -dir * 0.3;
-          handFrontX = dir * 10; handFrontY = -58 + airP * 30;
-          handBackX = -dir * 18; handBackY = -54 + airP * 32;
+        const kdPhase = char.kdState || (char.pose === 'flying' ? 'airborne' : 'prone');
+        if (kdPhase === 'straight_fly') {
+          // ━ الطيران الأفقي بخط مستقيم موازٍ للأرض (بارتفاع محدد مثل 2 متر عن الأرض) مع حلقات اندفاع صوتية!
+          customKneeBendDir = dir;
+          hipX = -dir * 4;
+          hipY = -18;
+          shoulderX = -dir * 38;
+          shoulderY = -20;
+          headX = -dir * 54;
+          headY = -23;
+          headAngle = -dir * 1.18;
+          footFrontX = dir * 32; footFrontY = -14; footFrontAngle = -dir * 0.45;
+          footBackX = dir * 22; footBackY = -10; footBackAngle = -dir * 0.35;
+          handFrontX = dir * 10; handFrontY = -28;
+          handBackX = -dir * 20; handBackY = -32;
+        } else if (kdPhase === 'air_recover') {
+          // ارتداد جوي مع شقلبة في السماء واستعادة التوازن
+          const arP = Math.min(1, (char.kdTimer || 0) / 0.48);
+          ctx.translate(0, -54);
+          ctx.rotate(-dir * arP * Math.PI * 2);
+          ctx.translate(0, 54);
+          headAngle = -dir * 0.35;
+          hipX = -dir * 4; hipY = -42;
+          shoulderX = -dir * 12; shoulderY = -78;
+          headX = -dir * 16; headY = -95;
+          footFrontX = dir * 16; footFrontY = -12; footFrontAngle = -dir * 0.3;
+          footBackX = -dir * 10; footBackY = -16; footBackAngle = dir * 0.25;
+          handFrontX = dir * 14; handFrontY = -74;
+          handBackX = -dir * 14; handBackY = -68;
+        } else if (kdPhase === 'airborne') {
+          // 1. يطير للخلف في الهواء بقوس فيزيائي واقعي (انحناء الظهر للخلف، وثني الركبتين للأعلى باتجاه السماء)
+          const airP = Math.min(1, (char.kdTimer || 0) / 0.34);
+          customKneeBendDir = dir; // يجعل الركبتين تنثنيان للأعلى دائماً أثناء الطيران للخلف!
+          hipX = -dir * 2;
+          hipY = -36 + airP * 14;
+          shoulderX = -dir * (18 + airP * 16);
+          shoulderY = -68 + airP * 32;
+          headX = -dir * (27 + airP * 20);
+          headY = -82 + airP * 40;
+          headAngle = -dir * (0.55 + airP * 0.45);
+          footFrontX = dir * (22 + airP * 10); footFrontY = -18 + airP * 6; footFrontAngle = -dir * 0.35;
+          footBackX = dir * (12 + airP * 10); footBackY = -12 + airP * 4; footBackAngle = -dir * 0.25;
+          handFrontX = -dir * (4 + airP * 6); handFrontY = -64 + airP * 28;
+          handBackX = -dir * (22 + airP * 10); handBackY = -56 + airP * 26;
         } else if (kdPhase === 'prone') {
-          // 2. منبطح بالكامل بشكل أفقي على الأرض (y قريب من 0 تماماً!)
-          hipX = 0; hipY = -8;
-          shoulderX = -dir * 38; shoulderY = -9;
-          headX = -dir * 53; headY = -12;
-          footFrontX = dir * 42; footFrontY = -4; footFrontAngle = dir * 0.55;
-          footBackX = dir * 35; footBackY = -3; footBackAngle = dir * 0.45;
-          handFrontX = -dir * 20; handFrontY = -2;
-          handBackX = -dir * 45; handBackY = -3;
+          // 2. مستلقٍ على ظهره على الأرض مع ثني الركبتين للأعلى (customKneeBendDir = dir يمنع دخول الركبة تحت الأرض نهائياً!)
+          customKneeBendDir = dir;
+          hipX = -dir * 2; hipY = -10;
+          shoulderX = -dir * 38; shoulderY = -13;
+          headX = -dir * 53; headY = -18;
+          headAngle = -dir * 1.18;
+          footFrontX = dir * 28; footFrontY = -3; footFrontAngle = -dir * 0.35;
+          footBackX = dir * 19; footBackY = -3; footBackAngle = -dir * 0.25;
+          handFrontX = -dir * 16; handFrontY = -16;
+          handBackX = -dir * 34; handBackY = -4;
         } else {
-          // 3. ينهض بشكل احترافي: يرتكز بيديه وركبته على الأرض أولاً ثم يستقيم واقفاً!
+          // 3. النهوض الرياضي بارتكاز اليد والركبة على الأرض ثم الاستقامة لوقفة القتال!
           const upP = Math.min(1, (char.kdTimer || 0) / 0.62);
           if (upP < 0.5) {
-            // المرحلة أ: دفع الأرض باليدين وثني الركبة للأمام
             const k = upP / 0.5;
+            customKneeBendDir = -dir;
             hipX = -dir * 6 * (1 - k);
-            hipY = -8 - k * 20;
+            hipY = -10 - k * 18;
             shoulderX = -dir * 38 * (1 - k * 0.75);
-            shoulderY = -9 - k * 42;
+            shoulderY = -13 - k * 38;
             headX = -dir * 53 * (1 - k * 0.8);
-            headY = -12 - k * 54;
-            footFrontX = dir * (42 - k * 26); footFrontY = 0; footFrontAngle = 0;
-            footBackX = dir * (35 - k * 52); footBackY = 0; footBackAngle = 0;
-            handFrontX = dir * 12 * k - dir * 20 * (1 - k);
-            handFrontY = -2; // اليد مرتكزة على الأرض تدفع الجسم للأعلى!
+            headY = -18 - k * 48;
+            headAngle = -dir * 1.18 * (1 - k * 0.75);
+            footFrontX = dir * (28 - k * 12); footFrontY = 0; footFrontAngle = 0;
+            footBackX = dir * (19 - k * 34); footBackY = 0; footBackAngle = 0;
+            handFrontX = dir * 12 * k - dir * 18 * (1 - k);
+            handFrontY = -3;
             handBackX = -dir * 10;
-            handBackY = -2 - k * 14;
+            handBackY = -4 - k * 14;
           } else {
-            // المرحلة ب: النهوض الكامل من وضعية الركبة إلى وقفة القتال الاحترافية
             const k = (upP - 0.5) / 0.5;
             hipX = 0;
             hipY = -28 - k * 14;
@@ -6599,34 +7338,28 @@
             shoulderY = -51 - k * 30;
             headX = -dir * 10 * (1 - k) + dir * 4 * k;
             headY = -66 - k * 33;
+            headAngle = -dir * 0.28 * (1 - k);
             footFrontX = dir * 16; footFrontY = 0; footFrontAngle = 0;
             footBackX = -dir * 15; footBackY = 0; footBackAngle = 0;
             handFrontX = dir * (12 + k * 12);
-            handFrontY = -2 - k * 72;
+            handFrontY = -3 - k * 71;
             handBackX = -dir * 10 + dir * 18 * k;
-            handBackY = -16 - k * 52;
+            handBackY = -18 - k * 50;
           }
         }
-      } else if (char.pose === 'flying') {
-        isRecoilPose = true;
-        ctx.rotate(-dir * 0.85);
-      } else if (char.pose === 'down') {
-        isRecoilPose = true;
-        ctx.translate(0, -10);
-        ctx.rotate(-dir * 1.48);
       }
 
-      const pantColor = isShadow ? '#06080f' : '#1e293b';
+      const pantColor = char.customPantColor || (isShadow ? '#06080f' : '#1e293b');
       const skinColor = isShadow ? '#06080f' : (char.creatureType === 'zombie' ? '#84cc16' : (char.creatureType === 'alien' ? '#2dd4bf' : '#fde68a'));
 
-      // خطوط سرعة عند الحركة خاصة بـ Shadow – الظل!
-      if (isShadow && !isPreview && (char.pose === 'run' || char.pose === 'brawl' || char.pose === 'fly' || Math.abs(char.vx) > 2)) {
+      // خطوط سرعة عند الحركة خاصة بـ Shadow – الظل أو الطيران السريع!
+      if ((isShadow || char.flyingActive) && !isPreview && (char.pose === 'run' || char.pose === 'brawl' || char.pose === 'fly' || Math.abs(char.vx) > 2)) {
         ctx.save();
         for (let sl = 0; sl < 5; sl++) {
           const ly = -20 - sl * 22 + Math.sin(t * 7 + sl) * 4;
           const lx = -dir * (18 + (sl % 3) * 14);
           const lLen = 36 + (sl % 2) * 26;
-          ctx.strokeStyle = sl % 2 === 0 ? 'rgba(239, 68, 68, 0.75)' : 'rgba(255, 255, 255, 0.7)';
+          ctx.strokeStyle = sl % 2 === 0 ? (isShadow ? 'rgba(239, 68, 68, 0.75)' : 'rgba(56, 189, 248, 0.65)') : 'rgba(255, 255, 255, 0.7)';
           ctx.lineWidth = sl % 2 === 0 ? 2.4 : 1.6;
           ctx.beginPath();
           ctx.moveTo(lx, ly);
@@ -6645,33 +7378,57 @@
         ctx.translate(0, 64);
       }
 
-      // Solve 2-Bone IK for both legs (bendDir = -dir makes the knee ALWAYS bend forward in screen coordinates!)
-      const kneeBendDir = -dir;
+      // حساب المتجه العمودي للعمود الفقري (nx, ny) ليرسم الجذع والأكتاف والخصر بسمك تشريحي صحيح في كل الزوايا (0° إلى 360°)!
+      const spineDx = shoulderX - hipX;
+      const spineDy = shoulderY - hipY;
+      const spineLen = Math.max(1, Math.hypot(spineDx, spineDy));
+      const spineUx = spineDx / spineLen;
+      const spineUy = spineDy / spineLen;
+      const normX = -spineUy;
+      const normY = spineUx;
+
+      // Solve 2-Bone IK for both legs & arms
       const legLen = isShadow ? 24 : 23;
       const armLen = isShadow ? 21.5 : 20.5;
-      const backLegIK = solve2BoneIK(hipX - dir * 3, hipY, footBackX, footBackY, legLen, legLen, kneeBendDir);
-      const frontLegIK = solve2BoneIK(hipX + dir * 3, hipY, footFrontX, footFrontY, legLen, legLen, kneeBendDir);
+      const backLegIK = solve2BoneIK(hipX - normX * dir * 3, hipY - normY * dir * 3, footBackX, footBackY, legLen, legLen, customKneeBendDir);
+      const frontLegIK = solve2BoneIK(hipX + normX * dir * 3, hipY + normY * dir * 3, footFrontX, footFrontY, legLen, legLen, customKneeBendDir);
 
-      // Solve 2-Bone IK for both arms (bendDir = dir makes the elbow ALWAYS bend naturally downward/backward!)
       const elbowBendDir = dir;
-      const backArmIK = solve2BoneIK(shoulderX - dir * 2, shoulderY + 4, handBackX, handBackY, armLen, armLen, elbowBendDir);
-      const frontArmIK = solve2BoneIK(shoulderX + dir * 3, shoulderY + 4, handFrontX, handFrontY, armLen, armLen, elbowBendDir);
+      const backArmIK = solve2BoneIK(shoulderX - normX * dir * 2, shoulderY - normY * dir * 2 + 2, handBackX, handBackY, armLen, armLen, elbowBendDir);
+      const frontArmIK = solve2BoneIK(shoulderX + normX * dir * 3, shoulderY + normY * dir * 3 + 2, handFrontX, handFrontY, armLen, armLen, elbowBendDir);
 
-      // Flowing Long Red Scarf behind Shadow (الطبقة الخلفية للوشاح الأحمر الطويل الذي ينساب خلف الشخصية ويتحرك بقوة مع السرعة والقتال!)
-      if (isShadow) {
+      // عباءة خلفية متموجة إذا طلب الكاتب "عباءة" أو "معطف" في الوصف!
+      if (char.customHasCape) {
+        ctx.save();
+        const capeCol = char.customCapeColor || '#1e1b4b';
+        const waveC = Math.sin(t * 3.1) * 10;
+        ctx.fillStyle = capeCol;
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(shoulderX, shoulderY + 2);
+        ctx.quadraticCurveTo(shoulderX - dir * 34, hipY - 12 + waveC, hipX - dir * 48, hipY + 34 + waveC * 0.6);
+        ctx.lineTo(hipX - dir * 18, hipY + 36);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // وشاح طويل منسدل خلف الشخصية (لـ Shadow أو لأي شخصية وُصف لها "وشاح" ما لم يُكتب "بلا وشاح")
+      const showScarf = (char.customHasScarf === true) || (isShadow && char.customHasScarf !== false);
+      const scarfPrimaryCol = char.customScarfColor || '#dc2626';
+      if (showScarf) {
         ctx.save();
         const scarfFast = (char.pose === 'run' || char.pose === 'brawl' || char.pose === 'fly' || char.rocketFlight);
         const scarfLen = scarfFast ? 88 : 64;
         const waveAmp = scarfFast ? 14 : 6;
-        const sx = headX - dir * 6;
-        const sy = headY + 12;
+        const sx = shoulderX - dir * 4;
+        const sy = shoulderY - 3;
 
-        // Long primary crimson ribbon
-        ctx.fillStyle = '#dc2626';
-        ctx.strokeStyle = '#7f1d1d';
-        ctx.lineWidth = 1.8;
-        ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = 0;
+        ctx.fillStyle = scarfPrimaryCol;
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
         ctx.moveTo(sx, sy - 3);
         ctx.bezierCurveTo(
@@ -6688,89 +7445,74 @@
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-
-        // Secondary shorter fluttering scarf tail
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.moveTo(sx, sy + 1);
-        ctx.quadraticCurveTo(
-          sx - dir * (scarfLen * 0.42), sy + 14 + Math.cos(t * 4.1) * waveAmp,
-          sx - dir * (scarfLen * 0.68), sy + 22 + Math.sin(t * 4.1) * waveAmp
-        );
-        ctx.lineTo(sx - dir * (scarfLen * 0.60), sy + 28 + Math.sin(t * 4.1) * waveAmp);
-        ctx.quadraticCurveTo(
-          sx - dir * (scarfLen * 0.34), sy + 18 + Math.cos(t * 4.1) * waveAmp,
-          sx, sy + 7
-        );
-        ctx.closePath();
-        ctx.fill();
         ctx.restore();
       }
 
       // 2. Draw Back Arm
-      drawIKLimbSegment(ctx, shoulderX - dir * 2, shoulderY + 4, backArmIK.jointX, backArmIK.jointY, backArmIK.endX, backArmIK.endY, 8, 6.5, mainCol, skinColor, false, dir, 0, isShadow);
+      drawIKLimbSegment(ctx, shoulderX - normX * dir * 2, shoulderY - normY * dir * 2 + 2, backArmIK.jointX, backArmIK.jointY, backArmIK.endX, backArmIK.endY, 8, 6.5, mainCol, skinColor, false, dir, 0, isShadow);
 
       // 3. Draw Back Leg + Shoe
-      drawIKLimbSegment(ctx, hipX - dir * 3, hipY, backLegIK.jointX, backLegIK.jointY, backLegIK.endX, backLegIK.endY, 9.5, 8, pantColor, pantColor, true, dir, footBackAngle, isShadow);
+      drawIKLimbSegment(ctx, hipX - normX * dir * 3, hipY - normY * dir * 3, backLegIK.jointX, backLegIK.jointY, backLegIK.endX, backLegIK.endY, 9.5, 8, pantColor, pantColor, true, dir, footBackAngle, isShadow);
 
-      // 4. Draw Torso (لـ Shadow: جسم رياضي أسود رشيق بأكتاف واضحة وعضلات بسيطة؛ ولغيره: سترة مقاتل أنمي)
+      // 4. Draw Anatomical Spine-Normal Torso (لا ينضغط ولا يتسطح أبداً عند السقوط أو الميلان!)
       ctx.save();
-      ctx.fillStyle = mainCol;
-      ctx.strokeStyle = isShadow ? '#27272a' : '#090d16';
+      const isHitFlashing = (!isPreview && (char.hitFlashTimer || 0) > 0);
+      ctx.fillStyle = isHitFlashing ? '#ffffff' : mainCol;
+      ctx.strokeStyle = isHitFlashing ? '#ef4444' : (isShadow ? '#27272a' : '#090d16');
       ctx.lineWidth = 2.6;
       const shW = isShadow ? 13.5 : 12;
       const hpW = isShadow ? 8.5 : 9;
       ctx.beginPath();
-      ctx.moveTo(shoulderX - shW, shoulderY);
-      ctx.lineTo(shoulderX + shW, shoulderY);
-      ctx.lineTo(hipX + hpW, hipY + 2);
-      ctx.lineTo(hipX - hpW, hipY + 2);
+      ctx.moveTo(shoulderX - normX * shW, shoulderY - normY * shW);
+      ctx.lineTo(shoulderX + normX * shW, shoulderY + normY * shW);
+      ctx.lineTo(hipX + normX * hpW, hipY + normY * hpW);
+      ctx.lineTo(hipX - normX * hpW, hipY - normY * hpW);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
+      // تفاصيل الصدر والحزام متعامدة مع العمود الفقري
+      const chestX = shoulderX - spineUx * 12;
+      const chestY = shoulderY - spineUy * 12;
       if (isShadow) {
-        // خطوط عضلات الصدر والبطن البسيطة والأنيقة على الجسم الأسود الرياضي
         ctx.strokeStyle = '#3f3f46';
         ctx.lineWidth = 1.4;
         ctx.beginPath();
-        ctx.moveTo(shoulderX - 8, shoulderY + 11);
-        ctx.lineTo(shoulderX, shoulderY + 13);
-        ctx.lineTo(shoulderX + 8, shoulderY + 11);
-        ctx.moveTo(shoulderX, shoulderY + 13);
-        ctx.lineTo(hipX, hipY - 4);
+        ctx.moveTo(chestX - normX * 8, chestY - normY * 8);
+        ctx.lineTo(chestX, chestY);
+        ctx.lineTo(chestX + normX * 8, chestY + normY * 8);
+        ctx.moveTo(chestX, chestY);
+        ctx.lineTo(hipX + spineUx * 4, hipY + spineUy * 4);
         ctx.stroke();
-        // حزام خصر قرمزي رشيق
-        ctx.fillStyle = '#dc2626';
-        ctx.fillRect(hipX - 9, hipY - 4, 18, 4);
       } else {
         ctx.fillStyle = '#0f172a';
         ctx.beginPath();
-        ctx.moveTo(shoulderX - 5, shoulderY);
-        ctx.lineTo(shoulderX + 5, shoulderY);
-        ctx.lineTo(shoulderX + dir * 2, shoulderY + 16);
+        ctx.moveTo(shoulderX - normX * 5, shoulderY - normY * 5);
+        ctx.lineTo(shoulderX + normX * 5, shoulderY + normY * 5);
+        ctx.lineTo(shoulderX - spineUx * 15, shoulderY - spineUy * 15);
         ctx.closePath();
         ctx.fill();
-
-        ctx.fillStyle = '#facc15';
-        ctx.fillRect(hipX - 10, hipY - 5, 20, 5);
-        ctx.strokeRect(hipX - 10, hipY - 5, 20, 5);
       }
+      // حزام الخصر المدار مع زاوية العمود الفقري
+      ctx.strokeStyle = isShadow ? '#dc2626' : '#facc15';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(hipX - normX * (hpW + 0.5), hipY - normY * (hpW + 0.5));
+      ctx.lineTo(hipX + normX * (hpW + 0.5), hipY + normY * (hpW + 0.5));
+      ctx.stroke();
       ctx.restore();
 
       // 5. Draw Front Leg + Shoe
-      drawIKLimbSegment(ctx, hipX + dir * 3, hipY, frontLegIK.jointX, frontLegIK.jointY, frontLegIK.endX, frontLegIK.endY, 10, 8.5, pantColor, pantColor, true, dir, footFrontAngle, isShadow);
+      drawIKLimbSegment(ctx, hipX + normX * dir * 3, hipY + normY * dir * 3, frontLegIK.jointX, frontLegIK.jointY, frontLegIK.endX, frontLegIK.endY, 10, 8.5, pantColor, pantColor, true, dir, footFrontAngle, isShadow);
 
       // 6. Draw Front Arm + Fist
-      drawIKLimbSegment(ctx, shoulderX + dir * 3, shoulderY + 4, frontArmIK.jointX, frontArmIK.jointY, frontArmIK.endX, frontArmIK.endY, 8.5, 7, mainCol, skinColor, false, dir, 0, isShadow);
+      drawIKLimbSegment(ctx, shoulderX + normX * dir * 3, shoulderY + normY * dir * 3 + 2, frontArmIK.jointX, frontArmIK.jointY, frontArmIK.endX, frontArmIK.endY, 8.5, 7, mainCol, skinColor, false, dir, 0, isShadow);
 
-      // 7. Anime Strike Motion Arc (لـ Shadow: تأثيرات ضوئية حمراء وبيضاء مزدوجة عند تنفيذ الضربات!)
+      // 7. Anime Strike Motion Arc
       if (showStrikeArc && !isPreview) {
         ctx.save();
         const arcColor = isShadow ? '#ef4444' : (char.auraActive ? aCol : mainCol);
         ctx.strokeStyle = arcColor;
-        ctx.shadowColor = arcColor;
-        ctx.shadowBlur = 0;
         ctx.lineWidth = isShadow ? 7 : 5;
         ctx.beginPath();
         if (char.attackType === 'acrobatic_flip') {
@@ -6781,30 +7523,25 @@
           ctx.arc(shoulderX, shoulderY + 4, 46, dir > 0 ? -0.9 : Math.PI - 0.35, dir > 0 ? 0.35 : Math.PI + 0.9);
         }
         ctx.stroke();
-
         if (isShadow) {
-          // القوس الضوئي الأبيض الداخلي الساطع لضربات Shadow
           ctx.strokeStyle = '#ffffff';
-          ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 0;
           ctx.lineWidth = 2.8;
           ctx.stroke();
         }
         ctx.restore();
       }
 
-      // 8. Weapon in Front Hand
+      // 8. Weapon in Front Hand (يختفي تماماً إذا كانت الشخصية بلا أي سلاح wp === 'none')
       const wp = char.weapon || 'none';
-      if (wp !== 'none') {
+      if (wp && wp !== 'none') {
+        const wCustomCol = char.weaponColor || '';
         ctx.save();
         ctx.translate(frontArmIK.endX, frontArmIK.endY);
         if (wp === 'sword' || wp === 'katana' || wp === 'dagger') {
           const wLen = wp === 'dagger' ? 20 : 42;
           ctx.fillStyle = '#facc15';
           ctx.fillRect(-4, -4, 8, 8);
-          ctx.strokeStyle = char.fireActive ? '#fb923c' : '#f8fafc';
-          ctx.shadowColor = char.fireActive ? '#f97316' : '#38bdf8';
-          ctx.shadowBlur = 0;
+          ctx.strokeStyle = wCustomCol || (char.fireActive ? '#fb923c' : '#f8fafc');
           ctx.lineWidth = wp === 'katana' ? 3.5 : 4.5;
           ctx.beginPath();
           ctx.moveTo(0, 0);
@@ -6817,7 +7554,7 @@
           ctx.moveTo(0, 10);
           ctx.lineTo(dir * 30, -30);
           ctx.stroke();
-          ctx.fillStyle = wp === 'axe' ? '#ef4444' : '#475569';
+          ctx.fillStyle = wCustomCol || (wp === 'axe' ? '#ef4444' : '#475569');
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 2;
           ctx.beginPath();
@@ -6825,248 +7562,322 @@
           ctx.fill();
           ctx.stroke();
         } else if (wp === 'spear' || wp === 'staff' || wp === 'bat') {
-          ctx.strokeStyle = wp === 'staff' ? '#a855f7' : '#d97706';
+          ctx.strokeStyle = wCustomCol || (wp === 'staff' ? '#a855f7' : '#d97706');
           ctx.lineWidth = 4;
           ctx.beginPath();
           ctx.moveTo(-dir * 16, 16);
           ctx.lineTo(dir * 44, -34);
           ctx.stroke();
         } else if (wp === 'gun' || wp === 'rifle') {
-          ctx.fillStyle = '#334155';
+          ctx.fillStyle = wCustomCol || '#334155';
           ctx.fillRect(0, -6, dir * (wp === 'rifle' ? 28 : 16), 8);
         } else if (wp === 'shield') {
-          ctx.fillStyle = '#1e40af';
+          ctx.fillStyle = wCustomCol || '#1e40af';
           ctx.strokeStyle = '#93c5fd';
           ctx.lineWidth = 2.5;
           ctx.beginPath();
           ctx.roundRect(dir * 4, -20, 13, 36, 5);
           ctx.fill();
           ctx.stroke();
+        } else if (wp === 'bow') {
+          ctx.strokeStyle = wCustomCol || '#d97706';
+          ctx.lineWidth = 3.2;
+          ctx.beginPath();
+          ctx.arc(dir * 4, 0, 22, dir > 0 ? -1.2 : Math.PI - 1.2, dir > 0 ? 1.2 : Math.PI + 1.2);
+          ctx.stroke();
         }
         ctx.restore();
       }
 
-      // 9. Anime Neck, Red Scarf Collar & Head
+      // 9. Anime Neck, Scarf Collar, Head, Hair & Expressive Hit/Pain Face (يدور بالكامل بزاوية headAngle!)
+      ctx.save();
+      ctx.translate(headX, headY);
+      ctx.rotate(headAngle);
+
+      // الرقبة متصلة بالرأس
       ctx.fillStyle = skinColor;
       ctx.strokeStyle = isShadow ? '#27272a' : '#090d16';
       ctx.lineWidth = 2;
-      ctx.fillRect(headX - 4, headY + 10, 8, 8);
+      ctx.fillRect(-4, 10, 8, 8);
 
-      // الوشاح الأحمر الملتف حول رقبة Shadow – الظل (ثابت في جميع الحركات!)
-      if (isShadow) {
-        ctx.save();
-        ctx.fillStyle = '#dc2626';
-        ctx.strokeStyle = '#7f1d1d';
-        ctx.lineWidth = 1.8;
+      // ياقة الوشاح حول الرقبة
+      if (showScarf) {
+        ctx.fillStyle = scarfPrimaryCol;
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.roundRect(headX - 13, headY + 9, 26, 9, 4);
+        ctx.roundRect(-13, 9, 26, 9, 4);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.roundRect(headX - 11, headY + 10, 22, 4, 2);
-        ctx.fill();
-        ctx.restore();
       }
 
-      // الرأس متوسط الحجم
-      ctx.fillStyle = skinColor;
-      ctx.strokeStyle = isShadow ? '#27272a' : '#090d16';
+      // كرة الرأس
+      ctx.fillStyle = isHitFlashing ? '#fecaca' : skinColor;
+      ctx.strokeStyle = isHitFlashing ? '#ef4444' : (isShadow ? '#27272a' : '#090d16');
       ctx.lineWidth = 2.6;
       ctx.beginPath();
-      ctx.arc(headX, headY, isShadow ? 14.5 : 15, 0, Math.PI * 2);
+      ctx.arc(0, 0, isShadow ? 14.5 : 15, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
+      // قطرات العرق/الصدمة المتطايرة عند تلقي الضرب (أنمي احترافي!)
+      if (isRecoilPose && !isPreview) {
+        ctx.fillStyle = '#38bdf8';
+        [[-dir * 20, -14, 2.6], [-dir * 26, -4, 2.1], [dir * 18, -16, 2.2]].forEach(([dxD, dyD, rD]) => {
+          ctx.beginPath();
+          ctx.arc(dxD, dyD, rD, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
       if (isShadow) {
-        // ==================== هوية Shadow – الظل الثابتة: شعر أسود شوكي مدبب للأعلى والخلف + عينان أبيضتان متوهجتان حادتان ومائلتان دون أنف أو فم! ====================
-        // 1. الشعر الأسود الشوكي المدبب للأعلى والخلف (يشبه تسريحات أبطال الأنمي)
-        ctx.save();
-        ctx.fillStyle = '#05070c';
-        ctx.strokeStyle = '#3f3f46';
-        ctx.lineWidth = 1.6;
-        ctx.beginPath();
-        ctx.moveTo(headX + dir * 13, headY - 5);
-        ctx.lineTo(headX + dir * 19, headY - 19);
-        ctx.lineTo(headX + dir * 8, headY - 14);
-        ctx.lineTo(headX + dir * 11, headY - 28);
-        ctx.lineTo(headX + dir * 1, headY - 16);
-        ctx.lineTo(headX - dir * 4, headY - 31);
-        ctx.lineTo(headX - dir * 7, headY - 16);
-        ctx.lineTo(headX - dir * 18, headY - 29);
-        ctx.lineTo(headX - dir * 12, headY - 13);
-        ctx.lineTo(headX - dir * 25, headY - 21);
-        ctx.lineTo(headX - dir * 14, headY - 5);
-        ctx.lineTo(headX - dir * 22, headY - 10);
-        ctx.lineTo(headX - dir * 13, headY + 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
+        // 1. شعر Shadow الأسود الشوكي (إلا إذا وُصف بأنه أصلع)
+        if (char.customHairStyle !== 'bald') {
+          ctx.fillStyle = char.customHairColor || '#05070c';
+          ctx.strokeStyle = '#3f3f46';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(dir * 13, -5);
+          ctx.lineTo(dir * 19, -19);
+          ctx.lineTo(dir * 8, -14);
+          ctx.lineTo(dir * 11, -28);
+          ctx.lineTo(dir * 1, -16);
+          ctx.lineTo(-dir * 4, -31);
+          ctx.lineTo(-dir * 7, -16);
+          ctx.lineTo(-dir * 18, -29);
+          ctx.lineTo(-dir * 12, -13);
+          ctx.lineTo(-dir * 25, -21);
+          ctx.lineTo(-dir * 14, -5);
+          ctx.lineTo(-dir * 22, -10);
+          ctx.lineTo(-dir * 13, 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
 
-        // 2. عينان أبيضتان متوهجتان، حادتان ومائلتان، مع وهج أبيض حول العينين، ودون أنف أو فم تماماً!
-        ctx.save();
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 0;
+        // 2. عيون Shadow المتوهجة (تنكمش بعلامة > < عند تلقي الضرب القوي!)
+        ctx.fillStyle = char.customEyeColor || '#ffffff';
+        ctx.strokeStyle = char.customEyeColor || '#ffffff';
+        if (isRecoilPose) {
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.moveTo(dir * 2, -2.5);
+          ctx.lineTo(dir * 7.5, 0.5);
+          ctx.lineTo(dir * 2, 3.2);
+          ctx.stroke();
+        } else {
+          const fEyeX = dir * 5.2;
+          const fEyeY = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(fEyeX - dir * 4.5, fEyeY - 2.6);
+          ctx.lineTo(fEyeX + dir * 4.2, fEyeY + 0.8);
+          ctx.lineTo(fEyeX - dir * 1.2, fEyeY + 2.4);
+          ctx.closePath();
+          ctx.fill();
 
-        // العين الأمامية الحادة والمائلة
-        const fEyeX = headX + dir * 5.2;
-        const fEyeY = headY + 0.5;
-        ctx.beginPath();
-        ctx.moveTo(fEyeX - dir * 4.5, fEyeY - 2.6);
-        ctx.lineTo(fEyeX + dir * 4.2, fEyeY + 0.8);
-        ctx.lineTo(fEyeX - dir * 1.2, fEyeY + 2.4);
-        ctx.closePath();
-        ctx.fill();
+          const bEyeX = dir * 11.2;
+          const bEyeY = 0.2;
+          ctx.beginPath();
+          ctx.moveTo(bEyeX - dir * 2.2, bEyeY + 0.6);
+          ctx.lineTo(bEyeX + dir * 2.8, bEyeY - 2.2);
+          ctx.lineTo(bEyeX + dir * 0.8, bEyeY + 2.0);
+          ctx.closePath();
+          ctx.fill();
+        }
 
-        // العين الثانية المائلة (تظهر بزاوية ثلاثية الأبعاد أنيقة)
-        const bEyeX = headX + dir * 11.2;
-        const bEyeY = headY + 0.2;
-        ctx.beginPath();
-        ctx.moveTo(bEyeX - dir * 2.2, bEyeY + 0.6);
-        ctx.lineTo(bEyeX + dir * 2.8, bEyeY - 2.2);
-        ctx.lineTo(bEyeX + dir * 0.8, bEyeY + 2.0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-
-        // إذا كان دور شخصية الظل نفسها في الكلام، يفتح ويقفل فمه بوهج أبيض/أحمر أثناء الجملة فقط ويختفي فور انتهاء كلامه!
         if (!isPreview && state.activeSpeakerSlot === char.slot) {
           const shTalkCycle = (Math.sin(time * 16.5) + 1) * 0.5;
-          ctx.save();
           ctx.strokeStyle = '#f8fafc';
           ctx.fillStyle = '#dc2626';
           ctx.lineWidth = 1.6;
           if (shTalkCycle > 0.28) {
             const openH = 1.0 + shTalkCycle * 3.5;
             ctx.beginPath();
-            ctx.ellipse(headX + dir * 5.5, headY + 6.8, 3.2, openH, 0, 0, Math.PI * 2);
+            ctx.ellipse(dir * 5.5, 6.8, 3.2, openH, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
           } else {
             ctx.beginPath();
-            ctx.moveTo(headX + dir * 3, headY + 6.8);
-            ctx.lineTo(headX + dir * 8.2, headY + 6.8);
+            ctx.moveTo(dir * 3, 6.8);
+            ctx.lineTo(dir * 8.2, 6.8);
             ctx.stroke();
           }
-          ctx.restore();
         }
       } else {
-        // Anime Eyes for standard human/zombie/alien characters
-        const eyeX = headX + dir * 6;
-        const eyeY = headY - 1;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.ellipse(eyeX, eyeY, 4.2, 3.2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = char.auraActive ? aCol : mainCol;
-        ctx.beginPath();
-        ctx.arc(eyeX + dir * 1.0, eyeY, 2.1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#090d16';
-        ctx.beginPath();
-        ctx.arc(eyeX + dir * 1.2, eyeY, 1.0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Expressive Eyebrow
-        ctx.strokeStyle = '#090d16';
-        ctx.lineWidth = 2.4;
-        ctx.beginPath();
+        // عيون وتعابير وجه الشخصيات البشرية والوحوش
+        const eyeX = dir * 6;
+        const eyeY = -1;
         if (isRecoilPose) {
-          ctx.moveTo(eyeX - dir * 4, eyeY - 4);
-          ctx.lineTo(eyeX + dir * 4, eyeY - 7);
-        } else if (char.pose === 'brawl' || char.auraActive) {
-          ctx.moveTo(eyeX - dir * 4, eyeY - 7);
-          ctx.lineTo(eyeX + dir * 4, eyeY - 4);
-        } else {
-          ctx.moveTo(eyeX - dir * 4, eyeY - 5.5);
-          ctx.lineTo(eyeX + dir * 4, eyeY - 5.5);
-        }
-        ctx.stroke();
+          // تعبير الألم والصدمة عند تلقي الضرب (> <) مع فم متألم!
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(eyeX - dir * 3.8, eyeY - 3.2);
+          ctx.lineTo(eyeX + dir * 3.2, eyeY);
+          ctx.lineTo(eyeX - dir * 3.8, eyeY + 3.2);
+          ctx.stroke();
 
-        // حركة الفم (لقف الشخصية يفتح ويقفل بوضوح للشخصية التي لها دور الكلام فقط، ويبقى مغلقاً لبقية الشخصيات!)
-        const isThisCharSpeaking = (!isPreview && state.activeSpeakerSlot === char.slot);
-        ctx.fillStyle = '#991b1b';
-        ctx.strokeStyle = '#090d16';
-        ctx.lineWidth = 1.8;
-        if (isThisCharSpeaking) {
-          // يفتح ويقفل بشكل متكرر وواضح طوال مدة كلام الشخصية (من الإغلاق الكامل إلى الفتح الواسع)
-          const talkCycle = (Math.sin(time * 16.5) + 1) * 0.5; // 0.0 (مغلق) -> 1.0 (مفتوح)
-          if (talkCycle > 0.28) {
-            const openH = 1.2 + talkCycle * 4.2;
-            ctx.beginPath();
-            ctx.ellipse(headX + dir * 5.5, headY + 6.5, 3.6, openH, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            // خط الأسنان العلوي الأبيض ليبدو فتح وإغلاق الفم واضحاً جداً كأفلام الأنمي
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(headX + dir * 5.5 - 2.2, headY + 6.5 - openH * 0.7, 4.4, 1.5);
+          // فم الصرخة والألم عند الضرب
+          ctx.fillStyle = '#7f1d1d';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.ellipse(dir * 5.5, 6.5, 3.8, 2.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(dir * 5.5 - 2.2, 4.4, 4.4, 1.4);
+        } else {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.ellipse(eyeX, eyeY, 4.2, 3.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = char.customEyeColor || (char.auraActive ? aCol : mainCol);
+          ctx.beginPath();
+          ctx.arc(eyeX + dir * 1.0, eyeY, 2.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#090d16';
+          ctx.beginPath();
+          ctx.arc(eyeX + dir * 1.2, eyeY, 1.0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // الحاجب التعبيري
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          if (char.pose === 'brawl' || char.auraActive) {
+            ctx.moveTo(eyeX - dir * 4, eyeY - 7);
+            ctx.lineTo(eyeX + dir * 4, eyeY - 4);
+          } else {
+            ctx.moveTo(eyeX - dir * 4, eyeY - 5.5);
+            ctx.lineTo(eyeX + dir * 4, eyeY - 5.5);
+          }
+          ctx.stroke();
+
+          // الفم والكلام
+          const isThisCharSpeaking = (!isPreview && state.activeSpeakerSlot === char.slot);
+          ctx.fillStyle = '#991b1b';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 1.8;
+          if (isThisCharSpeaking) {
+            const talkCycle = (Math.sin(time * 16.5) + 1) * 0.5;
+            if (talkCycle > 0.28) {
+              const openH = 1.2 + talkCycle * 4.2;
+              ctx.beginPath();
+              ctx.ellipse(dir * 5.5, 6.5, 3.6, openH, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(dir * 5.5 - 2.2, 6.5 - openH * 0.7, 4.4, 1.5);
+            } else {
+              ctx.beginPath();
+              ctx.moveTo(dir * 2.5, 6.5);
+              ctx.lineTo(dir * 8.8, 6.5);
+              ctx.stroke();
+            }
           } else {
             ctx.beginPath();
-            ctx.moveTo(headX + dir * 2.5, headY + 6.5);
-            ctx.lineTo(headX + dir * 8.8, headY + 6.5);
+            ctx.moveTo(dir * 3, 6.5);
+            ctx.lineTo(dir * 8.5, 6);
             ctx.stroke();
           }
-        } else {
-          // الفم مغلق تماماً عندما لا يكون دور هذه الشخصية في الكلام
+        }
+
+        // نظارة أو قناع إذا وُصف للشخصية في النص
+        if (char.customHasGlasses) {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(headX + dir * 3, headY + 6.5);
-          ctx.lineTo(headX + dir * 8.5, headY + 6);
+          ctx.roundRect(dir * 1, -4.5, 11, 7, 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        if (char.customHasMask) {
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(-11, 1, 24, 11, 4);
+          ctx.fill();
           ctx.stroke();
         }
 
-        // 10. Anime Hair & Flowing Headband
-        if (char.isMonster || arch.headType === 'horns') {
+        // الشعر أو الخوذة أو القبعة أو الصلع حسب الوصف
+        if (char.customHairStyle === 'bald') {
+          // أصلع / بلا شعر حسب الوصف!
+        } else if (char.isMonster || arch.headType === 'horns') {
           ctx.fillStyle = '#ef4444';
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 2;
           [-1, 1].forEach(s => {
             ctx.beginPath();
-            ctx.moveTo(headX + s * 6, headY - 12);
-            ctx.lineTo(headX + s * 18, headY - 30);
-            ctx.lineTo(headX + s * 13, headY - 10);
+            ctx.moveTo(s * 6, -12);
+            ctx.lineTo(s * 18, -30);
+            ctx.lineTo(s * 13, -10);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
           });
-        } else if (arch.headType === 'helmet' || arch.headType === 'robot') {
+        } else if (char.customHatType === 'helmet' || arch.headType === 'helmet' || arch.headType === 'robot') {
           ctx.fillStyle = mainCol;
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(headX, headY - 3, 15.5, Math.PI, 0);
+          ctx.arc(0, -3, 15.5, Math.PI, 0);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-        } else {
-          ctx.fillStyle = char.auraActive ? aCol : (arch.headType === 'spiky' ? '#facc15' : '#0f172a');
+        } else if (char.customHatType === 'cap') {
+          ctx.fillStyle = mainCol;
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(headX - 14, headY - 5);
-          ctx.lineTo(headX - 22, headY - 22);
-          ctx.lineTo(headX - 9, headY - 15);
-          ctx.lineTo(headX - 6, headY - 29);
-          ctx.lineTo(headX + 2, headY - 17);
-          ctx.lineTo(headX + 8, headY - 28);
-          ctx.lineTo(headX + 13, headY - 15);
-          ctx.lineTo(headX + 20, headY - 20);
-          ctx.lineTo(headX + 14, headY - 6);
+          ctx.arc(0, -4, 15, Math.PI, 0);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillRect(0, -6, dir * 22, 3.5);
+        } else {
+          ctx.fillStyle = char.customHairColor || (char.auraActive ? aCol : (arch.headType === 'spiky' ? '#facc15' : '#0f172a'));
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-14, -5);
+          ctx.lineTo(-22, -22);
+          ctx.lineTo(-9, -15);
+          ctx.lineTo(-6, -29);
+          ctx.lineTo(2, -17);
+          ctx.lineTo(8, -28);
+          ctx.lineTo(13, -15);
+          ctx.lineTo(20, -20);
+          ctx.lineTo(14, -6);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          ctx.strokeStyle = mainCol;
-          ctx.lineWidth = 3.5;
-          ctx.beginPath();
-          ctx.moveTo(headX - 14, headY - 7);
-          ctx.lineTo(headX + 14, headY - 7);
-          ctx.moveTo(headX - dir * 13, headY - 7);
-          ctx.quadraticCurveTo(headX - dir * 26, headY - 13 + Math.sin(t * 2.2) * 6, headX - dir * 36, headY - 3);
-          ctx.stroke();
+          if (char.customHairStyle === 'long') {
+            ctx.beginPath();
+            ctx.moveTo(-dir * 10, -4);
+            ctx.quadraticCurveTo(-dir * 26, 8, -dir * 20, 24);
+            ctx.lineTo(-dir * 8, 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          if (char.customHasHeadband !== false) {
+            ctx.strokeStyle = mainCol;
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(-14, -7);
+            ctx.lineTo(14, -7);
+            ctx.moveTo(-dir * 13, -7);
+            ctx.quadraticCurveTo(-dir * 26, -13 + Math.sin(t * 2.2) * 6, -dir * 36, -3);
+            ctx.stroke();
+          }
         }
       }
+      ctx.restore();
 
       // Ice Freeze Crystal Block if frozenActive
       if (char.frozenActive) {
@@ -7222,6 +8033,80 @@
       ctx.translate(-cam.x, -cam.y);
 
       drawWorldEnvironment(ctx, timeSec, cam);
+
+      // 📏 رسم مسار الطيران والقياس المتري (نصف دائرة / خط مستقيم بارتفاع Xم / مسار مدمج) من موقع الضحية إلى نقطة الهبوط!
+      if (state.activeDistanceMarker) {
+        const dm = state.activeDistanceMarker;
+        const vic = state.characters[dm.victimSlot];
+        ctx.save();
+        const sX = dm.startX;
+        const eX = dm.endX;
+        const gStart = getGroundYAt(sX);
+        const gEnd = getGroundYAt(eX);
+        const tType = dm.trajectoryType || 'hybrid';
+        const elevPx = dm.elevPx || 48;
+        const peakH = dm.peakH || 150;
+
+        // خط المسار المنقط المتوهج حسب نوع المسار (نصف دائرة / خط مستقيم / مزيج)
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.72)';
+        ctx.lineWidth = 2.6;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        const steps = 40;
+        for (let s = 0; s <= steps; s++) {
+          const u = s / steps;
+          let px = sX + (eX - sX) * u;
+          let py = getGroundYAt(px);
+          if (tType === 'semicircle') {
+            const semi = 0.60 * Math.sin(u * Math.PI) + 0.40 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * u - 1, 2)));
+            py -= peakH * semi;
+          } else if (tType === 'straight') {
+            if (u < 0.90) py -= elevPx;
+            else py -= elevPx * (1 - (u - 0.90) / 0.10);
+          } else {
+            if (u < 0.44) {
+              py -= elevPx * Math.min(1, (u / 0.44) * 3.2);
+            } else if (u < 0.94) {
+              const k = (u - 0.44) / 0.50;
+              py -= (elevPx * (1 - k) + peakH * Math.sin(k * Math.PI));
+            }
+          }
+          if (s === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // علامة نقطة البداية (0م - موقع الضحية قبل الضربة) ونقطة النهاية (المسافة الكلية بالمتر)
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(sX, gStart, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = '900 11px Cairo';
+        ctx.textAlign = 'center';
+        ctx.fillText('📍 موقع الضربة (0م)', sX, gStart + 20);
+
+        ctx.fillStyle = '#f43f5e';
+        ctx.beginPath();
+        ctx.arc(eX, gEnd, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText(`🎯 ${dm.meters} متر (${dm.label || ''})`, eX, gEnd + 20);
+
+        if (vic) {
+          const curM = Math.min(dm.meters, Math.round((Math.abs(vic.x - sX) / Math.max(1, Math.abs(eX - sX))) * dm.meters));
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+          ctx.strokeStyle = '#f43f5e';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(vic.x - 75, vic.y - 138, 150, 22, 7);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#fde047';
+          ctx.font = '900 11px Cairo';
+          ctx.fillText(`📏 المسافة: ${curM} / ${dm.meters} متر`, vic.x, vic.y - 123);
+        }
+        ctx.restore();
+      }
 
       // رسم تشققات الأرض وتطاير الصخور عند الضربات القوية والانبطاح!
       state.groundCracks.forEach(gc => {
@@ -8357,6 +9242,7 @@
         const c = state.characters[state.touchTargetSlot];
         if (c) {
           c.weapon = e.target.value;
+          c.manualWeapon = e.target.value === 'none' ? '' : e.target.value;
           showToast(`🗡️ تم تحديث سلاح #${c.slot + 1} (${c.name})`);
         }
       });
@@ -8743,7 +9629,11 @@
           } else if (dir === 'jump') {
             c.vy = -12.5;
             c.vx = (c.facing || 1) * 5.5;
-            c.pose = 'flying';
+            c.pose = 'jump_arc';
+          } else if (dir === 'fly_toggle') {
+            c.flyingActive = !c.flyingActive;
+            c.flyHeight = c.flyingActive ? 172 : 0;
+            c.pose = c.flyingActive ? 'fly' : 'idle';
           } else if (dir === 'flip_face') {
             c.facing = -(c.facing || 1);
           } else if (dir === 'center') {
@@ -8986,6 +9876,7 @@
       });
       document.getElementById('charWeaponSelect')?.addEventListener('change', e => {
         state.characters[state.selectedCharSlot].weapon = e.target.value;
+        state.characters[state.selectedCharSlot].manualWeapon = e.target.value === 'none' ? '' : e.target.value;
       });
       document.getElementById('charScaleInput')?.addEventListener('input', e => {
         state.characters[state.selectedCharSlot].targetScale = parseFloat(e.target.value) || 1.0;
