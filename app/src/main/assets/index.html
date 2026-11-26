@@ -1135,6 +1135,8 @@
           inVehicle: false,
           auraActive: false,
           auraColor: i % 2 === 0 ? '#ef4444' : '#00d4ff',
+          auraScale: 1.0,
+          customAuraScale: 0,
           auraShape: 'circle_light', // 'circle_light' | 'flame_ring' | 'electric_orb'
           fireActive: false,
           lightningActive: false,
@@ -1177,8 +1179,13 @@
       blackHoles: [],
       meteors: [],
       groundCracks: [],
+      groundFissures: [],
+      floatingAuraRocks: [],
       rockDebris: [],
       xSlashes: [],
+      worldQuakeTimer: 0,
+      skyDarkenFactor: 0,
+      initialWeather: 'clear',
       hasCafeScene: false,
       eclipseProgress: 0,
       camOverrideTarget: null,
@@ -1460,10 +1467,10 @@
     }
 
     function extractDistanceMeters(clause, fallbackM = 3.0) {
-      // استبعاد عبارة "بارتفاع X متر" أو "X متر مربع" حتى لا تختلط بالمسافة الأفقية!
+      // استبعاد عبارات "بارتفاع X متر" أو "بسمك X متر" أو "بقطر X متر" أو "بحجم X متر" أو "X متر مربع" حتى لا تختلط بالمسافة الأفقية!
       const clean = (clause || '')
         .replace(/\d+\s*متر\s*مربع/g, '')
-        .replace(/(?:بارتفاع|بإرتفاع|على\s*ارتفاع|ارتفاع[هه]?)\s*\d+(?:\.\d+)?\s*(?:متر|أمتار|امتار|م)?/g, '');
+        .replace(/(?:بارتفاع|بإرتفاع|على\s*ارتفاع|ارتفاع[هه]?|بسمك|سمك[هه]?|بقطر|قطر(?:ها|ه)?|بحجم|حجم(?:ها|ه)?|بعرض|عرض(?:ها|ه)?)\s*\d+(?:\.\d+)?\s*(?:متر|أمتار|امتار|م|سم)?/g, '');
       const km = clean.match(/(\d+(?:\.\d+)?)\s*(?:كيلومتر|كيلو\s*متر|كيلو|كم)/);
       if (km) return Math.max(100, parseFloat(km[1]) * 1000);
       if (/أربع[ةه]?\s*(?:كيلومتر|كيلو)/.test(clean)) return 4000;
@@ -1503,12 +1510,12 @@
 
     function extractColorFromArabicText(txt, fallbackColor = '') {
       if (!txt) return fallbackColor;
-      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:سود[اءهة]?|أسود|اسود|ظلامي?[ةه]?|ضلامي?[ةه]?|قاتم[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#111827';
-      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:حمر[اءهة]?|أحمر|احمر|قرمزي[ةه]?|دموي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#ef4444';
-      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:زرق[اءهة]?|أزرق|ازرق|سماوي[ةه]?|لبني[ةه]?|كهربائي[ةه]?|جليدي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#00d4ff';
-      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:صفر[اءهة]?|أصفر|اصفر|ذهبي[ةه]?|شمسي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#facc15';
-      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:خضر[اءهة]?|أخضر|اخضر|زمردي[ةه]?|عشبي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#10b981';
-      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:بيض[اءهة]?|أبيض|ابيض|فضي[ةه]?|نقي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#f8fafc';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:سود(?:اء|ا|أ|ه|ة)?|أسود|اسود|ظلامي?[ةه]?|ضلامي?[ةه]?|قاتم[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#111827';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:حمر(?:اء|ا|أ|ه|ة)?|أحمر|احمر|قرمزي[ةه]?|دموي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#ef4444';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:زرق(?:اء|ا|أ|ه|ة)?|أزرق|ازرق|سماوي[ةه]?|لبني[ةه]?|كهربائي[ةه]?|جليدي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#00d4ff';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:صفر(?:اء|ا|أ|ه|ة)?|أصفر|اصفر|ذهبي[ةه]?|شمسي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#facc15';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:خضر(?:اء|ا|أ|ه|ة)?|أخضر|اخضر|زمردي[ةه]?|عشبي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#10b981';
+      if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:بيض(?:اء|ا|أ|ه|ة)?|أبيض|ابيض|فضي[ةه]?|نقي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#f8fafc';
       if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:بنفسجي[ةه]?|أرجواني[ةه]?|ارجواني[ةه]?|موف)(?=$|[^؀-ۿ])/.test(txt)) return '#a855f7';
       if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:برتقالي[ةه]?|ناري[ةه]?|ملتهب[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#f97316';
       if (/(?:^|[^؀-ۿ])(?:[وفبكل]{0,2}(?:ال)?)?(?:وردي[ةه]?|زهري[ةه]?|فوشي[ةه]?)(?=$|[^؀-ۿ])/.test(txt)) return '#ec4899';
@@ -1519,12 +1526,73 @@
 
     function extractAuraColorFromClause(clause, fallbackColor = '') {
       if (!clause) return fallbackColor;
-      const auraNearMatch = clause.match(/(?:هال[ةه]|هالته|هالتها|طاق[ةه]|توهج)\s+(?:ضوئي[ةه]\s+|دائري[ةه]\s+|مشتعل[ةه]\s+|قوي[ةه]\s+|خارق[ةه]\s+)?([؀-ۿ]+(?:\s+[؀-ۿ]+)?)/);
+      const auraNearMatch = clause.match(/(?:هال[ةه]|هالته|هالتها|طاق[ةه]|توهج)\s+(?:ضوئي[ةه]\s+|دائري[ةه]\s+|مشتعل[ةه]\s+|قوي[ةه]\s+|خارق[ةه]\s+|كبير[ةه]\s+|ضخم[ةه]\s+)?([؀-ۿ]+(?:\s+[؀-ۿ]+)?)/);
       if (auraNearMatch) {
         const nearCol = extractColorFromArabicText(auraNearMatch[1], '');
         if (nearCol) return nearCol;
       }
       return extractColorFromArabicText(clause, fallbackColor);
+    }
+
+    function extractAuraSizeConfig(clause) {
+      if (!clause) return { auraScale: 1.0, diameterMeters: 0, hasExplicitSize: false };
+      const diamMatch = clause.match(/(?:بقطر|قطر(?:ها|ه)?|بحجم|حجم(?:ها|ه)?|بعرض|عرض(?:ها|ه)?|بمساح[ةه])\s*(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م)?/);
+      if (diamMatch) {
+        const dm = Math.max(0.5, Math.min(25, parseFloat(diamMatch[1])));
+        // قطر 6 متر -> نصف قطر 216 بكسل (auraScale = 2.77) ليغطي مساحة ضخمة حول الشخصية!
+        const sc = Math.min(4.2, Math.max(0.55, (dm * 36) / 78));
+        return { auraScale: sc, diameterMeters: dm, hasExplicitSize: true };
+      }
+      if (/هال[ةه][^،,.]*?(?:عملاق[ةه]|هائل[ةه]|عظيم[ةه])/.test(clause)) {
+        return { auraScale: 2.65, diameterMeters: 5.8, hasExplicitSize: true };
+      }
+      if (/هال[ةه][^،,.]*?(?:ضخم[ةه]|كبير[ةه]\s*جدا)/.test(clause)) {
+        return { auraScale: 2.25, diameterMeters: 4.8, hasExplicitSize: true };
+      }
+      if (/هال[ةه][^،,.]*?(?:كبير[ةه]|واسع[ةه])/.test(clause)) {
+        return { auraScale: 1.78, diameterMeters: 3.8, hasExplicitSize: true };
+      }
+      if (/هال[ةه][^،,.]*?(?:صغير[ةه]|خفيف[ةه])/.test(clause)) {
+        return { auraScale: 0.68, diameterMeters: 1.4, hasExplicitSize: true };
+      }
+      return { auraScale: 1.0, diameterMeters: 0, hasExplicitSize: false };
+    }
+
+    function extractBeamConfigFromClause(clause) {
+      if (!clause) return { color: '', colorExplicit: false, thicknessMeters: 0.65, widthPx: 22, sizeExplicit: false };
+      let bCol = '';
+      const explicitColMatch = clause.match(/(?:ولون[هه]?|بلون|لون[هه]?|شعاع|ليزر)\s+(?:ضوئي\s+|طاقة\s+|خارق\s+)?([؀-ۿ]+(?:\s+[؀-ۿ]+)?)/);
+      if (explicitColMatch) {
+        bCol = extractColorFromArabicText(explicitColMatch[1], '');
+      }
+      if (!bCol) bCol = extractColorFromArabicText(clause, '');
+      const colorExplicit = Boolean(bCol);
+
+      let thicknessMeters = 0.65;
+      let sizeExplicit = false;
+      const thMatch = clause.match(/(?:بسمك|سمك[هه]?|بقطر|قطر[هه]?|بعرض|عرض[هه]?|بحجم|حجم[هه]?)\s*(\d+(?:\.\d+)?)\s*(سم|سنتيمتر|متر|أمتار|امتار|م)?/);
+      if (thMatch) {
+        let val = parseFloat(thMatch[1]);
+        const unit = thMatch[2] || 'متر';
+        if (/سم|سنتيمتر/.test(unit)) val = val / 100;
+        thicknessMeters = Math.max(0.1, Math.min(12.0, val));
+        sizeExplicit = true;
+      } else if (/شعاع[^،,.]*?(?:عملاق|هائل|عظيم)/.test(clause)) {
+        thicknessMeters = 2.8;
+        sizeExplicit = true;
+      } else if (/شعاع[^،,.]*?(?:ضخم|كبير\s*جدا)/.test(clause)) {
+        thicknessMeters = 2.0;
+        sizeExplicit = true;
+      } else if (/شعاع[^،,.]*?(?:كبير|عريض)/.test(clause)) {
+        thicknessMeters = 1.35;
+        sizeExplicit = true;
+      } else if (/شعاع[^،,.]*?(?:صغير|رفيع|دقيق)/.test(clause)) {
+        thicknessMeters = 0.30;
+        sizeExplicit = true;
+      }
+      // 1 متر سمك = 36 بكسل للقلب الأساسي للشعاع (+ هالة التوهج المحيطة = ~64 بكسل)
+      const widthPx = Math.min(210, Math.max(7, Math.round(thicknessMeters * 36)));
+      return { color: bCol, colorExplicit, thicknessMeters, widthPx, sizeExplicit };
     }
 
     function isExplicitNoWeaponText(clause) {
@@ -1574,6 +1642,11 @@
           c.auraColor = aCol;
           c.customAuraColor = aCol;
           c.auraShape = (aCol === '#111827') ? 'dark_void' : 'circle_light';
+        }
+        const aSizeCfg = extractAuraSizeConfig(clause);
+        if (aSizeCfg.hasExplicitSize) {
+          c.auraScale = aSizeCfg.auraScale;
+          c.customAuraScale = aSizeCfg.auraScale;
         }
         c.auraActive = true;
         c.initialAuraActive = true;
@@ -1668,7 +1741,8 @@
         .replace(/\{[^}]*\}/g, ' ')
         .replace(/(?:"|“|”|«|'')\s*[^"”»']+\s*(?:"|“|”|»|'')/g, ' ')
         .replace(/(\d+(?:\.\d+)?)\s*(?:متر\s*مربع|متر|أمتار|امتار|كيلومتر|كيلو|كم|خطو[ةه]|خطوات|زوايا|لقطات|درج[ةه]|ثاني[ةه]|ثواني|ثوان|دقيق[ةه]|دقائق|دقايق|شخصي[ةه]|شخصيات|أشخاص|اشخاص)/g, ' ')
-        .replace(/(?:لمد[ةه]|لمساف[ةه]|مساف[ةه]|بارتفاع|بإرتفاع|ارتفاع|على\s*بعد|يبعد|يضم)\s*\d+(?:\.\d+)?/g, ' ')
+        .replace(/(?:لمد[ةه]|لمساف[ةه]|مساف[ةه]|بارتفاع|بإرتفاع|ارتفاع|على\s*بعد|يبعد|يضم|بسمك|سمك[هه]?|بقطر|قطر(?:ها|ه)?|بحجم|حجم(?:ها|ه)?|بعرض|عرض(?:ها|ه)?|بسرع[ةه]|سرع[ةه])\s*\d+(?:\.\d+)?/g, ' ')
+        .replace(/(?:على|علي)\s+(?=(?:الشخصي|شخصي|رقم|الطيب|الشرير|أحمد|احمد|حمد|خالد|محمد|عمر|زيد|سارة|ساره|حمزة|حمزه|فهد|سلمان|ياسر|طارق|سعيد|ناصر|ماجد|الأرض|الارض))/g, ' ')
         .replace(/القطع[ةه]\s*رقم\s*\d+/g, ' ');
 
       const genericPhrases = [
@@ -1897,11 +1971,17 @@
       if (ws) ws.value = state.world;
 
       // 2. Reset to official names (الشخصية رقم 1..15) unless manually renamed, then extract any names from the description!
-      // Detect weather from description automatically!
-      if (/ثلج|ثلوج|جليدي/.test(norm0) && !/يجمد.*بالجليد|تجميد/.test(norm0)) state.weather = 'snow';
-      else if (/عاصف[ةه]|امطار\s*ورعد/.test(norm0)) state.weather = 'storm';
-      else if (/مطر|أمطار|امطار|ممطر/.test(norm0)) state.weather = 'rain';
-      else state.weather = 'clear';
+      // Detect static initial weather vs dynamic mid-scene weather effects (مثل: "يتأثر العالم بها ظهور مطر أو برق")
+      const isDynamicEventWeather = /(?:تظهر|يظهر|تضهر|يضهر|ضهور|ظهور|يتأثر|تتأثر|يتاثر|تتاثر|بسبب|ينزل|يهطل|تبدأ)[^.،\n]{0,75}(?:مطر|أمطار|امطار|برق|عاصف[ةه]|ثلج)/.test(norm0);
+      if (!isDynamicEventWeather) {
+        if (/ثلج|ثلوج|جليدي/.test(norm0) && !/يجمد.*بالجليد|تجميد/.test(norm0)) state.initialWeather = 'snow';
+        else if (/عاصف[ةه]|امطار\s*ورعد/.test(norm0)) state.initialWeather = 'storm';
+        else if (/مطر|أمطار|امطار|ممطر/.test(norm0)) state.initialWeather = 'rain';
+        else state.initialWeather = 'clear';
+      } else {
+        state.initialWeather = 'clear';
+      }
+      state.weather = state.initialWeather;
 
       // Reset characters dynamically to official names (الشخصية رقم 1..15) and classic human archetypes unless the current description or manual lock specifies Shadow/Monsters!
       const classic8ArchIds = ['stickman_classic', 'shadow_ninja', 'energy_hero', 'fire_lord', 'cyber_mecha', 'mystic_mage', 'armored_knight', 'giant_boss'];
@@ -2040,6 +2120,8 @@
         if (startsWithCafeFriends && i <= 1) c.hiddenAtStart = false;
         c.weaponColor = '';
         c.customAuraColor = '';
+        c.auraScale = 1.0;
+        c.customAuraScale = 0;
         c.initialAuraActive = false;
         c.customPantColor = '';
         c.customHairColor = '';
@@ -2103,7 +2185,7 @@
             state.characters[shSlot].creatureType = shVariant;
             state.characters[shSlot].name = 'Shadow – الظل';
             state.characters[shSlot].color = '#070a12';
-            state.characters[shSlot].auraColor = '#ef4444';
+            state.characters[shSlot].auraColor = shVariant === 'shadow_void' ? '#111827' : (shVariant === 'shadow_lightning' ? '#f8fafc' : '#ef4444');
             syncCharacterArchetype(state.characters[shSlot]);
           }
 
@@ -2558,9 +2640,26 @@
           if (!/يتعارك|عراك|يطير|يشحن|سيار|شاص|حرب/.test(clause)) return;
         }
 
-        const actor = mentioned.length > 0 ? mentioned[0] : lastActor;
+        let actor = mentioned.length > 0 ? mentioned[0] : lastActor;
+        let target = mentioned.length > 1 ? mentioned[1] : ((actor + 1) % Math.max(2, state.activeCharCount));
+        // إذا كانت الجملة هجوماً أو شعاعاً أو حركة نحو شخص ("باتجاه عمر" / "ب إتجاه عمر" / "نحو عمر" / "ضد عمر") فإن الاسم الذي بعد "باتجاه/نحو/ضد" هو الهدف دائماً!
+        const isDirectedAttackOrBeam = /شعاع|ليزر|كاميهاميها|موج[ةه]\s*طاق|ضرب|يضرب|تضرب|ركل|يركل|تركل|لكم|يلكم|تلكم|أطلق|اطلق|يطلق|تطلق|يرمي|رمى|هاجم|يهاجم|يهجم/.test(clause);
+        const dirPrepositionMatch = clause.match(/(?:باتجاه|ب\s*اتجاه|ب\s*إتجاه|بإتجاه|نحو|صوب|ضد)\s+([؀-ۿ0-9\s#]+)/);
+        if (isDirectedAttackOrBeam && dirPrepositionMatch) {
+          const dirTargetSlots = findCharacterSlotsInText(dirPrepositionMatch[1]);
+          if (dirTargetSlots.length > 0) {
+            const explicitTarget = dirTargetSlots[0];
+            if (mentioned.length === 1 && mentioned[0] === explicitTarget) {
+              target = explicitTarget;
+              actor = (lastActor !== explicitTarget) ? lastActor : ((explicitTarget + 1) % Math.max(2, state.activeCharCount));
+            } else if (mentioned.length >= 2 && mentioned.includes(explicitTarget)) {
+              target = explicitTarget;
+              const otherActor = mentioned.find(s => s !== explicitTarget);
+              if (otherActor !== undefined) actor = otherActor;
+            }
+          }
+        }
         lastActor = actor;
-        const target = mentioned.length > 1 ? mentioned[1] : ((actor + 1) % Math.max(2, state.activeCharCount));
 
         // تطبيق وصف الشخصية حرفياً على الشخصية المذكورة فقط (أو الجميع فقط إذا كتب "الشخصيات / الجميع / الكل")!
         const isGlobalDescClause = /الشخصيات|شخصيات|شخصيتين|الجميع|الكل|كلاهما/.test(clause);
@@ -3037,16 +3136,18 @@
           return;
         }
 
-        // ⚡🔥 Superpowers (Aura, Black Aura, Invisibility, Shadow Clones, Ice Freeze, Black Hole, Meteors, Rocket Flight, Beam, Fire, Lightning, Giant, Monster)
+        // ⚡🔥 Superpowers (Aura, Black Aura, Giant Aura Diameter, World Effects: Rain/Lightning/Ground Split, Beam with Thickness/Color/Auto-Turn/Knockback, etc.)
         const powers = parseClausePowers(clause);
         if (powers.isSuperpowerOnly) {
-          const pDur = explicitDur > 0 ? explicitDur : (powers.fly ? 4.5 : 2.2);
+          const defaultPDur = powers.fly ? 4.5 : ((powers.beam || powers.worldImpact || powers.groundSplit) ? 2.85 : 2.2);
+          const pDur = explicitDur > 0 ? explicitDur : defaultPDur;
           const pEv = {
             type: 'superpower',
             title: `⚡ قوة خارقة (#${actor + 1} ${state.characters[actor].name}): ${powers.label}`,
             actorSlot: actor,
             targetSlot: target,
             powers,
+            deferToEndOfScene: /(في آخر المشهد|في اخر المشهد|في نهاية المشهد|بنهاية المشهد|بآخر المشهد|باخر المشهد)/.test(clause),
             duration: pDur
           };
           if (isParallel && events.length > 0) {
@@ -3288,7 +3389,7 @@
       const rocket = /صاروخ|اندفاع[ةه]|شرار[ةه]|ذيل|300\s*متر|كيلومتر|كيلو|كم|بسرع[ةه]\s*خارق|بسرع[ةه]\s*كبير/.test(clause);
       const flyMeters = extractDistanceMeters(clause, rocket ? 4000 : 300);
       const land = /يهبط|ينزل\s*للأرض|ينزل\s*على\s*الأرض|هبوط/.test(clause);
-      const giant = /يكبر|عملاق|يتضخم|حجمه/.test(clause);
+      const giant = (/يكبر|عملاق|يتضخم|حجمه/.test(clause)) && !/هال[ةه][^،,.]*عملاق|شعاع[^،,.]*عملاق/.test(clause);
       const monster = /يتحول\s*إلى\s*وحش|يتحول\s*الى\s*وحش|يتحول\s*لوحش|وحش\s*مرعب/.test(clause);
       const invisible = /يختفي|تختفي|اختفاء|تمويه|شبح/.test(clause);
       const clones = /ينسخ|نسخ\s*ظل|نسخ\s*نفسه|سراب/.test(clause);
@@ -3301,25 +3402,66 @@
       let auraColor = parsedAuraCol || '#ef4444';
       let auraShape = 'circle_light';
       if (auraColor === '#111827') { auraShape = 'dark_void'; }
+      const auraSizeCfg = extractAuraSizeConfig(clause);
+      const auraScale = auraSizeCfg.auraScale;
+      const auraDiameterMeters = auraSizeCfg.diameterMeters;
+      const auraSizeExplicit = auraSizeCfg.hasExplicitSize;
 
       const fire = /نار|لهب|حريق/.test(clause);
       const beam = /شعاع|ليزر|كاميهاميها|موج[ةه]\s*طاق/.test(clause);
-      const lightning = /برق|صاعق[ةه]/.test(clause);
+      const beamCfg = extractBeamConfigFromClause(clause);
+      const beamColor = beamCfg.color;
+      const beamColorExplicit = beamCfg.colorExplicit;
+      const beamThicknessMeters = beamCfg.thicknessMeters;
+      const beamWidthPx = beamCfg.widthPx;
+      const beamSizeExplicit = beamCfg.sizeExplicit;
+      let beamExplicitDir = 0;
+      if (/باتجاه\s*اليمين|ب\s*إتجاه\s*اليمين|نحو\s*اليمين|لليمين|باتجاه\s*الشرق/.test(clause)) beamExplicitDir = 1;
+      else if (/باتجاه\s*اليسار|ب\s*إتجاه\s*اليسار|نحو\s*اليسار|لليسار|باتجاه\s*الغرب/.test(clause)) beamExplicitDir = -1;
+      const beamHasFlyKnock = /يطير|يطيير|تطير|طار|طارت|لمساف[ةه]|نصف\s*دائر|نص\s*دائر|بخط\s*مستقيم/.test(clause);
+      const beamKnockbackMeters = beamHasFlyKnock ? extractDistanceMeters(clause, Math.max(6, beamThicknessMeters * 7)) : Math.max(5, beamThicknessMeters * 6);
+      const victimDies = /يموت|تموت|مات|ماتت|ميت|يقتله|تقتله|قتله|قتلها|قضى\s*عليه|يفقد\s*الوعي|لا\s*ينهض/.test(clause);
+
+      const lightning = /برق|صاعق[ةه]|صواعق|تبرق/.test(clause);
+      const rainEffect = /مطر|أمطار|امطار|تمطر|ممطر/.test(clause);
+      const snowEffect = /ثلج|ثلوج/.test(clause) && !freeze;
+      const groundSplit = /تنشق\s*الأرض|تنشق\s*الارض|انشقاق\s*الأرض|انشقاق\s*الارض|تتشقق\s*الأرض|تتشقق\s*الارض|تنفلق\s*الأرض|تتكسر\s*الأرض|تتحطم\s*الأرض|صدع|حفر[ةه]\s*تحت/.test(clause);
+      const quakeEffect = /زلزال|تهتز\s*الأرض|تهتز\s*الارض|ترتجف\s*الأرض|يرتج\s*العالم|يهتز\s*العالم/.test(clause);
+      const windEffect = /رياح|عاصف[ةه]|إعصار|اعصار|غبار/.test(clause);
+      const rocksFloat = /تتطاير\s*الصخور|ترتفع\s*الصخور|ترتفع\s*الحجار|تتطاير\s*الحجار/.test(clause);
+      const skyDarken = /تظلم\s*السماء|يظلم\s*العالم|تتحول\s*السماء.*ظلام/.test(clause);
+      const worldImpact = /يتأثر\s*العالم|تتأثر\s*العالم|يتاثر\s*العالم|تتاثر\s*العالم/.test(clause) || rainEffect || snowEffect || groundSplit || quakeEffect || windEffect || rocksFloat || skyDarken;
+
       const teleport = /ينتقل\s*خلف|انتقال\s*آني|انتقال\s*اني|يظهر\s*خلف/.test(clause);
       const shield = /درع\s*طاق|يفجر\s*طاق|انفجار\s*طاق/.test(clause);
       const run = /يركض|تركض|يجري|يندفع/.test(clause);
       const brawl = /يتعارك|تتعارك|تتعراك|يتعاركان|يتعاركون|عراك|عارك|يتقاتل|يتقاتلان|قتال|يشتبك|تشتبك|يشتبكان|اشتباك|يتضارب|مضارب[ةه]|معرك[ةه]|حرب/.test(clause);
 
-      const isSuperpowerOnly = !brawl && (fly || land || giant || monster || invisible || clones || freeze || blackhole || meteors || aura || fire || beam || lightning || teleport || shield);
+      const isSuperpowerOnly = !brawl && (fly || land || giant || monster || invisible || clones || freeze || blackhole || meteors || aura || fire || beam || lightning || teleport || shield || worldImpact);
       let label = 'طاقة خارقة';
+      const worldTags = [];
+      if (rainEffect) worldTags.push('🌧️ مطر');
+      if (lightning) worldTags.push('🌩️ برق');
+      if (groundSplit) worldTags.push('🌋 انشقاق الأرض');
+      if (quakeEffect) worldTags.push('🫨 زلزال');
+      const worldSuffix = worldTags.length ? ` + تأثر العالم (${worldTags.join(' + ')})` : (worldImpact ? ' + تأثر العالم' : '');
+
       if (fly) label = rocket ? `🚀 طيران صاروخي (${flyMeters >= 1000 ? (flyMeters / 1000) + ' كم' : flyMeters + ' م'}) مع ذيل طويل للهالة` : '🦅 طيران وتحليق في السماء';
+      else if (beam) {
+        const bColName = beamColor === '#111827' ? 'أسود' : (beamColor === '#ef4444' ? 'أحمر' : (beamColor === '#facc15' ? 'ذهبي' : (beamColor === '#10b981' ? 'أخضر' : (beamColor === '#a855f7' ? 'بنفسجي' : (beamColor === '#f8fafc' ? 'أبيض' : 'ضوئي')))));
+        label = `⚡ إطلاق شعاع ${bColName} (بسمك ${beamThicknessMeters} متر) وإصابة الخصم${worldSuffix}`;
+      }
       else if (invisible) label = '👻 قوة الاختفاء الشبحية';
       else if (clones) label = '👥 استدعاء نسخ الظل المقاتلة';
       else if (freeze) label = '❄️ تجميد الخصم بالجليد';
       else if (blackhole) label = '🕳️ إطلاق ثقب أسود جاذب';
       else if (meteors) label = '☄️ استدعاء وابل النيازك المشتعلة';
-      else if (aura) label = auraColor === '#111827' ? '⚫ شحن هالة سوداء (طاقة الظلام)' : (auraColor === '#ef4444' ? '🔴 شحن ضوء هالة حمراء دائرية' : (auraColor === '#00d4ff' ? '🔵 شحن ضوء هالة زرقاء كهربائية' : '⭕ شحن هالة ضوئية دائرية'));
-      else if (beam) label = '⚡ إطلاق شعاع طاقة خارق';
+      else if (aura) {
+        const sizeTxt = auraDiameterMeters > 0 ? ` بقطر ${auraDiameterMeters}م` : (auraScale > 1.3 ? ' كبيرة' : '');
+        const colTxt = auraColor === '#111827' ? `⚫ هالة سوداء${sizeTxt}` : (auraColor === '#ef4444' ? `🔴 هالة حمراء${sizeTxt}` : (auraColor === '#00d4ff' ? `🔵 هالة زرقاء${sizeTxt}` : (auraColor === '#facc15' ? `🟡 هالة صفراء${sizeTxt}` : (auraColor === '#10b981' ? `🟢 هالة خضراء${sizeTxt}` : (auraColor === '#a855f7' ? `🟣 هالة بنفسجية${sizeTxt}` : `⭕ هالة ضوئية${sizeTxt}`)))));
+        label = `شحن ${colTxt}${worldSuffix}`;
+      }
+      else if (worldImpact) label = `🌍 مؤثرات العالم (${worldTags.length ? worldTags.join(' + ') : 'اهتزاز وانشقاق الأرض'})`;
       else if (fire) label = '🔥 إطلاق سيل اللهب والنار';
       else if (lightning) label = '🌩️ صاعقة برق سماوية';
       else if (teleport) label = '💨 انتقال آني خلف العدو';
@@ -3330,7 +3472,11 @@
         fly, rocket, flyMeters, land, giant, monster,
         invisible, clones, freeze, blackhole, meteors,
         aura, auraColor, auraColorExplicit, auraShape,
-        fire, beam, lightning, teleport, shield, run, brawl,
+        auraScale, auraDiameterMeters, auraSizeExplicit,
+        fire, beam, beamColor, beamColorExplicit, beamThicknessMeters, beamWidthPx, beamSizeExplicit,
+        beamExplicitDir, beamHasFlyKnock, beamKnockbackMeters, victimDies,
+        lightning, rainEffect, snowEffect, groundSplit, quakeEffect, windEffect, rocksFloat, skyDarken, worldImpact,
+        teleport, shield, run, brawl,
         isSuperpowerOnly, label
       };
     }
@@ -3430,6 +3576,7 @@
         c.inVehicle = false;
         c.auraActive = Boolean(c.initialAuraActive);
         if (c.customAuraColor) c.auraColor = c.customAuraColor;
+        c.auraScale = c.customAuraScale || 1.0;
         c.fireActive = false;
         c.lightningActive = false;
         c.flyingActive = false;
@@ -3459,6 +3606,13 @@
       state.shockwaves = [];
       state.blackHoles = [];
       state.xSlashes = [];
+      state.groundCracks = [];
+      state.groundFissures = [];
+      state.floatingAuraRocks = [];
+      state.rockDebris = [];
+      state.worldQuakeTimer = 0;
+      state.skyDarkenFactor = 0;
+      state.weather = state.initialWeather || 'clear';
       state.camOverrideTarget = null;
       state.customCam2D.mode = '';
       state.customCam2D.initialized = false;
@@ -3489,6 +3643,47 @@
       }
     }
 
+    function spawnGroundFissure2D(x, y, scaleMult = 1.6, energyCol = '#a855f7') {
+      const halfW = Math.min(280, Math.max(75, Math.round(78 * scaleMult)));
+      const depth = Math.min(54, Math.max(22, Math.round(22 * scaleMult)));
+      const zigPoints = [];
+      const steps = 10;
+      for (let i = 0; i <= steps; i++) {
+        const u = (i / steps) * 2 - 1; // -1 .. +1
+        const px = x + u * halfW;
+        const openH = (1 - Math.abs(u)) * depth * (0.75 + (i % 2) * 0.35);
+        zigPoints.push({ x: px, yTop: y - 2 + (i % 2 === 0 ? -2 : 2), yBot: y + openH });
+      }
+      state.groundFissures.push({
+        x,
+        y,
+        halfW,
+        depth,
+        color: energyCol === '#111827' ? '#9333ea' : (energyCol || '#a855f7'),
+        isDarkVoid: energyCol === '#111827',
+        zigPoints,
+        alpha: 1.0
+      });
+      if (state.groundFissures.length > 8) state.groundFissures.shift();
+      spawnGroundCrackAndRocks(x, y);
+      spawnGroundCrackAndRocks(x - halfW * 0.45, y);
+      spawnGroundCrackAndRocks(x + halfW * 0.45, y);
+      for (let rk = 0; rk < 14; rk++) {
+        state.floatingAuraRocks.push({
+          x: x + (Math.random() - 0.5) * halfW * 1.75,
+          y: y - 4 - Math.random() * 18,
+          vy: -0.9 - Math.random() * 1.6,
+          vx: (Math.random() - 0.5) * 0.7,
+          size: 5 + Math.random() * 7,
+          rot: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.08,
+          color: energyCol === '#111827' ? '#1e1b4b' : '#334155',
+          rimColor: energyCol === '#111827' ? '#a855f7' : (energyCol || '#38bdf8'),
+          alpha: 1.0
+        });
+      }
+    }
+
     function applyPowersToChar(c, powers, targetSlot = -1) {
       if (!powers || !c) return;
       if (powers.aura) {
@@ -3501,9 +3696,44 @@
         } else if (powers.auraColor && !c.auraColor) {
           c.auraColor = powers.auraColor;
         }
-        if (powers.auraShape) c.auraShape = powers.auraShape;
+        c.auraShape = (c.auraColor === '#111827') ? 'dark_void' : (powers.auraShape || 'circle_light');
+        if (powers.auraSizeExplicit && powers.auraScale) {
+          c.auraScale = powers.auraScale;
+          c.customAuraScale = powers.auraScale;
+        } else if (!c.auraScale) {
+          c.auraScale = 1.0;
+        }
         playSfx('aura');
-        spawnShockwave(c.x, c.y - 50, c.auraColor === '#111827' ? '#a855f7' : c.auraColor);
+        const swMax = Math.round(85 * (c.auraScale || 1.0));
+        spawnShockwave(c.x, c.y - 50, c.auraColor === '#111827' ? '#9333ea' : c.auraColor, swMax);
+        if (powers.auraDiameterMeters > 0) {
+          spawnHitText(c.x, c.y - 135, `⚫ هالة بقطر ${powers.auraDiameterMeters} متر!`, c.auraColor === '#111827' ? '#c084fc' : c.auraColor);
+        }
+      }
+      if (powers.rainEffect) {
+        state.weather = powers.lightning ? 'storm' : 'rain';
+        state.skyDarkenFactor = Math.max(state.skyDarkenFactor || 0, 0.38);
+        spawnHitText(c.x, c.y - 155, powers.lightning ? '🌧️🌩️ عاصفة مطر وبرق!' : '🌧️ هطول الأمطار وتأثر العالم!', '#38bdf8');
+      } else if (powers.snowEffect) {
+        state.weather = 'snow';
+      }
+      if (powers.skyDarken || (powers.worldImpact && c.auraColor === '#111827')) {
+        state.skyDarkenFactor = Math.max(state.skyDarkenFactor || 0, 0.52);
+      }
+      if (powers.groundSplit || (powers.worldImpact && (c.auraScale || 1.0) >= 1.5)) {
+        const gY = getGroundYAt(c.x) + (c.zLaneOffset || 0);
+        spawnGroundFissure2D(c.x, gY, Math.max(1.4, c.auraScale || 1.6), c.auraActive ? c.auraColor : '#a855f7');
+        state.cameraShake = Math.max(state.cameraShake || 0, 16);
+        state.worldQuakeTimer = Math.max(state.worldQuakeTimer || 0, 2.5);
+        playSfx('explosion');
+        if (powers.groundSplit) {
+          spawnHitText(c.x, c.y - 115, '🌋 انشقاق الأرض تحته!', '#f43f5e');
+        }
+      } else if (powers.worldImpact || powers.quakeEffect || powers.rocksFloat) {
+        const gY = getGroundYAt(c.x) + (c.zLaneOffset || 0);
+        spawnGroundCrackAndRocks(c.x, gY);
+        state.cameraShake = Math.max(state.cameraShake || 0, 13);
+        state.worldQuakeTimer = Math.max(state.worldQuakeTimer || 0, 2.2);
       }
       if (powers.invisible) {
         c.invisibleActive = true;
@@ -3553,24 +3783,64 @@
         c.beamActive = true;
         c.beamTargetSlot = targetSlot >= 0 ? targetSlot : ((c.slot + 1) % state.activeCharCount);
         const tChar = state.characters[c.beamTargetSlot];
+        const chosenBeamCol = (powers.beamColorExplicit && powers.beamColor)
+          ? powers.beamColor
+          : (c.auraActive ? c.auraColor : '#00d4ff');
+        const chosenWidthPx = powers.beamWidthPx || 24;
+        const chosenThickM = powers.beamThicknessMeters || 0.65;
         if (tChar) {
-          c.facing = tChar.x >= c.x ? 1 : -1;
+          // لو كان الهدف (عمر) خلفه، يلتفت تلقائياً باتجاهه قبل إطلاق الشعاع!
+          const neededFacing = tChar.x >= c.x ? 1 : -1;
+          if (c.facing !== neededFacing) {
+            c.facing = neededFacing;
+            spawnHitText(c.x, c.y - 135, `🔄 يلتفت نحو ${tChar.name}!`, '#facc15');
+          }
+          c.pose = 'beam_cast';
+          state.energyBeams = state.energyBeams.filter(eb => eb.fromSlot !== c.slot);
           state.energyBeams.push({
             fromSlot: c.slot,
             toSlot: c.beamTargetSlot,
-            color: c.auraActive ? c.auraColor : '#00d4ff',
-            alpha: 1.0
+            dir: c.facing,
+            color: chosenBeamCol,
+            widthPx: chosenWidthPx,
+            thicknessMeters: chosenThickM,
+            alpha: 1.0,
+            sustained: true,
+            life: 2.1,
+            maxLife: 2.1
           });
-          spawnShockwave(tChar.x, tChar.y - 55, '#00d4ff');
-          tChar.vx = c.facing * 9;
-          state.cameraShake = 11;
+          spawnShockwave(c.x + c.facing * 32, c.y - 70, chosenBeamCol === '#111827' ? '#a855f7' : chosenBeamCol, Math.max(55, chosenWidthPx * 1.6));
+          spawnShockwave(tChar.x, tChar.y - 58, chosenBeamCol === '#111827' ? '#a855f7' : chosenBeamCol, Math.max(65, chosenWidthPx * 1.9));
+          state.cameraShake = Math.min(20, 10 + chosenThickM * 4);
+          playSfx('beam');
+        } else {
+          if (powers.beamExplicitDir !== 0) c.facing = powers.beamExplicitDir;
+          c.pose = 'beam_cast';
+          state.energyBeams.push({
+            fromSlot: c.slot,
+            toSlot: -1,
+            dir: c.facing,
+            color: chosenBeamCol,
+            widthPx: chosenWidthPx,
+            thicknessMeters: chosenThickM,
+            alpha: 1.0,
+            sustained: true,
+            life: 2.1,
+            maxLife: 2.1
+          });
           playSfx('beam');
         }
       }
       if (powers.lightning) {
         c.lightningActive = true;
-        const tChar = targetSlot >= 0 ? state.characters[targetSlot] : c;
-        spawnLightningBolt(tChar ? tChar.x : c.x, (tChar ? tChar.y : c.y) - 60);
+        // إذا كان البرق جزءاً من تأثر العالم بالهالة (دون استهداف عدو)، تضرب الصواعق حول الشخصية وفي السماء!
+        if (powers.aura || powers.worldImpact) {
+          spawnLightningBolt(c.x - 95, c.y - 20);
+          spawnLightningBolt(c.x + 105, c.y - 20);
+        } else {
+          const tChar = targetSlot >= 0 ? state.characters[targetSlot] : c;
+          spawnLightningBolt(tChar ? tChar.x : c.x, (tChar ? tChar.y : c.y) - 60);
+        }
         playSfx('lightning');
       }
       if (powers.fly) {
@@ -3860,18 +4130,106 @@
           });
         }
       } else if (ev.type === 'superpower') {
-        if (ev.powers && ev.powers.fly) {
-          c.flyingActive = true;
-          c.pose = 'fly';
-          c.x += (c.facing || 1) * (ev.powers.rocket ? 260 : 165) * dt;
-          const groundY = getGroundYAt(c.x) + (c.zLaneOffset || 0);
-          c.y = groundY - (c.flyHeight || 175) + Math.sin((c.poseTimer || 0) * 0.6) * 10;
-        }
+        stepSuperpowerEvent2D(ev, progress, dt);
       } else if (ev.type === 'brawl' || ev.type === 'chase') {
         const acts = ev.actors || [0, 1];
         if (acts.length >= 2) {
           simulateCombatPair(state.characters[acts[0]], state.characters[acts[1]], dt, false);
         }
+      }
+    }
+
+    function stepSuperpowerEvent2D(ev, progress, dt) {
+      const c = state.characters[ev.actorSlot ?? 0];
+      if (!c || !ev.powers) return;
+      const pw = ev.powers;
+
+      if (pw.fly) {
+        c.flyingActive = true;
+        c.pose = 'fly';
+        c.x += (c.facing || 1) * (pw.rocket ? 260 : 165) * dt;
+        const groundY = getGroundYAt(c.x) + (c.zLaneOffset || 0);
+        c.y = groundY - (c.flyHeight || 175) + Math.sin((c.poseTimer || 0) * 0.6) * 10;
+      }
+
+      if (pw.beam) {
+        const tSlot = ev.targetSlot !== undefined && ev.targetSlot >= 0 ? ev.targetSlot : c.beamTargetSlot;
+        const tChar = (tSlot >= 0 && tSlot !== c.slot) ? state.characters[tSlot] : null;
+        const bCol = (pw.beamColorExplicit && pw.beamColor) ? pw.beamColor : (c.auraActive ? c.auraColor : '#00d4ff');
+        const wPx = pw.beamWidthPx || 24;
+
+        if (tChar) {
+          const dirToTarget = tChar.x >= c.x ? 1 : -1;
+          c.facing = dirToTarget;
+          // تحديث الشعاع المستمر ليظل موصولاً من يدي المهاجم إلى صدر الهدف
+          const activeBeam = state.energyBeams.find(eb => eb.fromSlot === c.slot);
+          if (activeBeam && progress < 0.78) {
+            activeBeam.alpha = Math.min(1.0, (1 - progress) * 2.2);
+            activeBeam.dir = dirToTarget;
+          }
+
+          if (progress < 0.75) {
+            c.pose = 'beam_cast';
+          } else {
+            c.pose = 'idle';
+          }
+
+          // تأثر العدو بالشعاع الضوئي: ١) ارتداد وألم وشرارات وانزلاق تحت ضغط الشعاع -> ٢) انفجار وإطاحة بالعدو على الأرض!
+          if (progress >= 0.06 && progress < 0.52) {
+            tChar.facing = -dirToTarget;
+            tChar.pose = 'brawl';
+            tChar.combatPhase = 'recoil';
+            tChar.hitReactionType = (Math.floor(progress * 18) % 2 === 0) ? 'head_snap' : 'gut_fold';
+            tChar.phaseProgress = (progress * 8) % 1;
+            tChar.hitFlashTimer = 0.14;
+            const pushSpd = 68 + Math.min(130, wPx * 1.45);
+            tChar.x += dirToTarget * pushSpd * dt;
+            tChar.y = getGroundYAt(tChar.x) + (tChar.zLaneOffset || 0);
+            if (Math.random() < 0.35) {
+              spawnShockwave(tChar.x, tChar.y - 60, bCol === '#111827' ? '#a855f7' : bCol, Math.max(48, wPx * 1.4));
+              spawnGroundCrackAndRocks(tChar.x, tChar.y);
+            }
+          } else if (progress >= 0.52 && !ev._beamImpactDone) {
+            ev._beamImpactDone = true;
+            tChar.isDead = Boolean(pw.victimDies);
+            tChar.stayProne = Boolean(pw.victimDies);
+            const powerMult = Math.min(2.3, Math.max(1.1, 0.92 + (pw.beamThicknessMeters || 0.7) * 0.45));
+            triggerKnockdownSequence(tChar, dirToTarget, powerMult);
+            spawnShockwave(tChar.x, tChar.y - 60, bCol === '#111827' ? '#a855f7' : bCol, Math.max(95, wPx * 2.3));
+            spawnShockwave(tChar.x, tChar.y - 60, '#ffffff', Math.max(55, wPx * 1.2));
+            spawnGroundCrackAndRocks(tChar.x, getGroundYAt(tChar.x));
+            state.cameraShake = Math.min(22, 12 + (pw.beamThicknessMeters || 1) * 4);
+            playSfx('ko');
+            spawnHitText(tChar.x, tChar.y - 128, `💥 إصابة بالشعاع (${pw.beamThicknessMeters || 0.7}م)!`, bCol === '#111827' ? '#c084fc' : bCol);
+          }
+        } else {
+          if (progress < 0.75) c.pose = 'beam_cast';
+          else c.pose = 'idle';
+        }
+      }
+
+      // استمرار مؤثرات تأثر العالم بالهالة (تطاير الصخور، اهتزاز الأرض، والبرق إذا طُلب في الوصف)
+      if (pw.worldImpact || pw.groundSplit || (pw.aura && (c.auraScale || 1) >= 1.5)) {
+        state.cameraShake = Math.max(state.cameraShake || 0, 5.5);
+        if (Math.random() < 0.28) {
+          const span = Math.max(85, 72 * (c.auraScale || 1.5));
+          state.floatingAuraRocks.push({
+            x: c.x + (Math.random() - 0.5) * span * 1.6,
+            y: getGroundYAt(c.x) - 4,
+            vy: -1.1 - Math.random() * 1.6,
+            vx: (Math.random() - 0.5) * 0.6,
+            size: 4 + Math.random() * 6,
+            rot: Math.random() * Math.PI * 2,
+            vRot: (Math.random() - 0.5) * 0.08,
+            color: c.auraColor === '#111827' ? '#1e1b4b' : '#334155',
+            rimColor: c.auraColor === '#111827' ? '#a855f7' : (c.auraColor || '#38bdf8'),
+            alpha: 0.95
+          });
+        }
+      }
+      if (pw.lightning && Math.random() < 0.16) {
+        const lx = c.x + (Math.random() - 0.5) * Math.max(220, 140 * (c.auraScale || 1.4));
+        spawnLightningBolt(lx, getGroundYAt(lx) - 15);
       }
     }
 
@@ -4364,6 +4722,7 @@
       }
 
       if (ev.type === 'superpower') {
+        ev._beamImpactDone = false;
         const c = state.characters[ev.actorSlot];
         if (c) {
           c.visible = true;
@@ -5156,15 +5515,8 @@
           }
         } else if (ev.type === 'jump_flip_2d' || ev.type === 'fly_move_2d') {
           stepSingleMovementSubEvent2D(ev, progress, dt);
-        } else if (ev.type === 'superpower' && ev.powers && ev.powers.fly) {
-          const c = state.characters[ev.actorSlot ?? 0];
-          if (c) {
-            c.flyingActive = true;
-            c.pose = 'fly';
-            c.x += (c.facing || 1) * (ev.powers.rocket ? 260 : 140) * dt;
-            const groundY = getGroundYAt(c.x) + (c.zLaneOffset || 0);
-            c.y = groundY - (c.flyHeight || 170) + Math.sin((c.poseTimer || 0) * 0.6) * 10;
-          }
+        } else if (ev.type === 'superpower') {
+          stepSuperpowerEvent2D(ev, progress, dt);
         } else if (ev.type === 'shock_reaction_2d') {
           const c = state.characters[ev.actorSlot];
           if (c) {
@@ -5769,8 +6121,15 @@
         if (state.lightningBolts[i].alpha <= 0) state.lightningBolts.splice(i, 1);
       }
       for (let i = state.energyBeams.length - 1; i >= 0; i--) {
-        state.energyBeams[i].alpha -= 0.025;
-        if (state.energyBeams[i].alpha <= 0) state.energyBeams.splice(i, 1);
+        const eb = state.energyBeams[i];
+        if (eb.sustained && eb.life !== undefined) {
+          eb.life -= dt;
+          if (eb.life <= 0.35) eb.alpha = Math.max(0, eb.life / 0.35);
+          if (eb.life <= 0 || eb.alpha <= 0) state.energyBeams.splice(i, 1);
+        } else {
+          eb.alpha -= 0.025;
+          if (eb.alpha <= 0) state.energyBeams.splice(i, 1);
+        }
       }
       for (let i = state.blackHoles.length - 1; i >= 0; i--) {
         const bh = state.blackHoles[i];
@@ -6042,6 +6401,10 @@
         try {
           ctx.drawImage(state.customBgImage, 0, 0, w, h);
         } catch (err) {}
+      }
+      if ((state.skyDarkenFactor || 0) > 0.01) {
+        ctx.fillStyle = `rgba(2, 6, 23, ${Math.min(0.75, state.skyDarkenFactor)})`;
+        ctx.fillRect(0, 0, w, h);
       }
       ctx.restore();
     }
@@ -6940,34 +7303,57 @@
         ctx.fill();
       }
 
-      // 1. SUPERPOWER: PURE CIRCULAR GLOWING LIGHT AURA + BLACK DARK-MATTER AURA (هالة سوداء أو ضوء دائري أحمر/أزرق/ذهبي/أخضر/أبيض!)
+      // 1. SUPERPOWER: PURE CIRCULAR GLOWING LIGHT AURA + BLACK DARK-MATTER AURA (تدعم التحكم الكامل بالقطر والحجم واللون الأسود الحقيقي!)
       if (char.auraActive) {
         ctx.save();
         const isBlackAura = (aCol === '#111827' || char.auraShape === 'dark_void');
-        const pulse = Math.sin(t * 3.2) * 7;
-        const outerR = 78 + pulse;
-        const innerR = 48 + pulse * 0.5;
+        const aScale = Math.max(0.5, char.auraScale || 1.0);
+        const pulse = Math.sin(t * 3.4) * (7 * Math.min(1.8, aScale));
+        const outerR = 78 * aScale + pulse;
+        const innerR = 48 * aScale + pulse * 0.55;
         const aShape = char.auraShape || 'circle_light';
 
         if (isBlackAura) {
-          // هالة سوداء خارقة فائقة السرعة (3 طبقات فيكتور دائرية بدون أي ضغط على المعالج الرسومي!)
-          ctx.globalAlpha = 0.28;
-          ctx.fillStyle = '#7c3aed';
+          // هالة سوداء حقيقية داكنة جداً مع ألسنة طاقة سوداء وحافة تباين واضحة (بحجم قابل للتحكم مثل بقطر 6 متر!)
+          ctx.globalAlpha = 0.34;
+          ctx.fillStyle = '#020617';
           ctx.beginPath();
-          ctx.arc(0, -56, outerR, 0, Math.PI * 2);
+          ctx.arc(0, -56, outerR * 1.06, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.globalAlpha = 0.55;
-          ctx.fillStyle = '#0f172a';
+          ctx.globalAlpha = 0.64;
+          ctx.fillStyle = '#090d16';
           ctx.beginPath();
-          ctx.arc(0, -56, innerR * 1.22, 0, Math.PI * 2);
+          ctx.arc(0, -56, outerR * 0.86, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.globalAlpha = 0.78;
+          ctx.globalAlpha = 0.88;
           ctx.fillStyle = '#000000';
           ctx.beginPath();
-          ctx.arc(0, -56, innerR * 0.85, 0, Math.PI * 2);
+          ctx.arc(0, -56, innerR * 1.05, 0, Math.PI * 2);
           ctx.fill();
+
+          // ألسنة لهب الظلام الأسود المحيطة بالهالة السوداء
+          const flameCount = aScale >= 1.6 ? 14 : 10;
+          for (let f = 0; f < flameCount; f++) {
+            const ang = (f / flameCount) * Math.PI * 2 + t * 1.35;
+            const rad = outerR * (0.82 + 0.12 * Math.sin(t * 4 + f * 1.7));
+            const fx = Math.cos(ang) * rad;
+            const fy = -56 + Math.sin(ang) * rad;
+            ctx.globalAlpha = 0.72;
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(fx, fy, (10 + Math.sin(t * 5 + f) * 4) * Math.min(1.9, aScale), 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // حلقة محيطية سوداء/فضية لإبراز حدود قطر الهالة السوداء بوضوح في كل الخلفيات
+          ctx.globalAlpha = 0.55;
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = Math.max(2, 2.5 * Math.min(1.8, aScale));
+          ctx.beginPath();
+          ctx.arc(0, -56, outerR * 0.96, 0, Math.PI * 2);
+          ctx.stroke();
           ctx.globalAlpha = 1.0;
         } else {
           // هالة ضوئية ساطعة فائقة السرعة (3 طبقات فيكتور متدرجة الشفافية تعمل بسرعة 60 إطار/ثانية على جميع الهواتف!)
@@ -7282,6 +7668,18 @@
           handFrontX = dir * 24; handFrontY = -72;
           handBackX = dir * 8; handBackY = -66;
         }
+      } else if (char.pose === 'beam_cast') {
+        // ⚡ وقفة إطلاق الشعاع الخارق بكلتا اليدين للأمام باتجاه الخصم!
+        const recoilVib = Math.sin(t * 14) * 1.5;
+        torsoTilt = dir * 0.16;
+        headAngle = dir * 0.08;
+        hipX = -dir * 4 + recoilVib; hipY = -41;
+        shoulderX = dir * 6 + recoilVib; shoulderY = -80;
+        headX = dir * 8 + recoilVib; headY = -98;
+        footFrontX = dir * 19; footFrontY = 0; footFrontAngle = 0;
+        footBackX = -dir * 18; footBackY = 0; footBackAngle = 0;
+        handFrontX = dir * 33 + recoilVib; handFrontY = -71;
+        handBackX = dir * 29 + recoilVib; handBackY = -66;
       } else if (char.pose === 'fly' || char.flyingActive) {
         const hover = Math.sin(t * 0.9) * 3.5;
         const fTilt = char.flyTiltAngle || 0;
@@ -8156,6 +8554,63 @@
         ctx.restore();
       }
 
+      // 🌋 رسم انشقاق الأرض الكبير (تنشق الأرض تحته) والصخور المتطايرة حول الهالة الكبيرة!
+      if (state.groundFissures && state.groundFissures.length > 0) {
+        state.groundFissures.forEach(gf => {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, gf.alpha);
+          // فجوة الانشقاق العميقة تحت الشخصية
+          ctx.fillStyle = '#020617';
+          ctx.strokeStyle = gf.isDarkVoid ? '#e2e8f0' : gf.color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          gf.zigPoints.forEach((pt, idx) => {
+            if (idx === 0) ctx.moveTo(pt.x, pt.yTop);
+            else ctx.lineTo(pt.x, pt.yTop);
+          });
+          for (let i = gf.zigPoints.length - 1; i >= 0; i--) {
+            ctx.lineTo(gf.zigPoints[i].x, gf.zigPoints[i].yBot);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // شقوق متفرعة من الانشقاق الأرضي
+          ctx.strokeStyle = gf.isDarkVoid ? '#000000' : gf.color;
+          ctx.lineWidth = 2.4;
+          for (let i = 1; i < gf.zigPoints.length - 1; i += 2) {
+            const p = gf.zigPoints[i];
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.yBot);
+            ctx.lineTo(p.x + (i % 4 === 1 ? -22 : 22), p.yBot + 18);
+            ctx.stroke();
+          }
+          ctx.restore();
+        });
+      }
+
+      if (state.floatingAuraRocks && state.floatingAuraRocks.length > 0) {
+        state.floatingAuraRocks.forEach(fr => {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, fr.alpha);
+          ctx.translate(fr.x, fr.y);
+          ctx.rotate(fr.rot);
+          ctx.fillStyle = fr.color || '#1e293b';
+          ctx.strokeStyle = fr.rimColor || '#94a3b8';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-fr.size * 0.6, -fr.size * 0.5, fr.size * 1.2, fr.size, 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          fr.x += fr.vx;
+          fr.y += fr.vy;
+          fr.rot += fr.vRot;
+          fr.alpha -= 0.012;
+        });
+        state.floatingAuraRocks = state.floatingAuraRocks.filter(fr => fr.alpha > 0);
+      }
+
       // رسم تشققات الأرض وتطاير الصخور عند الضربات القوية والانبطاح!
       state.groundCracks.forEach(gc => {
         ctx.save();
@@ -8228,24 +8683,99 @@
         ctx.restore();
       });
 
-      // Draw Kamehameha / Laser Energy Beams
+      // Draw Kamehameha / Laser Energy Beams (مع التحكم الكامل بسمك الشعاع بالمتر ولونه بما في ذلك الشعاع الأسود!)
       state.energyBeams.forEach(eb => {
         const cFrom = state.characters[eb.fromSlot];
-        const cTo = state.characters[eb.toSlot];
-        if (cFrom && cTo) {
+        const cTo = eb.toSlot >= 0 ? state.characters[eb.toSlot] : null;
+        if (cFrom) {
           ctx.save();
-          ctx.globalAlpha = Math.max(0, eb.alpha);
-          ctx.strokeStyle = eb.color;
-          ctx.shadowColor = eb.color;
-          ctx.shadowBlur = 0;
-          ctx.lineWidth = 18;
-          ctx.beginPath();
-          ctx.moveTo(cFrom.x + cFrom.facing * 28, cFrom.y - 68);
-          ctx.lineTo(cTo.x, cTo.y - 62);
-          ctx.stroke();
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 7;
-          ctx.stroke();
+          const alpha = Math.max(0, eb.alpha);
+          const wPx = eb.widthPx || 22;
+          const isBlackBeam = (eb.color === '#111827' || eb.color === '#000000');
+          const bDir = cTo ? (cTo.x >= cFrom.x ? 1 : -1) : (eb.dir || cFrom.facing || 1);
+          const sx = cFrom.x + bDir * 33 * (cFrom.scale || 1);
+          const sy = cFrom.y - 70 * (cFrom.scale || 1);
+          const ex = cTo ? cTo.x : (sx + bDir * 720);
+          const ey = cTo ? (cTo.y - 62 * (cTo.scale || 1)) : sy;
+          ctx.lineCap = 'round';
+
+          if (isBlackBeam) {
+            // شعاع أسود خارق (غلاف تباين خارجي + جسم الشعاع الأسود القاتم بالسمك المحدد + قلب الطاقة السوداء)
+            ctx.globalAlpha = alpha * 0.48;
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = wPx * 1.38;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+
+            ctx.globalAlpha = alpha * 0.96;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = wPx;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+
+            ctx.globalAlpha = alpha * 0.85;
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = Math.max(3, wPx * 0.34);
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+
+            // كرة شحن الشعاع الأسود عند يدي المهاجم وكرة الانفجار عند الهدف
+            ctx.globalAlpha = alpha * 0.95;
+            ctx.fillStyle = '#000000';
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(sx, sy, Math.max(12, wPx * 0.68), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(ex, ey, Math.max(16, wPx * 0.88), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          } else {
+            // شعاع ضوئي ملون (أحمر / أزرق / ذهبي / أخضر / بنفسجي / أبيض) بالسمك المحدد
+            ctx.globalAlpha = alpha * 0.36;
+            ctx.strokeStyle = eb.color || '#00d4ff';
+            ctx.lineWidth = wPx * 1.55;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+
+            ctx.globalAlpha = alpha * 0.94;
+            ctx.strokeStyle = eb.color || '#00d4ff';
+            ctx.lineWidth = wPx;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+
+            ctx.globalAlpha = alpha * 0.95;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(4, wPx * 0.38);
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+
+            ctx.fillStyle = eb.color || '#00d4ff';
+            ctx.beginPath();
+            ctx.arc(sx, sy, Math.max(12, wPx * 0.65), 0, Math.PI * 2);
+            ctx.arc(ex, ey, Math.max(15, wPx * 0.85), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(sx, sy, Math.max(6, wPx * 0.32), 0, Math.PI * 2);
+            ctx.arc(ex, ey, Math.max(8, wPx * 0.42), 0, Math.PI * 2);
+            ctx.fill();
+          }
           ctx.restore();
         }
       });
