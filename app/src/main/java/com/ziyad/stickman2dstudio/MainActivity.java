@@ -55,6 +55,8 @@ public class MainActivity extends Activity {
         ws.setAllowFileAccessFromFileURLs(true);
         ws.setAllowUniversalAccessFromFileURLs(true);
         ws.setMediaPlaybackRequiresUserGesture(false);
+        ws.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.clearCache(true);
 
         webView.addJavascriptInterface(new AndroidStudioBridge(), "AndroidStudioBridge");
         webView.setWebViewClient(new WebViewClient());
@@ -82,7 +84,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        webView.loadUrl("file:///android_asset/stickman_2d_studio.html");
+        webView.loadUrl("file:///android_asset/stickman_2d_studio.html?v=" + System.currentTimeMillis());
     }
 
     private void requestNeededPermissions() {

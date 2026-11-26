@@ -411,16 +411,11 @@
 
 
 
-          <textarea id="scriptInput" rows="8" class="w-full rounded-xl bg-slate-950 border p-3 text-xs leading-relaxed text-white custom-scroll" placeholder="اكتب وصف المشهد هنا...">المشهد في مدينة مشمسة مع مقهى وجبل كبير في البعيد ويضم 3 شخصيات حيث الشخصية رقم 3 هو الظل.
-» وفي يوم صافي يجلس رقم 1 مع رقم 2 في المقهى على الكراسي بلا قتال كأصدقاء ويتحدثون عن الأسطورة لمدة 5 ثوان.
-يقول رقم 1 {هل سمعت عن الشخصية المظلمة التي تظهر فوق الجبل؟} لمدة 5 ثوان.
-يرد رقم 2 {يقولون إنه مقاتل خارق يختفي كالشبح ولا يستطيع أحد رؤيته!} لمدة 5 ثوان.
-» وفجأة تنتقل الكاميرا إلى الجبل ليتغير لون السماء والشمس لتصبح مدينة الظلام تحت ضوء القمر لمدة 7 ثوان.
-ينتقل رقم 3 الظل بسرعة الرصاصة إلى المقهى عند رقم 1 ورقم 2 لمدة 3 ثوان.
-يقول رقم 3 الظل {أنا الأسطورة!} فيقوم الاثنان معاً على المظلم لمدة 5 ثوان.
-يستخدم رقم 3 الظل حركة الاختفاء مع الضرب ولا يظهر أي شيء منه وتظهر علامة إكس ضربة على رقم 1 وعلى رقم 2 حتى ينبطحون على الأرض "1" لمدة 9 ثوان.
-ينهض رقم 1 ورقم 2 من الأرض ويتحولون إلى خارقين مع هالة مختلفة وشحن الهالة لمدة 6 ثوان.
-يحاول رقم 3 المظلم أن يسدد نفس الضربات السابقة ولكن يركله رقم 1 بقوة لعند الشخصية الثانية ويلعبون فيه كرة بالركلات المتبادلة حتى ينبطح على الأرض وينتهي المشهد "1" لمدة 13 ثانية.</textarea>
+          <textarea id="scriptInput" rows="8" class="w-full rounded-xl bg-slate-950 border p-3 text-xs leading-relaxed text-white custom-scroll" placeholder="اكتب وصف المشهد هنا...">المشهد يضم شخصيتين عمر وعلي بلا أي سلاح.
+تضهر هاله سوداء على عمر هاله كبيره بقطر 6 متر وتتاثر العالم بها مثلاً ضهور مطر او برق او تنشق الأرض تحته لمدة 4 ثوان.
+يمشي علي باتجاه اليمين 5 متر لمدة 2 ثانية.
+ضرب علي شعاع بسمك 1 متر ولون اسود ب إتجاه عمر لمدة 4 ثوان.
+يطير عمر في السماء عالياً باتجاه اليمين لمسافة 25 متر لمدة 4 ثوان.</textarea>
 
           <!-- زر تشغيل المشهد من شاشة الكتابة الثانية + زر الصعود لشاشة العرض الأولى -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2254,7 +2249,7 @@
         .replace(/ ويطير /g, '|يطير ').replace(/ وتطير /g, '|تطير ').replace(/ فيطير /g, '|فيطير ').replace(/ فتطير /g, '|فتطير ')
         .replace(/ وطار /g, '|طار ').replace(/ فطار /g, '|فطار ').replace(/ ويحلق /g, '|يحلق ').replace(/ ويهبط /g, '|يهبط ').replace(/ ويرتفع /g, '|يرتفع ')
         .replace(/ ويشحن /g, '|يشحن ').replace(/ وتشحن /g, '|تشحن ').replace(/ فيشحن /g, '|يشحن ')
-        .replace(/ ويظهر هال/g, '|يظهر هال').replace(/ وتظهر هال/g, '|تظهر هال').replace(/ ويضهر هال/g, '|يضهر هال').replace(/ وتضهر هال/g, '|تضهر هال')
+        .replace(/ ويظهر هال/g, '|يظهر هال').replace(/ وتظهر هال/g, '|تظهر هال').replace(/ ويضهر هال/g, '|يضهر هال').replace(/ وتضهر هال/g, '|تضهر هال').replace(/ ويطلق شعاع/g, '|يطلق شعاع').replace(/ وتطلق شعاع/g, '|تطلق شعاع').replace(/ فيطلق شعاع/g, '|يطلق شعاع').replace(/ ويضرب شعاع/g, '|يضرب شعاع')
         .replace(/ ويركل /g, '|يركل ').replace(/ وتركل /g, '|تركل ').replace(/ فيركل /g, '|يركل ').replace(/ ويلكم /g, '|يلكم ').replace(/ فيلكم /g, '|يلكم ')
         .replace(/ وفي اخر المشهد /g, '|في اخر المشهد ').replace(/ في اخر المشهد /g, '|في اخر المشهد ')
         .replace(/ وفي آخر المشهد /g, '|في آخر المشهد ').replace(/ في آخر المشهد /g, '|في آخر المشهد ')
@@ -2860,7 +2855,7 @@
         }
 
         // 🌟 New Character Appearing Mid-Scene ("يظهر رقم 3" / "يظهر واحد" / "ويأتي واحد من أقصى المدينة ليركل واحد حتى يطير")
-        if (!hasVehWord && /يظهر|يضهر|يدخل|ينضم|يأتي|ياتي|يتدخل/.test(clause) && !/تظهرهما|تظهر\s*الجميع|يظهر\s*المشهد|هال[ةه]|شرار/.test(clause)) {
+        if (!hasVehWord && /يظهر|يضهر|يدخل|ينضم|يأتي|ياتي|يتدخل/.test(clause) && !/تظهرهما|تظهر\s*الجميع|يظهر\s*المشهد|هال[ةه]|شرار|شعاع|ليزر|مطر|أمطار|امطار|برق|صاعق|صواعق|رعد|نار|لهب|ضوء|طاق[ةه]|ثقب|نيزك|نيازك|عاصف|ثلج|الأرض|الارض|يتأثر|تتأثر|يتاثر|تتاثر/.test(clause)) {
           let appearList = mentioned.filter(s => s >= 1 && (state.characters[s].hiddenAtStart || s >= 2));
           if (appearList.length === 0) {
             if (/ثاني[ةه]|2/.test(clause)) appearList = [1];
@@ -2984,7 +2979,7 @@
         }
 
         //🦅🚀 نظام الطيران الكامل في الثنائي 2D (يطير للأعلى، يطير يمين/يسار/شمال/جنوب، يطير نحو خصمه، يحلق في السماء، طيران صاروخي، أو يهبط للأرض)
-        const hasStrikeWordInClause = /ركل|يركل|تركل|لكم|يلكم|تلكم|ضرب|يضرب|تضرب|قاضي[ةه]|ليركل.*حتى\s*يطير|يجعلونه\s*يطير|تطير\s*ب[هه]/.test(clause);
+        const hasStrikeWordInClause = /ركل|يركل|تركل|لكم|يلكم|تلكم|ضرب|يضرب|تضرب|شعاع|ليزر|كاميهاميها|موج[ةه]\s*طاق|أطلق|اطلق|يطلق|تطلق|قاضي[ةه]|ليركل.*حتى\s*يطير|يجعلونه\s*يطير|تطير\s*ب[هه]/.test(clause);
         const isKnockbackFly = hasStrikeWordInClause || /يطير\s*للخلف|نصف\s*دائر[ةه]|نص\s*دائر[ةه]/.test(clause);
         const isLandingVerb2D = /يهبط|تهبط|يهبطان|هبوط|ينزل\s*للأرض|ينزل\s*على\s*الأرض|يعود\s*للأرض/.test(clause);
         const isFlyVerb2D = !isKnockbackFly && (/يطير|تطير|يطيران|تطيران|يطيرون|طار|طارت|طاروا|يحلق|تحلق|يحلقان|طيران|يرتفع\s*في|يرتفع\s*للأعلى|يرتفع\s*للاعلى|يرتفع\s*عن|يعلو|يصعد\s*في\s*(?:الجو|السماء|الهواء)|يصعد\s*للسماء/.test(clause));
@@ -3067,7 +3062,7 @@
         const isTurnVerb2D = /ينعطف|تنعطف|انعطاف|انعطف|يلتف|تلتف|يلتفت|تلتفت|ينحرف|يستدير/.test(clause);
         const isMoveVerb2D = isTurnVerb2D || /تركض|يركض|يكرض|تجري|يجري|تمشي|يمشي|يسير|تسير|يتقدم|تتقدم|يتحرك|تتحرك|يقترب|تقترب|يبتعد|تبتعد|يتراجع|تتراجع|يهرب|تهرب/.test(clause);
         const hasFollowSpeedWords = /يركض\s*وراء|يكرض\s*وراء|يجري\s*وراء|يمشي\s*وراء|يركض\s*خلف|يتبع|يلحق|يطارد|بسرع[ةه]\s*\d+|سرع[ةه]\s*\d+|المساف[ةه]\s*بينهم/.test(clause);
-        if (isMoveVerb2D && !hasFollowSpeedWords && !/يتعارك|عراك|يشتبك|يضرب|يركل/.test(clause)) {
+        if (isMoveVerb2D && !hasFollowSpeedWords && !/يتعارك|عراك|عارك|يشتبك|يضرب|ضرب|يركل|ركل|يلكم|لكم|شعاع|ليزر|كاميهاميها|موج[ةه]\s*طاق|هال[ةه]|تنشق\s*الأرض|تنشق\s*الارض|انشقاق\s*الأرض|ضهور\s*مطر|ظهور\s*مطر|يتأثر\s*العالم|تتأثر\s*العالم|يتاثر\s*العالم|تتاثر\s*العالم/.test(clause)) {
           const runMeters = extractDistanceMeters(clause, isTurnVerb2D ? 8.0 : 12.0);
           const runDur = explicitDur > 0 ? explicitDur : Math.min(5.5, Math.max(0.95, runMeters * 0.14));
           let moveDir2D = 'forward_face'; // افتراضياً: وجه الشخصية هو الأمام!
@@ -3789,11 +3784,17 @@
         const chosenWidthPx = powers.beamWidthPx || 24;
         const chosenThickM = powers.beamThicknessMeters || 0.65;
         if (tChar) {
-          // لو كان الهدف (عمر) خلفه، يلتفت تلقائياً باتجاهه قبل إطلاق الشعاع!
+          // لو كان الهدف (عمر) خلفه، يظهر التفاته بوضوح ثم يطلق الشعاع باتجاهه!
           const neededFacing = tChar.x >= c.x ? 1 : -1;
           if (c.facing !== neededFacing) {
+            c._pendingBeamTurnFacing = neededFacing;
+            c._beamTurnTimer = 0.22;
+            spawnHitText(c.x, c.y - 138, `🔄 يلتفت نحو ${tChar.name} خلفه!`, '#facc15');
+            spawnShockwave(c.x, c.y - 50, '#facc15', 55);
+          } else {
+            c._pendingBeamTurnFacing = 0;
+            c._beamTurnTimer = 0;
             c.facing = neededFacing;
-            spawnHitText(c.x, c.y - 135, `🔄 يلتفت نحو ${tChar.name}!`, '#facc15');
           }
           c.pose = 'beam_cast';
           state.energyBeams = state.energyBeams.filter(eb => eb.fromSlot !== c.slot);
@@ -4160,7 +4161,15 @@
 
         if (tChar) {
           const dirToTarget = tChar.x >= c.x ? 1 : -1;
-          c.facing = dirToTarget;
+          if (c._beamTurnTimer && c._beamTurnTimer > 0) {
+            c._beamTurnTimer -= dt;
+            if (c._beamTurnTimer <= 0) {
+              c.facing = dirToTarget;
+              c._pendingBeamTurnFacing = 0;
+            }
+          } else {
+            c.facing = dirToTarget;
+          }
           // تحديث الشعاع المستمر ليظل موصولاً من يدي المهاجم إلى صدر الهدف
           const activeBeam = state.energyBeams.find(eb => eb.fromSlot === c.slot);
           if (activeBeam && progress < 0.78) {
@@ -9992,6 +10001,12 @@
       });
 
       document.getElementById('btnStagePlayPause')?.addEventListener('click', () => {
+        const curScript = (document.getElementById('scriptInput')?.value || '').trim();
+        const atEnd = state.timeline.length > 0 && state.currentEventIndex >= state.timeline.length - 1 && state.eventElapsed >= (state.timeline[state.currentEventIndex]?.duration || 0);
+        if (curScript !== (state._lastVoiceScriptSig || '') || (!state.isPlaying && atEnd)) {
+          parseArabicScript(curScript);
+          return;
+        }
         state.isPlaying = !state.isPlaying;
         if (state.bgmLoaded && state.bgmAudio) {
           if (state.isPlaying) {
@@ -10001,6 +10016,14 @@
           }
         }
         updatePlayButtonsUI();
+      });
+
+      document.getElementById('btnScrollToStageTop')?.addEventListener('click', () => {
+        const curScript = (document.getElementById('scriptInput')?.value || '').trim();
+        if (curScript !== (state._lastVoiceScriptSig || '')) {
+          parseArabicScript(curScript);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
       document.getElementById('btnStageRestart')?.addEventListener('click', () => {
@@ -10107,6 +10130,12 @@
           if (state.undoStack.length > 30) state.undoStack.shift();
         }
         try { localStorage.setItem('stickman_2d_autosave_script', val); } catch (err) {}
+        clearTimeout(state._autoParseDebounceTimer);
+        state._autoParseDebounceTimer = setTimeout(() => {
+          if (area && area.value.trim() && area.value.trim() !== (state._lastVoiceScriptSig || '')) {
+            parseArabicScript(area.value);
+          }
+        }, 550);
       };
       area?.addEventListener('input', pushUndoState);
 
