@@ -398,6 +398,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-1">
               <button id="btnInsertNarrator" type="button" class="touch-btn px-2 py-1 rounded-lg bg-purple-500/25 text-purple-300 border text-[10px] font-black" title="إضافة رمز الراوي » لبداية السطر">🎙️ الراوي »</button>
+              <button id="btnInsertSpeechBubble2D" type="button" class="touch-btn px-2 py-1 rounded-lg bg-sky-500/25 text-sky-300 border text-[10px] font-black" title="إضافة كلام داخل فقاعة مع سهم للمتكلم بعلامة ✓ أو $">💬 فقاعة {كلام}✓</button>
               <button id="btnInsertCamStatic2D" type="button" class="touch-btn px-2 py-1 rounded-lg bg-pink-500/25 text-pink-300 border text-[10px] font-black" title="كاميرا ثابتة (؟) تركز على الشخصية وتبقى ثابتة في مكانها">🎥 كاميرا ثابتة ؟</button>
               <button id="btnInsertCamMoving2D" type="button" class="touch-btn px-2 py-1 rounded-lg bg-cyan-500/25 text-cyan-300 border text-[10px] font-black" title="كاميرا متحركة (؟=) تتبع الشخصية وتنظر للأمام كأنها لعبة 2D">🎥 كاميرا متحركة ؟=</button>
               <button id="btnInsertCamPov2D" type="button" class="touch-btn px-2 py-1 rounded-lg bg-emerald-500/25 text-emerald-300 border text-[10px] font-black" title="منظور عيون الشخصية (#الشخصية) لنرى ما تراه الشخصية أمامها">👁️ عيون الشخصية #</button>
@@ -414,11 +415,11 @@
 
 
 
-          <textarea id="scriptInput" rows="8" class="w-full rounded-xl bg-slate-950 border p-3 text-xs leading-relaxed text-white custom-scroll" placeholder="اكتب وصف المشهد هنا...">المشهد يضم شخصيتين عمر وعلي بلا أي سلاح.
+          <textarea id="scriptInput" rows="8" class="w-full rounded-xl bg-slate-950 border p-3 text-xs leading-relaxed text-white custom-scroll" placeholder="اكتب وصف المشهد هنا...">المشهد يضم شخصيتين علي وعمر بلا أي سلاح.
+علي { انا الأقوى}✓
+عمر { سنرى من الأقوى في هذه المعركة}$
 تضهر هاله سوداء على عمر هاله كبيره بقطر 6 متر وتتاثر العالم بها مثلاً ضهور مطر او برق او تنشق الأرض تحته لمدة 4 ثوان.
-يمشي علي باتجاه اليمين 5 متر لمدة 2 ثانية.
-ضرب علي شعاع بسمك 1 متر ولون اسود ب إتجاه عمر لمدة 4 ثوان.
-يطير عمر في السماء عالياً باتجاه اليمين لمسافة 25 متر لمدة 4 ثوان.</textarea>
+ضرب علي شعاع بسمك 1 متر ولون اسود ب إتجاه عمر يدفعه لمسافة 40 متر لمدة 4 ثوان.</textarea>
 
           <!-- زر تشغيل المشهد من شاشة الكتابة الثانية + زر الصعود لشاشة العرض الأولى -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -932,8 +933,9 @@
               <p class="text-slate-300 mt-1">ضع رمز <code class="text-amber-300">»</code> قبل أي جملة ليكون الكلام بصوت <strong>الراوي</strong> طوال الحلقة (مثال: <code class="text-emerald-300">» وفي يوم صافي يجلس أحمد وعلي في المقهى</code>). سيظهر لك في التسجيل: <strong>قُل بصوت الراوي</strong>.</p>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-900 border">
-              <span class="font-black text-cyan-300">💬 رمز حوار الشخصية ( <code class="text-amber-300">{الكلام}</code> ):</span>
-              <p class="text-slate-300 mt-1">ضع كلام الشخصية بين <code class="text-amber-300">{...}</code> ليفتح ويقفل فم هذه الشخصية فقط أثناء الكلام، وتظهر الترجمة أسفل الشاشة كفيلم سينمائي، <strong>وتختفي الكتابة تلقائياً فور تسجيل صوتك لها!</strong></p>
+              <span class="font-black text-cyan-300">💬 فقاعة الكلام بسهم للمتكلم ( <code class="text-amber-300">{الكلام}✓</code> أو <code class="text-amber-300">{الكلام}$</code> ):</span>
+              <p class="text-slate-300 mt-1">• إذا وضعت علامة <code class="text-emerald-300">✓</code> أو <code class="text-emerald-300">$</code> مع القوس مثل: <code class="text-emerald-300">علي { انا الأقوى}✓</code> أو <code class="text-emerald-300">علي { انا الأقوى}$</code> ⬅ <strong>تظهر فقاعة الكلام مع سهم يشير لجانب المتكلم</strong>، ويحرك المتكلم فقط ذراعه ويفتح فمه بينما يبقى الآخر ثابتاً!</p>
+              <p class="text-slate-300 mt-1">• إذا كتبت <code class="text-amber-300">علي { انا الأقوى}</code> <strong>بدون</strong> علامة <code class="text-emerald-300">✓</code> أو <code class="text-emerald-300">$</code> ⬅ <strong>لا تظهر أي فقاعة</strong> (تظهر الترجمة السينمائية أسفل الشاشة فقط).</p>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-900 border">
               <span class="font-black text-amber-300">🎬 رمز اللقطة الاحترافية والإعادة ( <code class="text-rose-300">"1"</code> أو <code class="text-rose-300">"2"</code> ):</span>
@@ -3285,36 +3287,56 @@
           if (appearList.length > 0) return;
         }
 
-        // 💬 Dialogue extraction: supports both {speech} and "يقول رقم 1: ..." / «...»
-        const braceRg = /\{([^}]+)\}/g;
+        // 💬 Dialogue extraction: supports {speech}✓, {speech}$, {speech}, and "يقول رقم 1: ..." / «...»
+        // إذا وُجدت علامة ✓ أو ✔ أو √ أو ☑ أو $ (أو كلمة فقاعة) تظهر فقاعة الكلام مع سهم لجانب المتكلم! وإذا لم توجد أي علامة منها فلا تظهر أي فقاعة!
+        const braceRg = /([✓✔√☑$])?\s*\{([^}]+)\}\s*([✓✔√☑$])?/g;
         let bm;
         let hadBraceDialogue = false;
+        let lastBraceEndIdx = 0;
+        const totalBracesInClause = (clause.match(/\{[^}]+\}/g) || []).length;
         while ((bm = braceRg.exec(clause)) !== null) {
           hadBraceDialogue = true;
-          const speechText = bm[1].trim();
+          const beforeBraceSeg = clause.slice(lastBraceEndIdx, bm.index);
+          const afterBraceSeg = clause.slice(bm.index + bm[0].length, bm.index + bm[0].length + 14);
+          lastBraceEndIdx = bm.index + bm[0].length;
+          const segSlots = findCharacterSlotsInText(beforeBraceSeg);
+          const dlgActor = segSlots.length > 0 ? segSlots[segSlots.length - 1] : actor;
+          const hasBubbleMarker = Boolean(
+            bm[1] ||
+            bm[3] ||
+            /[✓✔√☑$]/.test(bm[2]) ||
+            /^[\s"»']*([✓✔√☑$]|او\s*\$|أو\s*\$)/.test(afterBraceSeg) ||
+            /فقاع[ةه]/.test(beforeBraceSeg) ||
+            (totalBracesInClause === 1 && (/[✓✔√☑$]/.test(clause) || /فقاع[ةه]/.test(clause)))
+          );
+          const speechText = bm[2].replace(/[✓✔√☑$]/g, '').trim();
+          if (!speechText) continue;
           const dId = dialogues.length;
           dialogues.push({
             id: dId,
-            speakerSlot: actor,
-            speakerName: state.characters[actor].name,
+            speakerSlot: dlgActor,
+            speakerName: state.characters[dlgActor].name,
             text: speechText,
+            showBubble: hasBubbleMarker,
             audioUrl: null,
             recorded: false
           });
           events.push({
             type: 'dialogue',
-            title: `💬 ${state.characters[actor].name} (#${actor + 1}): "${speechText}"`,
+            title: `${hasBubbleMarker ? '🗯️ فقاعة' : '💬 حوار'} ${state.characters[dlgActor].name} (#${dlgActor + 1}): "${speechText}"`,
             duration: explicitDur > 0 ? explicitDur : Math.max(2.4, Math.min(8.0, speechText.length * 0.11)),
-            actorSlot: actor,
+            actorSlot: dlgActor,
             text: speechText,
+            showBubble: hasBubbleMarker,
             dialogueId: dId
           });
         }
         if (hadBraceDialogue) return;
 
         if ((clause.includes(':') || /يقول|قال|تقول|يصرخ|صرخ|ينادي|يرد|أجاب/.test(clause)) && !/بركل[ةه]|بلكم[ةه]|بضرب[ةه]|بهجوم|بسيف|بشعاع|يطير\s*للخلف|تطير\s*ب/.test(clause)) {
+          const hasBubbleMarker = /[✓✔√☑$]/.test(clause) || /فقاع[ةه]/.test(clause);
           let speech = clause.includes(':') ? clause.slice(clause.indexOf(':') + 1).trim() : clause;
-          speech = speech.replace(/["«»]/g, '').trim();
+          speech = speech.replace(/["«»✓✔√☑$]/g, '').trim();
           if (speech) {
             const dId = dialogues.length;
             dialogues.push({
@@ -3322,15 +3344,17 @@
               speakerSlot: actor,
               speakerName: state.characters[actor].name,
               text: speech,
+              showBubble: hasBubbleMarker,
               audioUrl: null,
               recorded: false
             });
             events.push({
               type: 'dialogue',
-              title: `💬 ${state.characters[actor].name} (#${actor + 1}): "${speech}"`,
+              title: `${hasBubbleMarker ? '🗯️ فقاعة' : '💬 حوار'} ${state.characters[actor].name} (#${actor + 1}): "${speech}"`,
               duration: explicitDur > 0 ? explicitDur : Math.max(2.4, Math.min(8.0, speech.length * 0.11)),
               actorSlot: actor,
               text: speech,
+              showBubble: hasBubbleMarker,
               dialogueId: dId
             });
             return;
@@ -4795,6 +4819,9 @@
       state.activeSubtitle = null;
       state.characters.forEach(c => {
         c.speech = null;
+        if (c.pose === 'talk') {
+          c.pose = c._sittingInCafe ? 'sit' : 'idle';
+        }
         c.fireActive = false;
         c.lightningActive = false;
         c.beamActive = false;
@@ -5265,6 +5292,16 @@
           return;
         }
 
+        // إيقاف أي حركة كلام أو ذراع لجميع الشخصيات الأخرى غير المتكلم حتى يكون المتكلم فقط هو الذي يحرك ذراعه ويفتح فمه!
+        state.characters.forEach(c => {
+          if (c.slot !== ev.actorSlot) {
+            c.speech = null;
+            if (!c.kdState && (c.pose === 'talk' || c.pose === 'brawl')) {
+              c.pose = c._sittingInCafe ? 'sit' : 'idle';
+            }
+          }
+        });
+
         const sp = state.characters[ev.actorSlot];
         if (sp) {
           if (state.hasCafeScene) {
@@ -5278,19 +5315,31 @@
               sp.y = getGroundYAt(sp.x);
               sp.facing = ev.actorSlot === 0 ? 1 : -1;
             }
+            // جعل المتكلم ينظر باتجاه أقرب شخصية مرئية أمامه أثناء الكلام
+            const listener = state.characters.find(ch => ch.visible && ch.slot !== ev.actorSlot);
+            if (listener && Math.abs(listener.x - sp.x) > 4) {
+              sp.facing = listener.x >= sp.x ? 1 : -1;
+            }
           }
           sp.visible = true;
-          // تحديد هذه الشخصية فقط لتفتح وتقفل فمها أثناء الكلام!
+          // تحديد هذه الشخصية فقط لتفتح وتقفل فمها وتحرك ذراعها أثناء الكلام!
           state.activeSpeakerSlot = ev.actorSlot;
-          // تظهر الكتابة في الأسفل وكأنها فيلم، وتختفي الكتابة تماماً لو تم تسجيل صوت الشخصية!
-          sp.speech = null;
+          const shouldShowBubble = Boolean(ev.showBubble || (dObj && dObj.showBubble));
+          if (shouldShowBubble) {
+            // إذا وُجدت علامة ✓ أو $ مع الجملة: تظهر فقاعة الكلام مع سهم لجانب المتكلم!
+            state.speechBubblesHidden = false;
+            sp.speech = ev.text;
+          } else {
+            // إذا لم توجد علامة ✓ أو $: لا تظهر أي فقاعة إطلاقاً!
+            sp.speech = null;
+          }
           state.activeSubtitle = isVoiceRecorded ? null : {
             text: ev.text,
             speakerName: sp.name,
             isNarrator: false
           };
           sp.pose = (sp._sittingInCafe && ev.actorSlot <= 1) ? 'sit' : 'talk';
-          if (/أنا\s*الأسطور|انا\s*الاصطور|فيقوم\s*الاثن/.test(ev.text) || ev.actorSlot >= 2) {
+          if (/أنا\s*الأسطور|انا\s*الاصطور|فيقوم\s*الاثن/.test(ev.text)) {
             state.characters[0]._sittingInCafe = false;
             state.characters[1]._sittingInCafe = false;
             state.characters[0].pose = 'brawl';
@@ -8044,27 +8093,37 @@
       let handFrontX = dir * 24, handFrontY = -66;
       let handBackX = -dir * 10, handBackY = -62;
 
+      const isThisCharSpeaking = (!isPreview && state.activeSpeakerSlot === char.slot);
+
       if (char.pose === 'sit') {
-        const talkWave = Math.sin(t * 1.4) * 3;
+        const talkWave = isThisCharSpeaking ? (Math.sin(t * 2.6) * 7) : 0;
         hipX = -dir * 4; hipY = -26;
         shoulderX = -dir * 2; shoulderY = -66;
         headX = 0; headY = -84;
         footFrontX = dir * 18; footFrontY = 0; footFrontAngle = 0;
         footBackX = dir * 11; footBackY = 0; footBackAngle = 0;
-        handFrontX = dir * 22; handFrontY = -44 + talkWave;
+        handFrontX = isThisCharSpeaking ? dir * (24 + Math.cos(t * 2.6) * 5) : dir * 20;
+        handFrontY = -44 + talkWave;
         handBackX = dir * 14; handBackY = -42;
       } else if (char.pose === 'idle' || char.pose === 'talk') {
-        const breathe = Math.sin(t * 0.6) * 2.2;
+        const breathe = Math.sin(t * 0.6) * 1.4;
         hipY = -43 + breathe;
         shoulderY = -83 + breathe;
         headY = -101 + breathe;
         footFrontX = dir * 12; footFrontY = 0;
         footBackX = -dir * 11; footBackY = 0;
-        handFrontX = dir * 22; handFrontY = -68 + breathe;
-        handBackX = dir * 6; handBackY = -62 + breathe;
-        if (char.pose === 'talk') {
-          handFrontX = dir * (25 + Math.sin(t * 2.2) * 6);
-          handFrontY = -76 + Math.cos(t * 2.2) * 5;
+        if (isThisCharSpeaking) {
+          // المتكلم فقط يحرك ذراعه أثناء الكلام!
+          handFrontX = dir * (27 + Math.sin(t * 2.6) * 8);
+          handFrontY = -78 + Math.cos(t * 2.6) * 7;
+          handBackX = -dir * 8;
+          handBackY = -62;
+        } else {
+          // غير المتكلم تبقى ذراعاه ثابتتين تماماً بدون تحريك!
+          handFrontX = dir * 20;
+          handFrontY = -66;
+          handBackX = -dir * 8;
+          handBackY = -62;
         }
       } else if (char.pose === 'run') {
         const walkCycle = t * 1.85;
@@ -8763,8 +8822,7 @@
           }
           ctx.stroke();
 
-          // الفم والكلام
-          const isThisCharSpeaking = (!isPreview && state.activeSpeakerSlot === char.slot);
+          // الفم والكلام (يفتح ويقفل فم المتكلم فقط!)
           ctx.fillStyle = '#991b1b';
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 1.8;
@@ -8925,45 +8983,97 @@
       ctx.restore();
 
       if (!isPreview && char.speech && !state.speechBubblesHidden) {
-        drawSpeechBubbleWithArrow(ctx, char.x, char.y - 132 * sc, char.speech, mainCol, `#${char.slot + 1} ${char.name}`);
+        drawSpeechBubbleWithArrow(ctx, char.x, char.y - 118 * sc, char.speech, mainCol, `#${char.slot + 1} ${char.name}`, char.facing || 1);
       }
     }
 
-    function drawSpeechBubbleWithArrow(ctx, tx, ty, text, col, speaker) {
-      if (state.speechBubblesHidden) return;
+    function drawSpeechBubbleWithArrow(ctx, tx, ty, text, col, speaker, facing = 1) {
+      if (state.speechBubblesHidden || !text) return;
       ctx.save();
-      ctx.font = 'bold 13px Cairo';
-      const w = Math.min(310, Math.max(130, ctx.measureText(text).width + 38));
-      const h = 52;
-      const bx = tx - w / 2;
-      const by = ty - h - 18;
+      ctx.font = '900 14px Cairo';
+
+      // تقسيم النص الطويل تلقائياً إلى سطرين داخل الفقاعة حتى يظهر الكلام واضحاً بالكامل
+      const words = String(text).trim().split(/\s+/);
+      const lines = [];
+      let curLine = '';
+      for (const wd of words) {
+        const testL = curLine ? (curLine + ' ' + wd) : wd;
+        if (ctx.measureText(testL).width > 250 && curLine) {
+          lines.push(curLine);
+          curLine = wd;
+        } else {
+          curLine = testL;
+        }
+      }
+      if (curLine) lines.push(curLine);
+      if (lines.length === 0) lines.push(String(text));
+
+      let maxLineW = 90;
+      lines.forEach(l => {
+        const lw = ctx.measureText(l).width;
+        if (lw > maxLineW) maxLineW = lw;
+      });
+
+      const showSpeakerHeader = (!state.isPlaying && !state.isRecordingVideo);
+      const w = Math.min(320, Math.max(125, maxLineW + 36));
+      const lineH = 20;
+      const h = (lines.length * lineH) + (showSpeakerHeader ? 30 : 22);
+
+      // إزاحة الفقاعة قليلاً لجانب الشخص المتكلم مع سهم مائل واضح يشير مباشرة إلى رأس/فم المتكلم!
+      const sideSign = facing >= 0 ? 1 : -1;
+      const bx = tx + (sideSign * 26) - w / 2;
+      const by = ty - h - 24;
+      const arrowBaseX = Math.max(bx + 22, Math.min(bx + w - 22, tx + sideSign * 14));
+      const arrowTipX = tx + sideSign * 4;
+      const arrowTipY = ty - 2;
       const style = state.speechBubbleStyle || 'classic';
 
-      if (style === 'neon') {
-        ctx.fillStyle = 'rgba(2, 6, 23, 0.94)';
-        ctx.strokeStyle = col || '#00d4ff';
-        ctx.shadowColor = col || '#00d4ff';
-        ctx.shadowBlur = 0;
-        ctx.lineWidth = 2.5;
+      const drawDirectionalTail = (fillCol, strokeCol, lw) => {
+        ctx.fillStyle = fillCol;
+        ctx.strokeStyle = strokeCol;
+        ctx.lineWidth = lw;
         ctx.beginPath();
-        ctx.roundRect(bx, by, w, h, 10);
+        ctx.moveTo(arrowBaseX - 10, by + h - 2);
+        ctx.lineTo(arrowTipX, arrowTipY);
+        ctx.lineTo(arrowBaseX + 10, by + h - 2);
+        ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 10px Cairo';
-        ctx.textAlign = 'right';
-        if (!state.isPlaying && !state.isRecordingVideo) ctx.fillText(`🗣️ ${speaker}:`, bx + w - 10, by + 16);
+        // مسح خط التقاء السهم بجسم الفقاعة لتبدو قطعة واحدة احترافية
+        ctx.fillStyle = fillCol;
+        ctx.fillRect(arrowBaseX - 9, by + h - 4, 18, 5);
+      };
+
+      if (style === 'neon') {
+        const strokeC = col || '#00d4ff';
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.94)';
+        ctx.strokeStyle = strokeC;
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.roundRect(bx, by, w, h, 12);
+        ctx.fill();
+        ctx.stroke();
+        drawDirectionalTail('rgba(2, 6, 23, 0.94)', strokeC, 2.4);
+
+        if (showSpeakerHeader) {
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = 'bold 10px Cairo';
+          ctx.textAlign = 'right';
+          ctx.fillText(`🗣️ ${speaker}:`, bx + w - 10, by + 15);
+        }
         ctx.fillStyle = '#ffffff';
-        ctx.font = '900 13px Cairo';
+        ctx.font = '900 14px Cairo';
         ctx.textAlign = 'center';
-        ctx.fillText(text, bx + w / 2, by + 37);
+        const startTextY = by + (showSpeakerHeader ? 33 : 22);
+        lines.forEach((ln, idx) => {
+          ctx.fillText(ln, bx + w / 2, startTextY + idx * lineH);
+        });
         ctx.restore();
         return;
       }
 
       if (style === 'shout') {
-        // فقاعة صرخة أنمي مسننة حماسية!
+        // فقاعة صرخة أنمي مسننة حماسية مع سهم للمتكلم!
         ctx.fillStyle = '#fef9c3';
         ctx.strokeStyle = '#e11d48';
         ctx.lineWidth = 3;
@@ -8982,49 +9092,51 @@
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+        drawDirectionalTail('#fef9c3', '#e11d48', 2.8);
       } else if (style === 'thought') {
-        // فقاعة سحابة تفكير
+        // فقاعة سحابة تفكير مع دوائر متدرجة تشير للمتكلم
         ctx.fillStyle = '#ffffff';
         ctx.strokeStyle = col || '#38bdf8';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.roundRect(bx, by, w, h, 24);
+        ctx.roundRect(bx, by, w, h, 22);
         ctx.fill();
         ctx.stroke();
-        [6, 13].forEach((off, idx) => {
+        [0.35, 0.72, 1.0].forEach((f, idx) => {
+          const dotX = arrowBaseX + (arrowTipX - arrowBaseX) * f;
+          const dotY = (by + h) + (arrowTipY - (by + h)) * f;
           ctx.beginPath();
-          ctx.arc(tx, by + h + off, 5 - idx * 1.5, 0, Math.PI * 2);
+          ctx.arc(dotX, dotY, 5.5 - idx * 1.4, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
         });
       } else {
-        // فقاعة كلاسيكية دائرية مع سهم
+        // فقاعة كلاسيكية ناصعة البياض مع سهم واضح يشير مباشرة لجانب الشخص المتكلم!
+        const strokeC = col || '#2563eb';
         ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = col || '#2563eb';
+        ctx.strokeStyle = strokeC;
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.roundRect(bx, by, w, h, 14);
         ctx.fill();
         ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(tx - 9, by + h - 1);
-        ctx.lineTo(tx, by + h + 15);
-        ctx.lineTo(tx + 9, by + h - 1);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+        drawDirectionalTail('#ffffff', strokeC, 2.8);
       }
 
-      ctx.fillStyle = '#475569';
-      ctx.font = 'bold 10px Cairo';
-      ctx.textAlign = 'right';
-      if (!state.isPlaying && !state.isRecordingVideo) ctx.fillText(`🗣️ ${speaker}:`, bx + w - 12, by + 16);
+      if (showSpeakerHeader) {
+        ctx.fillStyle = '#475569';
+        ctx.font = 'bold 10px Cairo';
+        ctx.textAlign = 'right';
+        ctx.fillText(`🗣️ ${speaker}:`, bx + w - 12, by + 15);
+      }
 
       ctx.fillStyle = '#0f172a';
-      ctx.font = '900 13px Cairo';
+      ctx.font = '900 14px Cairo';
       ctx.textAlign = 'center';
-      ctx.fillText(text, bx + w / 2, by + 37);
+      const startTextY = by + (showSpeakerHeader ? 33 : 22);
+      lines.forEach((ln, idx) => {
+        ctx.fillText(ln, bx + w / 2, startTextY + idx * lineH);
+      });
       ctx.restore();
     }
 
@@ -10802,6 +10914,16 @@
         }, 550);
       };
       area?.addEventListener('input', pushUndoState);
+
+      document.getElementById('btnInsertSpeechBubble2D')?.addEventListener('click', () => {
+        const inp = document.getElementById('scriptInput');
+        if (!inp) return;
+        const firstCharName = (state.characters[0] && state.characters[0].name) ? state.characters[0].name : 'علي';
+        const snippet = `\n${firstCharName} { انا الأقوى}✓`;
+        inp.value = inp.value.trimEnd() + snippet;
+        parseArabicScript(inp.value);
+        showToast('💬 تمت إضافة جملة داخل فقاعة كلام مع سهم للمتكلم { ... }✓');
+      });
 
       document.getElementById('btnInsertNarrator')?.addEventListener('click', () => {
         pushUndoState();
