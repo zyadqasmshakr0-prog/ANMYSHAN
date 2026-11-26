@@ -21,11 +21,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.5'
-
       - name: Sync latest HTML & Generate App Icon from image in F:/2D
         run: |
           mkdir -p app/src/main/assets
@@ -37,25 +32,50 @@ jobs:
           done
           if [ -n "$ICON_SRC" ] && command -v convert >/dev/null 2>&1; then
             echo "Using user icon image: $ICON_SRC"
-            convert "$ICON_SRC" -resize 48x48! app/src/main/res/mipmap-mdpi/ic_launcher.png
-            convert "$ICON_SRC" -resize 72x72! app/src/main/res/mipmap-hdpi/ic_launcher.png
-            convert "$ICON_SRC" -resize 96x96! app/src/main/res/mipmap-xhdpi/ic_launcher.png
-            convert "$ICON_SRC" -resize 144x144! app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-            convert "$ICON_SRC" -resize 192x192! app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 48x48! PNG32:app/src/main/res/mipmap-mdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 72x72! PNG32:app/src/main/res/mipmap-hdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 96x96! PNG32:app/src/main/res/mipmap-xhdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 144x144! PNG32:app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+            convert "$ICON_SRC" -resize 192x192! PNG32:app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
             for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
               cp -f "app/src/main/res/$dir/ic_launcher.png" "app/src/main/res/$dir/ic_launcher_round.png"
             done
           elif [ ! -f "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" ] && command -v convert >/dev/null 2>&1; then
             for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
-              convert -size 192x192 xc:"#0f172a" -fill "#ef4444" -draw "circle 96,96 96,20" "app/src/main/res/$dir/ic_launcher.png"
+              convert -size 192x192 xc:"#0f172a" -fill "#ef4444" -draw "circle 96,96 96,20" PNG32:"app/src/main/res/$dir/ic_launcher.png"
               cp -f "app/src/main/res/$dir/ic_launcher.png" "app/src/main/res/$dir/ic_launcher_round.png"
             done
           fi
 
-      - name: Build Android APK (Debug & Release)
+      - name: Direct Fast Android SDK APK Build (Zero Maven Central 429 Rate-Limit!)
         run: |
-          gradle assembleDebug assembleRelease --no-daemon
-          cp app/build/outputs/apk/debug/app-debug.apk Stickman_2D_Studio_ULTRA.apk
+          set -e
+          SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          BUILD_TOOLS=$(ls -d "$SDK_DIR/build-tools/"* | sort -V | tail -n 1)
+          PLATFORM_JAR=$(ls "$SDK_DIR/platforms/"android-*/android.jar | sort -V | tail -n 1)
+          echo "Using BUILD_TOOLS: $BUILD_TOOLS"
+          echo "Using PLATFORM_JAR: $PLATFORM_JAR"
+
+          rm -rf build_cli
+          mkdir -p build_cli/compiled_res build_cli/gen build_cli/obj build_cli/apk_raw
+
+          "$BUILD_TOOLS/aapt2" compile --dir app/src/main/res -o build_cli/compiled_res/res.zip
+          "$BUILD_TOOLS/aapt2" link             -I "$PLATFORM_JAR"             --manifest app/src/main/AndroidManifest.xml             --java build_cli/gen             --min-sdk-version 24             --target-sdk-version 34             --version-code 12             --version-name "12.0-ULTRA-FAST"             -o build_cli/apk_raw/unaligned.apk             build_cli/compiled_res/res.zip             -A app/src/main/assets             --auto-add-overlay
+
+          find app/src/main/java build_cli/gen -name "*.java" > build_cli/sources.txt
+          javac -source 17 -target 17 -encoding UTF-8 -cp "$PLATFORM_JAR" -d build_cli/obj @build_cli/sources.txt
+
+          CLASS_FILES=$(find build_cli/obj -name "*.class")
+          "$BUILD_TOOLS/d8" --lib "$PLATFORM_JAR" --min-api 24 --output build_cli/apk_raw $CLASS_FILES
+
+          (cd build_cli/apk_raw && zip -q unaligned.apk classes.dex)
+          "$BUILD_TOOLS/zipalign" -f -p 4 build_cli/apk_raw/unaligned.apk build_cli/aligned.apk
+
+          keytool -genkeypair -v             -keystore build_cli/debug.keystore             -storepass android             -alias androiddebugkey             -keypass android             -keyalg RSA             -keysize 2048             -validity 10000             -dname "CN=Android Debug,O=Android,C=US"
+
+          "$BUILD_TOOLS/apksigner" sign             --ks build_cli/debug.keystore             --ks-pass pass:android             --key-pass pass:android             --out Stickman_2D_Studio_ULTRA.apk             build_cli/aligned.apk
+
+          ls -lh Stickman_2D_Studio_ULTRA.apk
 
       - name: Upload APK to Actions Artifacts
         uses: actions/upload-artifact@v4
