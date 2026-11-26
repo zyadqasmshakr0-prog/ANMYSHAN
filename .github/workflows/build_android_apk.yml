@@ -60,7 +60,7 @@ jobs:
           mkdir -p build_cli/compiled_res build_cli/gen build_cli/obj build_cli/apk_raw
 
           "$BUILD_TOOLS/aapt2" compile --dir app/src/main/res -o build_cli/compiled_res/res.zip
-          "$BUILD_TOOLS/aapt2" link             -I "$PLATFORM_JAR"             --manifest app/src/main/AndroidManifest.xml             --java build_cli/gen             --min-sdk-version 24             --target-sdk-version 34             --version-code 12             --version-name "12.0-ULTRA-FAST"             -o build_cli/apk_raw/unaligned.apk             build_cli/compiled_res/res.zip             -A app/src/main/assets             --auto-add-overlay
+          "$BUILD_TOOLS/aapt2" link             -I "$PLATFORM_JAR"             --manifest app/src/main/AndroidManifest.xml             --java build_cli/gen             --min-sdk-version 24             --target-sdk-version 34             --version-code 13             --version-name "13.0-ULTRA-CITY100-SFX"             -o build_cli/apk_raw/unaligned.apk             build_cli/compiled_res/res.zip             -A app/src/main/assets             --auto-add-overlay
 
           find app/src/main/java build_cli/gen -name "*.java" > build_cli/sources.txt
           javac -source 17 -target 17 -encoding UTF-8 -cp "$PLATFORM_JAR" -d build_cli/obj @build_cli/sources.txt

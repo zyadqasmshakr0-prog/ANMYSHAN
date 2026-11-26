@@ -741,7 +741,18 @@
     <section id="viewVoice" class="hidden flex-col gap-4">
       <div class="glass-panel rounded-2xl p-5">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <h2 class="text-base font-black text-white">🎙️ استوديو تسجيل الصوت وموسيقى المشهد</h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-base font-black text-white">🎙️ استوديو الصوت والمؤثرات</h2>
+            <!-- التبويبات الداخلية داخل زر الصوت: الحوارات | المؤثرات (السقوط، اللكم، الركل، الشعاع...) -->
+            <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button id="subTabBtnVoiceDialogues" type="button" class="touch-btn px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-black">
+                🗣️ أصوات الحوار والراوي
+              </button>
+              <button id="subTabBtnVoiceSfx" type="button" class="touch-btn px-3 py-1.5 rounded-lg bg-slate-800 text-amber-300 text-xs font-black">
+                💥 المؤثرات (السقوط واللكم والركل...)
+              </button>
+            </div>
+          </div>
           <div class="flex items-center gap-2">
             <button id="btnPickBgmFile" type="button" class="touch-btn px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-black flex items-center gap-1.5" title="اختيار موسيقى خلفية للمشهد من ملفات جهازك">
               <span id="bgmBtnLabel">🎵 إضافة موسيقى للمشهد</span>
@@ -785,6 +796,7 @@
             </div>
           </div>
         </div>
+        <div id="subViewVoiceDialogues">
         <div class="max-w-xl mx-auto p-5 rounded-2xl bg-slate-900 border text-center mb-5 flex flex-col gap-3">
           <div>
             <div id="studioVoiceStepBadge" class="inline-block px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-extrabold mb-1">الحوار 1</div>
@@ -827,15 +839,88 @@
             <tbody id="dialogueLinesTableBody"></tbody>
           </table>
         </div>
+        </div>
+
+        <!-- ==================== التبويب الداخلي الثاني داخل زر الصوت: 💥 المؤثرات (تحميل من الملفات أو تسجيل صوت أو أصوات جاهزة!) ==================== -->
+        <div id="subViewVoiceSfx" class="hidden flex-col gap-4">
+          <div class="p-3.5 rounded-xl bg-slate-950 border-2 border-amber-500/40 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-xs sm:text-sm font-black text-amber-300">💥 تخصيص أصوات المؤثرات (السقوط، اللكم، الركل، الشعاع، الهالة، الانفجار، البرق، الطيران):</h3>
+              <p class="text-[11px] text-slate-300 mt-0.5">لكل مؤثر يمكنك اختيار <strong>صوت جاهز من التطبيق</strong>، أو <strong>تسجيل صوتك بالمايكروفون</strong>، أو <strong>تحميل صوت من ملفات جهازك</strong>!</p>
+            </div>
+            <input id="sfxFileUploadInput" type="file" accept="audio/*" class="hidden">
+          </div>
+          <div id="sfxCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        </div>
       </div>
     </section>
 
     <!-- ==================== TAB 4: HELP, GUIDE & 5 LEARNING SCENARIOS (تبويب المساعدة والشرح والسيناريوهات الـ 5!) ==================== -->
     <section id="viewHelp" class="hidden flex-col gap-4">
       <div class="glass-panel rounded-2xl p-4 sm:p-5 flex flex-col gap-4">
-        <div>
-          <h2 class="text-base sm:text-lg font-black text-amber-300 mb-1">📘 دليل استخدام الاستوديو وجميع الرموز والاختصارات الرسمية</h2>
-          <p class="text-xs text-slate-300 leading-relaxed">ينفذ هذا الاستوديو كل ما تكتبه في الوصف حرفياً، ويحول الرموز المختصرة تلقائياً إلى صوت راوٍ، وحوار سينمائي بترجمة سفلية، وإعادة لقطات بالتصوير البطيء، وانقسام شاشة.</p>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-black text-amber-300 mb-1">📘 دليل استخدام الاستوديو وجميع الرموز والاختصارات الرسمية</h2>
+            <p class="text-xs text-slate-300 leading-relaxed">ينفذ هذا الاستوديو كل ما تكتبه في الوصف حرفياً، وبجانبه زر <strong>📖 دفتر شامل</strong> الذي يشرح كل شيء من الصفر لأي شخص جديد.</p>
+          </div>
+          <button id="btnToggleComprehensiveBook" type="button" class="touch-btn px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-emerald-500 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-xl">
+            <span>📖 دفتر شامل (دليل كل شيء من الصفر للاحتراف)</span>
+          </button>
+        </div>
+
+        <!-- ==================== 📖 الدفتر الشامل لكل ما يحتاجه شخص لا يعرف شيئاً عن التطبيق ==================== -->
+        <div id="comprehensiveGuidebookPanel" class="hidden p-4 sm:p-5 rounded-2xl bg-slate-950 border-2 border-amber-400 flex-col gap-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm sm:text-base font-black text-amber-300">📖 الدفتر الشامل — موسوعة تعليم التطبيق خطوة بخطوة من الصفر</h3>
+              <p class="text-[11px] text-slate-300 mt-0.5">هذا الدفتر مكتوب خصيصاً لأي شخص يفتح التطبيق لأول مرة ليعرف كيف يكتب أي مشهد أو مدينة أو قتال أو شعاع أو مطاردة بسهولة تامة:</p>
+            </div>
+            <button id="btnCloseComprehensiveBook" type="button" class="touch-btn px-3 py-1 rounded-lg bg-rose-600/30 text-rose-300 text-xs font-black">✖ إغلاق الدفتر</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs leading-relaxed">
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1.5">
+              <div class="font-black text-cyan-300">1️⃣ الفصل الأول: الشخصيات والأسماء والأسلحة والملابس</div>
+              <p class="text-slate-300">• <strong>الأسماء تلقائياً:</strong> اكتب أي اسم عربي في الوصف (مثل <code class="text-emerald-300">علي</code>، <code class="text-emerald-300">عمر</code>، <code class="text-emerald-300">أحمد</code>، <code class="text-emerald-300">خالد</code>، <code class="text-emerald-300">الطيب</code>، <code class="text-emerald-300">الشرير</code>) أو <code class="text-amber-300">الشخصية رقم 1</code> وسيتعرف عليها التطبيق فوراً حتى لو اتصلت بحرف مثل <code class="text-amber-300">لخالد</code> أو <code class="text-amber-300">وعمر</code>.</p>
+              <p class="text-slate-300">• <strong>الأسلحة والملابس:</strong> افتراضياً الشخصيات <code class="text-emerald-300">بلا أي سلاح</code>. إذا أردت سلاحاً اكتب: <code class="text-amber-300">يحمل سيف / كاتانا / مطرقة / رمح / فأس</code>. ويمكنك وصف الشكل: <code class="text-amber-300">ملابسه سوداء</code>، <code class="text-amber-300">شعره طويل</code>، <code class="text-amber-300">أصلع</code>، <code class="text-amber-300">يرتدي وشاح أحمر</code>، <code class="text-amber-300">عباءة سوداء</code>، <code class="text-amber-300">قناع</code>.</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1.5">
+              <div class="font-black text-emerald-300">2️⃣ الفصل الثاني: وصف العالم والمدن (100 مبنى) والجبال</div>
+              <p class="text-slate-300">• <strong>مدينة على طول المرحلة أو بعدد مباني:</strong> اكتب <code class="text-emerald-300">مدينة على طول المرحلة</code> أو <code class="text-emerald-300">مدينة بطول 100</code> أو <code class="text-emerald-300">مدينة ب 100 مبنى تقع في وسط مركز العالم يعني 50 يسار و 50 يمين</code>.</p>
+              <p class="text-slate-300">• <strong>التحكم بطول وعرض المباني والجبال:</strong> اكتب <code class="text-amber-300">متفاوتين بالطول والعرض</code> (فتظهر المباني بأطوال وعروض مختلفة)، أو <code class="text-amber-300">موحدين بالطول ومتفاوتين بالعرض</code>، أو <code class="text-amber-300">موحدين بالطول والعرض</code>، وكذلك <code class="text-amber-300">جبال على طول المرحلة</code> أو <code class="text-amber-300">10 جبال</code>.</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1.5">
+              <div class="font-black text-rose-300">3️⃣ الفصل الثالث: الركل واللكم ومسارات الطيران الـ 3 (100 متر)</div>
+              <p class="text-slate-300">• <strong>ضربة باتجاه واحد بدون تأليف رد:</strong> إذا كتبت <code class="text-emerald-300">أحمد يركل علي</code> يضربه فقط ثم ينهض علي ويقف دون رد. وإذا كتبت <code class="text-amber-300">عراك / يتعاركان / قتال</code> يتبادلان الضربات باستمرار.</p>
+              <p class="text-slate-300">• <strong>الأنواع الثلاثة لطيران المضروب:</strong><br>
+              1) <code class="text-emerald-300">ركل أحمد خالد بقوة يطير لمسافة 100 متر باتجاه اليمين بشكل نصف دائرة</code><br>
+              2) <code class="text-emerald-300">ركل أحمد خالد بقوة طار لمسافة 100 متر بخط مستقيم بارتفاع 2 متر عن الأرض</code><br>
+              3) <code class="text-emerald-300">يطير لمسافة 100 متر بمزيج من الاثنين</code> (ينطلق مستقيماً ثم يرتفع بنصف دائرة).<br>
+              وبعد سقوطه ينهض تلقائياً ويقف إلا إذا كتبت <code class="text-rose-300">ويموت / مات</code>.</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1.5">
+              <div class="font-black text-purple-300">4️⃣ الفصل الرابع: الشعاع الضوئي (السمك واللون ودفع الشخصية والالتفات)</div>
+              <p class="text-slate-300">• <strong>التحكم بسمك ولون الشعاع والالتفات التلقائي:</strong> اكتب <code class="text-emerald-300">ضرب علي شعاع بسمك 1 متر ولون أسود باتجاه عمر</code> — لو كان عمر خلف علي فإنه <strong>يلتفت تلقائياً</strong> نحوه ويطلق الشعاع بالسمك واللون المحددين!</p>
+              <p class="text-slate-300">• <strong>جعل الشعاع يدفع الشخصية لمسافات طويلة مثل الركل واللكم:</strong> اكتب:<br>
+              <code class="text-amber-300">ضرب علي شعاع بسمك 1 متر ولون أسود باتجاه عمر يدفعه لمسافة 50 متر</code> أو <code class="text-amber-300">يطير لمسافة 100 متر بشكل نصف دائرة</code> أو <code class="text-amber-300">بخط مستقيم بارتفاع 2 متر عن الأرض</code>!</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1.5">
+              <div class="font-black text-amber-300">5️⃣ الفصل الخامس: الهالات المخصصة وتأثر العالم بها والطيران الحر</div>
+              <p class="text-slate-300">• <strong>لون وقطر وتوقيت الهالة وتأثر العالم:</strong> اكتب <code class="text-emerald-300">تظهر هالة سوداء على عمر هالة كبيرة بقطر 6 متر ويتأثر العالم بها ظهور مطر أو برق وتنشق الأرض تحته</code>، أو <code class="text-amber-300">تظهر هالة حمراء لخالد في آخر المشهد</code> (تظهر لخالد فقط وفي وقتها المحدد دون برق تلقائي).</p>
+              <p class="text-slate-300">• <strong>الطيران الحر:</strong> اكتب <code class="text-emerald-300">يطير عمر في السماء عالياً باتجاه اليمين لمسافة 30 متر</code> ثم <code class="text-emerald-300">يهبط على الأرض</code>.</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1.5">
+              <div class="font-black text-blue-300">6️⃣ الفصل السادس: المطاردة الذكية بالسرعات والكاميرا والصوت والفيديو</div>
+              <p class="text-slate-300">• <strong>المطاردة بالسرعات:</strong> <code class="text-emerald-300">أحمد يركض وراء علي وعلي يركض وينعطف يمين ويمشي 20 متر وينعطف يسار، علي بسرعة 12 وأحمد بسرعة 13 والمسافة بينهم 4 أمتار</code> (يحسب التطبيق متى يلحق به ويعدل المسافة تلقائياً مع إشعار إذا لم تكفِ).</p>
+              <p class="text-slate-300">• <strong>الكاميرات:</strong> <code class="text-amber-300">؟</code> كاميرا ثابتة • <code class="text-amber-300">؟=</code> كاميرا متحركة تتبع الشخصية كأنها لعبة • <code class="text-amber-300">#علي</code> منظور عيون الشخصية • <code class="text-amber-300">/</code> تقسيم الشاشة • <code class="text-amber-300">"1"</code> و <code class="text-amber-300">"2"</code> إعادة اللقطة بالتصوير البطيء.</p>
+              <p class="text-slate-300">• <strong>الصوت والفيديو:</strong> من تبويب <strong>🎙️ تسجيل الصوت</strong> اختر <strong>💥 المؤثرات</strong> لتغيير أو تسجيل صوت اللكم والركل والسقوط، وعند الضغط على <strong>📥 حفظ للمعرض</strong> يُحفظ الفيديو صافياً بترجمة الكلام فقط بدون أي خطوط إرشادية!</p>
+            </div>
+          </div>
         </div>
 
         <!-- جدول جميع الاختصارات والرموز السريعة -->
@@ -1285,6 +1370,20 @@
       undoStack: [],
       redoStack: [],
       savedVoices: {},
+      customSfxClips: {},
+      sfxPresets: {
+        punch: 'anime',
+        kick: 'anime',
+        fall: 'anime',
+        beam: 'anime',
+        aura: 'anime',
+        explosion: 'anime',
+        lightning: 'anime',
+        whoosh: 'anime'
+      },
+      activeSfxRecordKey: null,
+      sfxMediaRecorder: null,
+      sfxRecordedChunks: [],
       voicePreviewAudio: null,
       bgmAudio: null,
       bgmLoaded: false,
@@ -1371,10 +1470,52 @@
       return { ctx: audioCtx, dest: audioStreamDest };
     }
 
-    function playSfx(type) {
+    function playSfx(type, forcePreview = false) {
       const nowMs = performance.now();
-      if (nowMs - lastSfxTime < 85) return;
+      if (!forcePreview && nowMs - lastSfxTime < 75) return;
       lastSfxTime = nowMs;
+      const keyMap = {
+        hit: 'punch',
+        punch: 'punch',
+        ko: 'kick',
+        kick: 'kick',
+        fall: 'fall',
+        beam: 'beam',
+        aura: 'aura',
+        fire: 'aura',
+        explosion: 'explosion',
+        lightning: 'lightning',
+        whoosh: 'whoosh'
+      };
+      const sfxKey = keyMap[type] || 'punch';
+      const preset = (state.sfxPresets && state.sfxPresets[sfxKey]) || 'anime';
+      if (preset === 'mute' && !forcePreview) return;
+
+      // 1. إذا قام المستخدم بتحميل ملف صوتي أو تسجيل صوت مخصص لهذا المؤثر، نشغله فوراً ونمرره لمسار تسجيل الفيديو!
+      const customClip = state.customSfxClips && state.customSfxClips[sfxKey];
+      if (customClip && customClip.url) {
+        try {
+          const { ctx, dest } = ensureStudioAudioGraph();
+          if (customClip.audioBuffer) {
+            const src = ctx.createBufferSource();
+            const g = ctx.createGain();
+            g.gain.value = 0.85;
+            src.buffer = customClip.audioBuffer;
+            src.connect(g);
+            g.connect(ctx.destination);
+            if (dest) g.connect(dest);
+            src.start(0);
+            return;
+          } else {
+            const aud = new Audio(customClip.url);
+            aud.volume = 0.85;
+            aud.play().catch(() => {});
+            return;
+          }
+        } catch (err) {}
+      }
+
+      // 2. الأصوات الجاهزة المدمجة من التطبيق (قياسي أنمي / قوي وثقيل سينمائي / خاطف وحاد)
       try {
         const { ctx, dest } = ensureStudioAudioGraph();
         const now = ctx.currentTime;
@@ -1384,46 +1525,74 @@
         gain.connect(ctx.destination);
         if (dest) gain.connect(dest);
 
-        if (type === 'hit') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(170, now);
-          osc.frequency.exponentialRampToValueAtTime(42, now + 0.11);
-          gain.gain.setValueAtTime(0.24, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.11);
+        const pMult = preset === 'heavy' ? 0.72 : (preset === 'sharp' ? 1.38 : 1.0);
+        const dMult = preset === 'heavy' ? 1.35 : (preset === 'sharp' ? 0.78 : 1.0);
+
+        if (sfxKey === 'punch') {
+          osc.type = preset === 'heavy' ? 'sawtooth' : 'triangle';
+          osc.frequency.setValueAtTime(185 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(42 * pMult, now + 0.12 * dMult);
+          gain.gain.setValueAtTime(0.28, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12 * dMult);
           osc.start(now);
-          osc.stop(now + 0.11);
-        } else if (type === 'ko' || type === 'explosion') {
+          osc.stop(now + 0.12 * dMult);
+        } else if (sfxKey === 'kick') {
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220, now);
-          osc.frequency.exponentialRampToValueAtTime(28, now + 0.35);
-          gain.gain.setValueAtTime(0.35, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+          osc.frequency.setValueAtTime(240 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(30 * pMult, now + 0.28 * dMult);
+          gain.gain.setValueAtTime(0.36, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28 * dMult);
           osc.start(now);
-          osc.stop(now + 0.35);
-        } else if (type === 'lightning' || type === 'beam') {
+          osc.stop(now + 0.28 * dMult);
+        } else if (sfxKey === 'fall') {
+          // صوت ارتطام وسقوط الجسم على الأرض (Thud عميق)
+          osc.type = preset === 'sharp' ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(115 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(24, now + 0.24 * dMult);
+          gain.gain.setValueAtTime(0.38, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.24 * dMult);
+          osc.start(now);
+          osc.stop(now + 0.24 * dMult);
+        } else if (sfxKey === 'explosion') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(160 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(22, now + 0.42 * dMult);
+          gain.gain.setValueAtTime(0.38, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.42 * dMult);
+          osc.start(now);
+          osc.stop(now + 0.42 * dMult);
+        } else if (sfxKey === 'beam') {
           osc.type = 'square';
-          osc.frequency.setValueAtTime(560, now);
-          osc.frequency.exponentialRampToValueAtTime(110, now + 0.22);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+          osc.frequency.setValueAtTime(620 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(115 * pMult, now + 0.28 * dMult);
+          gain.gain.setValueAtTime(0.22, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28 * dMult);
           osc.start(now);
-          osc.stop(now + 0.22);
-        } else if (type === 'fire' || type === 'aura') {
+          osc.stop(now + 0.28 * dMult);
+        } else if (sfxKey === 'lightning') {
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(125, now);
-          osc.frequency.exponentialRampToValueAtTime(65, now + 0.18);
-          gain.gain.setValueAtTime(0.16, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+          osc.frequency.setValueAtTime(780 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(85, now + 0.25 * dMult);
+          gain.gain.setValueAtTime(0.22, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25 * dMult);
           osc.start(now);
-          osc.stop(now + 0.18);
-        } else if (type === 'car') {
+          osc.stop(now + 0.25 * dMult);
+        } else if (sfxKey === 'aura') {
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(75, now);
-          osc.frequency.linearRampToValueAtTime(135, now + 0.22);
-          gain.gain.setValueAtTime(0.14, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.24);
+          osc.frequency.setValueAtTime(135 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(68 * pMult, now + 0.22 * dMult);
+          gain.gain.setValueAtTime(0.20, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22 * dMult);
           osc.start(now);
-          osc.stop(now + 0.24);
+          osc.stop(now + 0.22 * dMult);
+        } else {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(340 * pMult, now);
+          osc.frequency.exponentialRampToValueAtTime(95 * pMult, now + 0.16 * dMult);
+          gain.gain.setValueAtTime(0.20, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16 * dMult);
+          osc.start(now);
+          osc.stop(now + 0.16 * dMult);
         }
       } catch (e) {}
     }
@@ -1492,6 +1661,22 @@
       const ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
       let out = str || '';
       for (let i = 0; i < 10; i++) out = out.replace(new RegExp(ar[i], 'g'), String(i));
+      out = out
+        .replace(/(?:^|\s)و?خمسين(?=\s|$)/g, ' 50')
+        .replace(/(?:^|\s)و?خمسون(?=\s|$)/g, ' 50')
+        .replace(/(?:^|\s)و?عشرين(?=\s|$)/g, ' 20')
+        .replace(/(?:^|\s)و?عشرون(?=\s|$)/g, ' 20')
+        .replace(/(?:^|\s)و?ثلاثين(?=\s|$)/g, ' 30')
+        .replace(/(?:^|\s)و?ثلاثون(?=\s|$)/g, ' 30')
+        .replace(/(?:^|\s)و?أربعين(?=\s|$)/g, ' 40')
+        .replace(/(?:^|\s)و?اربعين(?=\s|$)/g, ' 40')
+        .replace(/(?:^|\s)و?ستين(?=\s|$)/g, ' 60')
+        .replace(/(?:^|\s)و?سبعين(?=\s|$)/g, ' 70')
+        .replace(/(?:^|\s)و?ثمانين(?=\s|$)/g, ' 80')
+        .replace(/(?:^|\s)و?تسعين(?=\s|$)/g, ' 90')
+        .replace(/(?:^|\s)و?(?:مئة|مائة|ميه|مية)(?=\s|$)/g, ' 100')
+        .replace(/(?:^|\s)و?(?:مئتين|مائتين)(?=\s|$)/g, ' 200')
+        .replace(/اثنين\s*ونص(?:ف)?|إثنين\s*ونص(?:ف)?/g, '2.5');
       return out;
     }
 
@@ -1811,7 +1996,8 @@
         .replace(/\{[^}]*\}/g, ' ')
         .replace(/(?:"|“|”|«|'')\s*[^"”»']+\s*(?:"|“|”|»|'')/g, ' ')
         .replace(/(\d+(?:\.\d+)?)\s*(?:متر\s*مربع|متر|أمتار|امتار|كيلومتر|كيلو|كم|خطو[ةه]|خطوات|زوايا|لقطات|درج[ةه]|ثاني[ةه]|ثواني|ثوان|دقيق[ةه]|دقائق|دقايق|شخصي[ةه]|شخصيات|أشخاص|اشخاص)/g, ' ')
-        .replace(/(?:لمد[ةه]|لمساف[ةه]|مساف[ةه]|بارتفاع|بإرتفاع|ارتفاع|على\s*بعد|يبعد|يضم|بسمك|سمك[هه]?|بقطر|قطر(?:ها|ه)?|بحجم|حجم(?:ها|ه)?|بعرض|عرض(?:ها|ه)?|بسرع[ةه]|سرع[ةه])\s*\d+(?:\.\d+)?/g, ' ')
+        .replace(/(\d+(?:\.\d+)?)\s*(?:مبنى|مبنا|مباني|منزل|منازل|بناي[ةه]|عمارة|عمائر|برج|أبراج|ابراج|جبل|جبال|شجر[ةه]|أشجار|اشجار|شجر|حجر|أحجار|احجار|صخر[ةه]|صخور|يسار|يمين|شرق|غرب|شمال|جنوب)/g, ' ')
+        .replace(/(?:لمد[ةه]|لمساف[ةه]|مساف[ةه]|بارتفاع|بإرتفاع|ارتفاع|على\s*بعد|يبعد|يضم|بسمك|سمك[هه]?|بقطر|قطر(?:ها|ه)?|بحجم|حجم(?:ها|ه)?|بعرض|عرض(?:ها|ه)?|بطول|طول(?:ها|ه)?|بطو|بسرع[ةه]|سرع[ةه])\s*\d+(?:\.\d+)?/g, ' ')
         .replace(/(?:على|علي)\s+(?=(?:الشخصي|شخصي|رقم|الطيب|الشرير|أحمد|احمد|حمد|خالد|محمد|عمر|زيد|سارة|ساره|حمزة|حمزه|فهد|سلمان|ياسر|طارق|سعيد|ناصر|ماجد|الأرض|الارض))/g, ' ')
         .replace(/القطع[ةه]\s*رقم\s*\d+/g, ' ');
 
@@ -2001,19 +2187,148 @@
         }
       });
 
+      // ==================== المحرك البارامتري لبناء المدينة (100 مبنى، على طول المرحلة، بطول X، 50 يمين و50 يسار، تفاوت/توحيد الطول والعرض) والجبال والأشجار ====================
+      const cityAlongStage = /على\s*طول\s*المرحل[ةه]|على\s*طول\s*العالم|على\s*طول\s*المسرح|على\s*طول\s*الشاش[ةه]|مدين[ةه]\s*كامل[ةه]|تمتد\s*على\s*طول/.test(norm0);
+      const bCountMatch = norm0.match(/(?:ب\s*|تضم\s*|فيها\s*|بها\s*|عدد\s*)?(\d+)\s*(?:مبنى|مبنا|مباني|منزل|منازل|بناي[ةه]|بنايات|عمارة|عمائر|برج|أبراج|ابراج)/);
+      const cityLenMatch = norm0.match(/(?:مدين[ةه]|المدين[ةه])[^.،\n]{0,30}?(?:بطول|طولها|طول|بطو|بامتداد|مساحتها)\s*(\d+)/);
+      const hasCustomCitySpec = Boolean(cityAlongStage || bCountMatch || cityLenMatch);
+
+      let buildingCount = 11;
+      if (bCountMatch) {
+        buildingCount = Math.max(1, Math.min(400, parseInt(bCountMatch[1], 10)));
+      } else if (cityLenMatch) {
+        const lenVal = Math.max(10, Math.min(2000, parseInt(cityLenMatch[1], 10)));
+        buildingCount = Math.max(16, Math.min(300, Math.round(lenVal * 0.55)));
+      } else if (cityAlongStage) {
+        buildingCount = 120;
+      }
+
+      // فحص توزيع المباني حول مركز العالم (مثلاً: "في وسط مركز العالم يعني 50 يسار و 50 يمين")
+      let leftBCount = -1;
+      let rightBCount = -1;
+      const leftRightMatch1 = norm0.match(/(\d+)\s*(?:مبنى|مبنا|منزل)?\s*(?:يسار|اليسار|غرب)[^.،\n]{0,25}?(\d+)\s*(?:مبنى|مبنا|منزل)?\s*(?:يمين|اليمين|شرق)/);
+      const leftRightMatch2 = norm0.match(/(\d+)\s*(?:مبنى|مبنا|منزل)?\s*(?:يمين|اليمين|شرق)[^.،\n]{0,25}?(\d+)\s*(?:مبنى|مبنا|منزل)?\s*(?:يسار|اليسار|غرب)/);
+      if (leftRightMatch1) {
+        leftBCount = parseInt(leftRightMatch1[1], 10);
+        rightBCount = parseInt(leftRightMatch1[2], 10);
+        buildingCount = Math.max(1, Math.min(400, leftBCount + rightBCount));
+      } else if (leftRightMatch2) {
+        rightBCount = parseInt(leftRightMatch2[1], 10);
+        leftBCount = parseInt(leftRightMatch2[2], 10);
+        buildingCount = Math.max(1, Math.min(400, leftBCount + rightBCount));
+      } else {
+        leftBCount = Math.floor(buildingCount / 2);
+        rightBCount = buildingCount - leftBCount;
+      }
+
+      // فحص تفاوت أو توحيد الطول (الارتفاع) والعرض للمباني!
+      // يدعم: "متفاوتين بالطول والعرض" / "متفاويتن ب الطول والعرض" / "موحدين بطول ومتفاويتين بلعرض" / "موحدين بالطول والعرض"
+      let bHeightMode = 'varied'; // 'varied' | 'uniform'
+      let bWidthMode = 'uniform'; // 'varied' | 'uniform'
+      if (hasCustomCitySpec) bWidthMode = 'varied';
+
+      const hasUniformHeight = /(?:موحد(?:ين|ات|ة|ه)?|متساوي(?:ين|ات|ة|ه)?|نفس|واحد)\s*(?:ب\s*الطول|بالطول|بطول|ب\s*الارتفاع|بالارتفاع|الطول)/.test(norm0);
+      const hasVariedHeight = /(?:متفاوت(?:ين|ات|ة|ه)?|متفاويت(?:ن|ين|ه|ة)?|مختلف(?:ين|ات|ة|ه)?)\s*(?:ب\s*الطول|بالطول|بطول|ب\s*الارتفاع|بالارتفاع|الطول)/.test(norm0);
+      const hasUniformWidth = /(?:موحد(?:ين|ات|ة|ه)?|متساوي(?:ين|ات|ة|ه)?|نفس|واحد)[^.،\n]{0,20}?(?:ب\s*العرض|بالعرض|بعرض|بلعرض|ب\s*لعرض|العرض)/.test(norm0) && !/(?:متفاوت(?:ين|ات|ة|ه)?|متفاويت(?:ن|ين|ه|ة)?|مختلف(?:ين|ات|ة|ه)?)\s*(?:ب\s*العرض|بالعرض|بعرض|بلعرض|ب\s*لعرض)/.test(norm0);
+      const hasVariedWidth = /(?:متفاوت(?:ين|ات|ة|ه)?|متفاويت(?:ن|ين|ه|ة)?|مختلف(?:ين|ات|ة|ه)?)[^.،\n]{0,20}?(?:ب\s*العرض|بالعرض|بعرض|بلعرض|ب\s*لعرض|العرض)/.test(norm0);
+
+      if (hasUniformHeight) bHeightMode = 'uniform';
+      else if (hasVariedHeight) bHeightMode = 'varied';
+
+      if (hasVariedWidth) bWidthMode = 'varied';
+      else if (hasUniformWidth) bWidthMode = 'uniform';
+
+      // توليد قائمة المباني حول مركز العالم (CITY_CENTER_X + cityCenterOffset2D) بحيث يقع leftBCount يسار المركز و rightBCount يمين المركز!
+      const cityCenterRefX = CITY_CENTER_X + cityCenterOffset2D;
+      const buildingsList = [];
+      const gapPx = 10;
+      const getBWidth = (idx) => {
+        if (bWidthMode === 'uniform') return 74;
+        const wPool = [50, 96, 64, 114, 56, 86, 104, 52, 92, 68];
+        return wPool[Math.abs(idx) % wPool.length];
+      };
+      const getBHeight = (idx) => {
+        if (bHeightMode === 'uniform') return 198;
+        const hPool = [125, 255, 165, 305, 140, 225, 285, 115, 240, 185];
+        return hPool[Math.abs(idx) % hPool.length];
+      };
+
+      // المباني على يسار مركز العالم (-X)
+      let curLeftX = cityCenterRefX - 18;
+      for (let i = 0; i < leftBCount; i++) {
+        const bw = getBWidth(i * 3 + 1);
+        const bh = getBHeight(i * 7 + 2);
+        curLeftX -= bw;
+        buildingsList.push({ x: curLeftX, w: bw, h: bh, idx: i });
+        curLeftX -= gapPx;
+      }
+      buildingsList.reverse();
+
+      // المباني على يمين مركز العالم (+X)
+      let curRightX = cityCenterRefX + 18;
+      for (let i = 0; i < rightBCount; i++) {
+        const bw = getBWidth(i * 5 + 4);
+        const bh = getBHeight(i * 11 + 3);
+        buildingsList.push({ x: curRightX, w: bw, h: bh, idx: leftBCount + i });
+        curRightX += bw + gapPx;
+      }
+
+      // فحص الجبال المخصصة ("جبال على طول المرحلة" / "سلسلة جبال" / "10 جبال" / "جبال متفاوتة" / "جبال في وسط مركز العالم")
+      const mountainsAlongStage = /(?:جبل|جبال|سلسل[ةه]\s*جبال)[^.،\n]{0,40}(?:على\s*طول|طول\s*المرحل|كل\s*المرحل|في\s*وسط\s*مركز\s*العالم)/.test(norm0) || /سلسل[ةه]\s*جبال/.test(norm0);
+      const mCountMatch = norm0.match(/(\d+)\s*(?:جبل|جبال|قمم)/);
+      const mountainsList = [];
+      if (mountainsAlongStage || mCountMatch) {
+        const mCount = mCountMatch ? Math.max(1, Math.min(80, parseInt(mCountMatch[1], 10))) : 18;
+        const mUniformH = /جبال[^.،\n]{0,25}(?:موحد|متساوي|نفس\s*الطول)/.test(norm0);
+        const mUniformW = /جبال[^.،\n]{0,25}(?:موحد[ةه]?\s*العرض|نفس\s*العرض)/.test(norm0);
+        const mHalf = Math.floor(mCount / 2);
+        const mBaseCenter = mountainCenterX2D !== null ? mountainCenterX2D : CITY_CENTER_X;
+        for (let mIdx = 0; mIdx < mCount; mIdx++) {
+          const rel = mIdx - mHalf;
+          const mw = mUniformW ? 320 : (240 + ((mIdx * 67) % 190));
+          const mh = mUniformH ? 270 : (190 + ((mIdx * 89) % 185));
+          const mx = mBaseCenter + rel * (mw * 0.78);
+          mountainsList.push({ x: mx, w: mw, h: mh });
+        }
+      }
+
+      const finalHasCity = hasCity || hasCustomCitySpec || isShadowCity || (!hasForest && !hasMountain && !hasVolcano);
+      const finalHasMountain = hasMountain || mountainsAlongStage || Boolean(mCountMatch);
+
       state.worldConfig = {
         isShadowCity: isShadowCity,
         isTaizTwoLane: isTaizTwoLane,
         cityCenterOffset2D: cityCenterOffset2D,
         mountainCenterX2D: mountainCenterX2D,
-        hasCity: hasCity || isShadowCity || (!hasForest && !hasMountain && !hasVolcano),
-        hasStreet: hasStreet || (hasCity && hasForest),
+        hasCity: finalHasCity,
+        hasCustomCitySpec: hasCustomCitySpec,
+        buildingCount: buildingCount,
+        leftBCount: leftBCount,
+        rightBCount: rightBCount,
+        bHeightMode: bHeightMode,
+        bWidthMode: bWidthMode,
+        buildingsList: buildingsList,
+        cityMinX: buildingsList.length > 0 ? buildingsList[0].x - 160 : CITY_START_X - 280,
+        cityMaxX: buildingsList.length > 0 ? (buildingsList[buildingsList.length - 1].x + buildingsList[buildingsList.length - 1].w + 160) : CITY_END_X + 280,
+        hasStreet: hasStreet || hasCustomCitySpec || (finalHasCity && hasForest),
         hasForest: hasForest || isShadowCity,
         denseForest: denseForest || isShadowCity,
-        hasMountain: hasMountain,
+        hasMountain: finalHasMountain,
         bigMountain: bigMountain,
+        mountainsList: mountainsList,
         hasVolcano: hasVolcano
       };
+
+      // فحص سرعة العرض من الوصف إذا كتب "بسرعة ×2" أو "سرعة 2.5" أو "سرعة 3"
+      const globalSpdMatch = norm0.match(/(?:سرع[ةه]\s*العرض|سرع[ةه]\s*الفيديو|بسرع[ةه]\s*[×xX*]|سرع[ةه]\s*[×xX*])\s*(\d+(?:\.\d+)?)/);
+      if (globalSpdMatch) {
+        const spv = parseFloat(globalSpdMatch[1]);
+        if (spv >= 0.25 && spv <= 4.0) {
+          state.playbackSpeed = spv;
+          const spdBtn = document.getElementById('btnSpeedToggle');
+          if (spdBtn) spdBtn.textContent = `⚡ ${spv}x`;
+        }
+      }
 
       const envCount = (hasCity ? 1 : 0) + (hasForest ? 1 : 0) + (hasMountain ? 1 : 0) + (hasVolcano ? 1 : 0);
       if (isShadowCity) {
@@ -2546,7 +2861,7 @@
         if (/يبدأ\s*ب\s*اثنين|يبدأ\s*باثنين|بكل\s*مر[ةه]|اول\s*ما\s*يصبح\s*قريب|أول\s*ما\s*يصبح\s*قريب/.test(clause)) {
           return;
         }
-        if (/^(?:تقع|يقع|توجد|يوجد)\s*(?:المدين[ةه]|مدين[ةه]|الجبل|جبل|الشجر[ةه]|شجر|الحجر|حجر|الصخر[ةه]|صخور|المنزل|منازل|المقهى)/.test(clause) && !/يمشي|يركض|يتعارك|يقفز|يضرب/.test(clause)) {
+        if ((/^(?:تقع|يقع|توجد|يوجد|اريد|أريد|المشهد\s*في|في\s*مدين[ةه]|مدين[ةه]|المدين[ةه]|جبال|الجبال)/.test(clause) || /مبنى|مبنا|مباني|على\s*طول\s*المرحل|متفاوت(?:ين)?\s*ب?الطول|متفاويت(?:ن|ين)?|موحد(?:ين)?\s*ب?طول|50\s*يسار/.test(clause)) && !/يمشي|يركض|يكرض|يجري|يتعارك|عراك|يقفز|يضرب|ضرب|يركل|ركل|يلكم|لكم|يطير|تطير|شعاع|هال[ةه]|يقول|تقول/.test(clause)) {
           return;
         }
 
@@ -3209,7 +3524,7 @@
         // ⚡🔥 Superpowers (Aura, Black Aura, Giant Aura Diameter, World Effects: Rain/Lightning/Ground Split, Beam with Thickness/Color/Auto-Turn/Knockback, etc.)
         const powers = parseClausePowers(clause);
         if (powers.isSuperpowerOnly) {
-          const defaultPDur = powers.fly ? 4.5 : ((powers.beam || powers.worldImpact || powers.groundSplit) ? 2.85 : 2.2);
+          const defaultPDur = powers.fly ? 4.5 : (powers.beam && powers.beamHasFlyKnock ? Math.min(8.5, Math.max(3.3, 2.4 + (powers.beamKnockbackMeters || 10) * 0.038)) : ((powers.beam || powers.worldImpact || powers.groundSplit) ? 2.85 : 2.2));
           const pDur = explicitDur > 0 ? explicitDur : defaultPDur;
           const pEv = {
             type: 'superpower',
@@ -3488,8 +3803,12 @@
       let beamExplicitDir = 0;
       if (/باتجاه\s*اليمين|ب\s*إتجاه\s*اليمين|نحو\s*اليمين|لليمين|باتجاه\s*الشرق/.test(clause)) beamExplicitDir = 1;
       else if (/باتجاه\s*اليسار|ب\s*إتجاه\s*اليسار|نحو\s*اليسار|لليسار|باتجاه\s*الغرب/.test(clause)) beamExplicitDir = -1;
-      const beamHasFlyKnock = /يطير|يطيير|تطير|طار|طارت|لمساف[ةه]|نصف\s*دائر|نص\s*دائر|بخط\s*مستقيم/.test(clause);
-      const beamKnockbackMeters = beamHasFlyKnock ? extractDistanceMeters(clause, Math.max(6, beamThicknessMeters * 7)) : Math.max(5, beamThicknessMeters * 6);
+      const beamHasPushWord = /يدفع|يدفعه|يدفعها|تدفعه|تدفعها|تدفع|يطيح|يرمي|يرميه|يقذف|يقذفه/.test(clause);
+      const beamHasFlyKnock = beamHasPushWord || /يطير|يطيير|تطير|طار|طارت|لمساف[ةه]|مساف[ةه]|نصف\s*دائر|نص\s*دائر|بخط\s*مستقيم|بارتفاع|مزيج/.test(clause);
+      const beamKnockbackMeters = beamHasFlyKnock ? extractDistanceMeters(clause, Math.max(12, beamThicknessMeters * 12)) : Math.max(5, beamThicknessMeters * 6);
+      const beamKbCfg = extractKnockbackTrajectoryConfig(clause);
+      const beamTrajectoryType = (beamHasPushWord && !/نصف\s*دائر|نص\s*دائر|مزيج/.test(clause)) ? 'straight' : beamKbCfg.trajectoryType;
+      const beamHeightMeters = extractHeightAboveGroundMeters(clause, beamHasPushWord ? 1.2 : 2.0);
       const victimDies = /يموت|تموت|مات|ماتت|ميت|يقتله|تقتله|قتله|قتلها|قضى\s*عليه|يفقد\s*الوعي|لا\s*ينهض/.test(clause);
 
       const lightning = /برق|صاعق[ةه]|صواعق|تبرق/.test(clause);
@@ -3544,7 +3863,7 @@
         aura, auraColor, auraColorExplicit, auraShape,
         auraScale, auraDiameterMeters, auraSizeExplicit,
         fire, beam, beamColor, beamColorExplicit, beamThicknessMeters, beamWidthPx, beamSizeExplicit,
-        beamExplicitDir, beamHasFlyKnock, beamKnockbackMeters, victimDies,
+        beamExplicitDir, beamHasPushWord, beamHasFlyKnock, beamKnockbackMeters, beamTrajectoryType, beamHeightMeters, victimDies,
         lightning, rainEffect, snowEffect, groundSplit, quakeEffect, windEffect, rocksFloat, skyDarken, worldImpact,
         teleport, shield, run, brawl,
         isSuperpowerOnly, label
@@ -4258,8 +4577,9 @@
             c.pose = 'idle';
           }
 
-          // تأثر العدو بالشعاع الضوئي: ١) ارتداد وألم وشرارات وانزلاق تحت ضغط الشعاع -> ٢) انفجار وإطاحة بالعدو على الأرض!
-          if (progress >= 0.06 && progress < 0.52) {
+          // تأثر العدو بالشعاع الضوئي ودعم دفع الشخصية لمسافات طويلة (بخط مستقيم / نصف دائرة / مزيج) تماماً مثل الركل واللكم!
+          const launchThreshold = pw.beamHasFlyKnock ? 0.24 : 0.48;
+          if (progress >= 0.06 && progress < launchThreshold) {
             tChar.facing = -dirToTarget;
             tChar.pose = 'brawl';
             tChar.combatPhase = 'recoil';
@@ -4273,18 +4593,132 @@
               spawnShockwave(tChar.x, tChar.y - 60, bCol === '#111827' ? '#a855f7' : bCol, Math.max(48, wPx * 1.4));
               spawnGroundCrackAndRocks(tChar.x, tChar.y);
             }
-          } else if (progress >= 0.52 && !ev._beamImpactDone) {
-            ev._beamImpactDone = true;
-            tChar.isDead = Boolean(pw.victimDies);
-            tChar.stayProne = Boolean(pw.victimDies);
-            const powerMult = Math.min(2.3, Math.max(1.1, 0.92 + (pw.beamThicknessMeters || 0.7) * 0.45));
-            triggerKnockdownSequence(tChar, dirToTarget, powerMult);
-            spawnShockwave(tChar.x, tChar.y - 60, bCol === '#111827' ? '#a855f7' : bCol, Math.max(95, wPx * 2.3));
-            spawnShockwave(tChar.x, tChar.y - 60, '#ffffff', Math.max(55, wPx * 1.2));
-            spawnGroundCrackAndRocks(tChar.x, getGroundYAt(tChar.x));
-            state.cameraShake = Math.min(22, 12 + (pw.beamThicknessMeters || 1) * 4);
-            playSfx('ko');
-            spawnHitText(tChar.x, tChar.y - 128, `💥 إصابة بالشعاع (${pw.beamThicknessMeters || 0.7}م)!`, bCol === '#111827' ? '#c084fc' : bCol);
+          } else if (progress >= launchThreshold) {
+            if (!ev._beamImpactDone) {
+              ev._beamImpactDone = true;
+              const pushDir = (pw.beamExplicitDir && pw.beamExplicitDir !== 0) ? pw.beamExplicitDir : dirToTarget;
+              const meters = pw.beamKnockbackMeters || 6.0;
+              const origX = tChar.x;
+              const pxPerM = meters > 25 ? 24 : PIXELS_PER_METER;
+              const destX = origX + pushDir * meters * pxPerM;
+              const trajType = pw.beamTrajectoryType || 'straight';
+              const heightM = pw.beamHeightMeters || 1.5;
+              const elevPx = Math.min(240, Math.max(28, heightM * 24));
+              const peakH = Math.min(320, Math.max(130, Math.abs(destX - origX) * 0.20));
+
+              ev._beamOrigX = origX;
+              ev._beamDestX = destX;
+              ev._beamDir = pushDir;
+              ev._beamTrajType = trajType;
+              ev._beamElevPx = elevPx;
+              ev._beamPeakH = peakH;
+              ev._beamLandDone = false;
+
+              tChar.isDead = Boolean(pw.victimDies);
+              tChar.stayProne = Boolean(pw.victimDies);
+              tChar.hitFlashTimer = 0.20;
+
+              if (pw.beamHasFlyKnock) {
+                const trajNames = {
+                  semicircle: 'نصف دائرة ⌒',
+                  straight: `دفع مستقيم بارتفاع ${heightM}م ━`,
+                  hybrid: 'مسار مدمج (مستقيم + نصف دائرة) ━⌒'
+                };
+                state.activeDistanceMarker = {
+                  startX: origX,
+                  endX: destX,
+                  meters,
+                  victimSlot: tChar.slot,
+                  trajectoryType: trajType,
+                  heightMeters: heightM,
+                  elevPx,
+                  peakH,
+                  dir: pushDir,
+                  label: trajNames[trajType] || ''
+                };
+                if (activeBeam) activeBeam.life = Math.max(activeBeam.life || 1.5, (ev.duration || 3.5) * 0.72);
+              } else {
+                const powerMult = Math.min(2.3, Math.max(1.1, 0.92 + (pw.beamThicknessMeters || 0.7) * 0.45));
+                triggerKnockdownSequence(tChar, pushDir, powerMult);
+              }
+              spawnShockwave(tChar.x, tChar.y - 60, bCol === '#111827' ? '#a855f7' : bCol, Math.max(95, wPx * 2.3));
+              spawnShockwave(tChar.x, tChar.y - 60, '#ffffff', Math.max(55, wPx * 1.2));
+              spawnGroundCrackAndRocks(tChar.x, getGroundYAt(tChar.x));
+              state.cameraShake = Math.min(22, 12 + (pw.beamThicknessMeters || 1) * 4);
+              playSfx('ko');
+              spawnHitText(tChar.x, tChar.y - 128, pw.beamHasFlyKnock ? `⚡💥 دفع بالشعاع ${meters} متر!` : `💥 إصابة بالشعاع (${pw.beamThicknessMeters || 0.7}م)!`, bCol === '#111827' ? '#c084fc' : bCol);
+            }
+
+            // تحريك الشخصية المدفوعة بالشعاع على طول المسافة والمسار (نصف دائرة / خط مستقيم / مزيج) مثل الركل واللكم تماماً!
+            if (pw.beamHasFlyKnock) {
+              const postLandRatio = pw.victimDies ? 0.06 : 0.22;
+              const flySpan = Math.max(0.25, 1.0 - launchThreshold - postLandRatio);
+              const u = Math.max(0, Math.min(1, (progress - launchThreshold) / flySpan));
+              const origX = ev._beamOrigX ?? tChar.x;
+              const destX = ev._beamDestX ?? tChar.x;
+              const trajType = ev._beamTrajType || 'straight';
+              const elevPx = ev._beamElevPx || 36;
+              const peakH = ev._beamPeakH || 150;
+              const laneOff = tChar.zLaneOffset || 0;
+
+              if (trajType === 'semicircle') {
+                tChar.x = origX + (destX - origX) * u;
+                const gY = getGroundYAt(tChar.x) + laneOff;
+                const semi = 0.60 * Math.sin(u * Math.PI) + 0.40 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * u - 1, 2)));
+                tChar.y = gY - peakH * semi;
+                tChar.kdState = u < 0.96 ? 'airborne' : 'prone';
+                tChar.kdTimer = u * 0.34;
+              } else if (trajType === 'straight') {
+                if (u < 0.90) {
+                  const k = u / 0.90;
+                  tChar.x = origX + (destX - origX) * (0.94 * k);
+                  const gY = getGroundYAt(tChar.x) + laneOff;
+                  tChar.y = gY - elevPx;
+                  tChar.kdState = 'straight_fly';
+                  tChar.kdTimer = k * 0.34;
+                } else {
+                  const k = (u - 0.90) / 0.10;
+                  tChar.x = origX + (destX - origX) * (0.94 + 0.06 * k);
+                  const gY = getGroundYAt(tChar.x) + laneOff;
+                  tChar.y = gY - elevPx * (1 - k);
+                  tChar.kdState = u < 0.97 ? 'airborne' : 'prone';
+                }
+              } else {
+                if (u < 0.44) {
+                  const k = u / 0.44;
+                  tChar.x = origX + (destX - origX) * (0.44 * k);
+                  const gY = getGroundYAt(tChar.x) + laneOff;
+                  tChar.y = gY - elevPx * Math.min(1, k * 3.2);
+                  tChar.kdState = 'straight_fly';
+                  tChar.kdTimer = k * 0.25;
+                } else if (u < 0.94) {
+                  const k = (u - 0.44) / 0.50;
+                  tChar.x = origX + (destX - origX) * (0.44 + 0.50 * k);
+                  const gY = getGroundYAt(tChar.x) + laneOff;
+                  tChar.y = gY - (elevPx * (1 - k) + peakH * Math.sin(k * Math.PI));
+                  tChar.kdState = 'airborne';
+                  tChar.kdTimer = k * 0.34;
+                } else {
+                  const k = (u - 0.94) / 0.06;
+                  tChar.x = origX + (destX - origX) * (0.94 + 0.06 * k);
+                  tChar.y = getGroundYAt(tChar.x) + laneOff;
+                  tChar.kdState = 'prone';
+                }
+              }
+              tChar.vx = 0;
+              tChar.vy = 0;
+              tChar.pose = 'knockdown';
+              if (u >= 0.96 && !ev._beamLandDone) {
+                ev._beamLandDone = true;
+                tChar.x = destX;
+                tChar.y = getGroundYAt(destX) + laneOff;
+                tChar.kdState = 'prone';
+                tChar.kdTimer = 0;
+                playSfx('fall');
+                spawnGroundCrackAndRocks(tChar.x, tChar.y);
+                spawnShockwave(tChar.x, tChar.y, '#94a3b8', 75);
+              }
+            }
           }
         } else {
           if (progress < 0.75) c.pose = 'beam_cast';
@@ -5982,6 +6416,7 @@
               } else {
                 if (!ev._landImpactDone) {
                   ev._landImpactDone = true;
+                  playSfx('fall');
                   vic.x = destX;
                   vic.y = getGroundYAt(destX) + laneOff;
                   vic.kdState = 'prone';
@@ -6094,7 +6529,7 @@
           }
         } else if (c.kdState) {
           // إذا كانت الضحية تطير حالياً عبر مسار الضربة المبرمج (نصف دائرة / خط مستقيم / مزيج) ولم تهبط بعد، نترك تحكم الموقع لمحرك المسار الدقيق!
-          if (ev && ev.type === 'knockout' && ev.victimSlot === c.slot && ev._koDone && !ev._landImpactDone) {
+          if (ev && ((ev.type === 'knockout' && ev.victimSlot === c.slot && ev._koDone && !ev._landImpactDone) || (ev.type === 'superpower' && ev.powers && ev.powers.beam && ev.powers.beamHasFlyKnock && ev.targetSlot === c.slot && ev._beamImpactDone && !ev._beamLandDone))) {
             c.pose = 'knockdown';
           } else {
             // محرك أنيميشن تلقي الضربات الاحترافي: 1) يطير في الهواء -> 2) ينبطح على الأرض -> 3) ينهض تلقائياً ليقف بلا حركة (إلا إذا ماتت الشخصية!)
@@ -6112,6 +6547,7 @@
                 c.kdState = 'prone';
                 c.kdTimer = 0;
                 state.cameraShake = 8;
+                playSfx('fall');
                 spawnShockwave(c.x, groundHere, '#94a3b8', 48);
                 spawnGroundCrackAndRocks(c.x, groundHere);
               }
@@ -6328,8 +6764,8 @@
           state.camMain.y += (desY - state.camMain.y) * 0.15;
           state.camMain.zoom += (desZ - state.camMain.zoom) * 0.14;
         }
-      } else if (ev && ev.type === 'knockout' && ev._koDone && (ev.meters || 0) >= 8) {
-        const vic = state.characters[ev.victimSlot];
+      } else if (ev && ((ev.type === 'knockout' && ev._koDone && (ev.meters || 0) >= 8) || (ev.type === 'superpower' && ev.powers && ev.powers.beam && ev.powers.beamHasFlyKnock && ev._beamImpactDone && (ev.powers.beamKnockbackMeters || 0) >= 8))) {
+        const vic = state.characters[ev.type === 'knockout' ? ev.victimSlot : ev.targetSlot];
         if (vic) {
           const targetZ = (ev.meters || 0) >= 40 ? 0.68 : 0.82;
           state.camMain.x += (vic.x - state.camMain.x) * 0.24;
@@ -6528,30 +6964,41 @@
 
       const cityOffX = cfg.cityCenterOffset2D || 0;
       const isTaizMode = state.world === 'taiz_city' || Boolean(cfg.isTaizTwoLane);
-      // 2. City Zone (يدعم مدينة تعز شارع من خطين ومليئة بالمنازل + إزاحة مركز المدينة حسب مركز العالم!)
+      // 2. City Zone (يدعم أي عدد من المباني مثل 100 مبنى، على طول المرحلة، 50 يمين و 50 يسار مركز العالم، وتفاوت أو توحيد الطول والعرض!)
       if (shadowMode || isTaizMode || state.world === 'city' || (state.world === 'openworld' && cfg.hasCity)) {
-        ctx.fillStyle = shadowMode ? '#03050a' : '#64748b';
-        ctx.fillRect(CITY_START_X - 280 + cityOffX, GROUND_Y - 8, CITY_END_X - CITY_START_X + 560, 22);
+        const sidewalkMin = Math.max(minVisX - 80, (cfg.cityMinX !== undefined ? cfg.cityMinX : CITY_START_X - 280 + cityOffX));
+        const sidewalkMax = Math.min(maxVisX + 80, (cfg.cityMaxX !== undefined ? cfg.cityMaxX : CITY_END_X + 280 + cityOffX));
+        if (sidewalkMax > sidewalkMin) {
+          ctx.fillStyle = shadowMode ? '#03050a' : '#64748b';
+          ctx.fillRect(sidewalkMin, GROUND_Y - 8, sidewalkMax - sidewalkMin, 22);
+        }
 
-        const bColors = shadowMode ? ['#04060c', '#060911', '#030509', '#05080f'] : ['#f8fafc', '#e2e8f0', '#f1f5f9', '#fef9c3'];
-        const rColors = shadowMode ? ['#020307', '#04060b', '#030408', '#05070d'] : ['#991b1b', '#1e3a8a', '#166534', '#78350f'];
-        for (let i = 0; i < 11; i++) {
-          const bx = CITY_START_X - 60 + i * 84;
-          if (bx + 90 < minVisX || bx - 20 > maxVisX) continue;
-          const bh = 165 + ((i * 53) % 125);
-          const bw = 74;
+        const bColors = shadowMode ? ['#04060c', '#060911', '#030509', '#05080f'] : ['#f8fafc', '#e2e8f0', '#f1f5f9', '#fef9c3', '#e0f2fe', '#fae8ff'];
+        const rColors = shadowMode ? ['#020307', '#04060b', '#030408', '#05070d'] : ['#991b1b', '#1e3a8a', '#166534', '#78350f', '#312e81', '#0f766e'];
+        const bList = (Array.isArray(cfg.buildingsList) && cfg.buildingsList.length > 0)
+          ? cfg.buildingsList
+          : Array.from({ length: 11 }, (_, i) => ({ x: CITY_START_X - 60 + i * 84, w: 74, h: 165 + ((i * 53) % 125), idx: i }));
+
+        for (let k = 0; k < bList.length; k++) {
+          const b = bList[k];
+          const bx = b.x;
+          const bw = b.w || 74;
+          const bh = b.h || 180;
+          const i = b.idx !== undefined ? b.idx : k;
+          if (bx + bw + 20 < minVisX || bx - 20 > maxVisX) continue;
+
           ctx.fillStyle = bColors[i % bColors.length];
           ctx.fillRect(bx, GROUND_Y - bh, bw, bh);
           ctx.strokeStyle = shadowMode ? 'rgba(226, 232, 240, 0.35)' : '#94a3b8';
           ctx.lineWidth = shadowMode ? 1.6 : 2;
           ctx.strokeRect(bx, GROUND_Y - bh, bw, bh);
 
-          // سقف المنزل الأسود مع حافة ضوء القمر
+          // سقف المبنى المتكيف مع عرض المبنى (bw)
           ctx.fillStyle = rColors[i % rColors.length];
           ctx.beginPath();
-          ctx.moveTo(bx - 7, GROUND_Y - bh);
-          ctx.lineTo(bx + bw / 2, GROUND_Y - bh - 26);
-          ctx.lineTo(bx + bw + 7, GROUND_Y - bh);
+          ctx.moveTo(bx - 6, GROUND_Y - bh);
+          ctx.lineTo(bx + bw / 2, GROUND_Y - bh - Math.min(32, Math.max(18, bw * 0.32)));
+          ctx.lineTo(bx + bw + 6, GROUND_Y - bh);
           ctx.closePath();
           ctx.fill();
           if (shadowMode) {
@@ -6559,17 +7006,23 @@
             ctx.stroke();
           }
 
-          for (let wy = GROUND_Y - bh + 20; wy < GROUND_Y - 32; wy += 34) {
+          // نوافذ المبنى المتكيفة تلقائياً مع عرض المبنى (سواء كان ضيقاً أو عريضاً!)
+          const winCols = Math.max(1, Math.min(4, Math.floor((bw - 14) / 26)));
+          const winW = Math.min(18, Math.floor((bw - 16 - (winCols - 1) * 8) / winCols));
+          const winStartX = bx + Math.floor((bw - (winCols * winW + (winCols - 1) * 8)) * 0.5);
+          for (let wy = GROUND_Y - bh + 20; wy < GROUND_Y - 34; wy += 34) {
             ctx.fillStyle = shadowMode
               ? ((i + wy) % 3 === 0 ? 'rgba(239, 68, 68, 0.82)' : 'rgba(248, 250, 252, 0.78)')
               : '#38bdf8';
-            ctx.fillRect(bx + 11, wy, 17, 16);
-            ctx.fillRect(bx + 44, wy, 17, 16);
+            for (let cIdx = 0; cIdx < winCols; cIdx++) {
+              ctx.fillRect(winStartX + cIdx * (winW + 8), wy, winW, 15);
+            }
             ctx.fillStyle = shadowMode ? '#090d16' : '#475569';
-            ctx.fillRect(bx + 9, wy + 16, 54, 3.5);
+            ctx.fillRect(bx + 7, wy + 15, bw - 14, 3);
           }
+          const doorW = Math.min(24, Math.max(14, bw * 0.3));
           ctx.fillStyle = shadowMode ? '#020305' : '#334155';
-          ctx.fillRect(bx + 25, GROUND_Y - 28, 22, 28);
+          ctx.fillRect(bx + (bw - doorW) * 0.5, GROUND_Y - 28, doorW, 28);
         }
 
         // رسم طاولة وكراسي المقهى وأكواب القهوة عند وجود مشهد المقهى!
@@ -6685,8 +7138,26 @@
         }
       }
 
-      // 5. Giant Mountain Zone (يدعم "جبل كبير" بقمم شاهقة وشلال متدفق مع فحص مجال الرؤية لمنع أي بطء!)
-      if (state.world === 'mountain' || (state.world === 'openworld' && cfg.hasMountain)) {
+      // 5. Giant Mountain Zone (يدعم سلسلة جبال على طول المرحلة أو عدد جبال مخصص مع تفاوت/توحيد الطول والعرض!)
+      if (Array.isArray(cfg.mountainsList) && cfg.mountainsList.length > 0) {
+        cfg.mountainsList.forEach((mt, mIdx) => {
+          if (mt.x + mt.w < minVisX || mt.x - mt.w > maxVisX) return;
+          ctx.fillStyle = mIdx % 2 === 0 ? '#1e293b' : '#334155';
+          ctx.beginPath();
+          ctx.moveTo(mt.x - mt.w * 0.5, GROUND_Y);
+          ctx.lineTo(mt.x, GROUND_Y - mt.h);
+          ctx.lineTo(mt.x + mt.w * 0.5, GROUND_Y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#e2e8f0';
+          ctx.beginPath();
+          ctx.moveTo(mt.x, GROUND_Y - mt.h);
+          ctx.lineTo(mt.x - mt.w * 0.14, GROUND_Y - mt.h * 0.72);
+          ctx.lineTo(mt.x + mt.w * 0.14, GROUND_Y - mt.h * 0.72);
+          ctx.closePath();
+          ctx.fill();
+        });
+      } else if (state.world === 'mountain' || (state.world === 'openworld' && cfg.hasMountain)) {
         const nearScene = !cfg.hasStreet;
         const mStart = nearScene ? 480 : MOUNTAIN_START_X;
         const mPeak = nearScene ? 820 : MOUNTAIN_PEAK_X;
@@ -10302,13 +10773,13 @@
       });
 
       document.getElementById('btnSpeedToggle')?.addEventListener('click', e => {
-        const speeds = [1.0, 0.5, 1.5];
-        const labels = ['⚡ 1x', '🐢 بطيء 0.5x', '🚀 سريع 1.5x'];
+        const speeds = [1.0, 1.5, 2.0, 2.5, 3.0, 0.5];
+        const labels = ['⚡ 1x', '🚀 1.5x', '🔥 ×2', '⚡🔥 ×2.5', '🚀💥 ×3', '🐢 0.5x'];
         const curIdx = speeds.indexOf(state.playbackSpeed || 1.0);
         const nextIdx = (curIdx + 1) % speeds.length;
         state.playbackSpeed = speeds[nextIdx];
         e.currentTarget.textContent = labels[nextIdx];
-        showToast(`تم ضبط سرعة العرض على ${labels[nextIdx]}`);
+        showToast(`⚡ تم ضبط سرعة العرض على ${labels[nextIdx]}`);
       });
 
       // أزرار إدراج رمز اللقطة الاحترافية "1" و "2" والتراجع والإعادة والحفظ التلقائي
@@ -11029,6 +11500,201 @@
         document.execCommand('copy');
         showToast('تم النسخ!');
       });
+
+      // تفعيل زر "📖 دفتر شامل" داخل تبويب المساعدة
+      const compBookPanel = document.getElementById('comprehensiveGuidebookPanel');
+      document.getElementById('btnToggleComprehensiveBook')?.addEventListener('click', () => {
+        if (!compBookPanel) return;
+        const isHidden = compBookPanel.classList.contains('hidden');
+        if (isHidden) {
+          compBookPanel.classList.remove('hidden');
+          compBookPanel.classList.add('flex');
+          showToast('📖 تم فتح الدفتر الشامل لجميع ميزات وشروحات التطبيق!');
+        } else {
+          compBookPanel.classList.add('hidden');
+          compBookPanel.classList.remove('flex');
+        }
+      });
+      document.getElementById('btnCloseComprehensiveBook')?.addEventListener('click', () => {
+        compBookPanel?.classList.add('hidden');
+        compBookPanel?.classList.remove('flex');
+      });
+
+      // تفعيل التبويب الداخلي "💥 المؤثرات" داخل تبويب "🎙️ تسجيل الصوت"
+      const btnSubDialogues = document.getElementById('subTabBtnVoiceDialogues');
+      const btnSubSfx = document.getElementById('subTabBtnVoiceSfx');
+      const viewSubDialogues = document.getElementById('subViewVoiceDialogues');
+      const viewSubSfx = document.getElementById('subViewVoiceSfx');
+
+      const switchVoiceSubTab = (mode) => {
+        if (mode === 'sfx') {
+          viewSubDialogues?.classList.add('hidden');
+          viewSubSfx?.classList.remove('hidden');
+          viewSubSfx?.classList.add('flex');
+          if (btnSubSfx) btnSubSfx.className = 'touch-btn px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 text-xs font-black';
+          if (btnSubDialogues) btnSubDialogues.className = 'touch-btn px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-black';
+          renderSfxStudioCards();
+        } else {
+          viewSubSfx?.classList.add('hidden');
+          viewSubSfx?.classList.remove('flex');
+          viewSubDialogues?.classList.remove('hidden');
+          if (btnSubDialogues) btnSubDialogues.className = 'touch-btn px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-black';
+          if (btnSubSfx) btnSubSfx.className = 'touch-btn px-3 py-1.5 rounded-lg bg-slate-800 text-amber-300 text-xs font-black';
+        }
+      };
+      btnSubDialogues?.addEventListener('click', () => switchVoiceSubTab('dialogues'));
+      btnSubSfx?.addEventListener('click', () => switchVoiceSubTab('sfx'));
+
+      const SFX_DEFINITIONS = [
+        { key: 'punch', icon: '👊', title: 'صوت اللكم والضرب', desc: 'يعمل عند تسديد اللكمات والضربات المباشرة' },
+        { key: 'kick', icon: '🦵', title: 'صوت الركل القوي', desc: 'يعمل عند تسديد الركلات والضربات القاضية' },
+        { key: 'fall', icon: '💥', title: 'صوت السقوط على الأرض', desc: 'يعمل عند ارتطام وسقوط الشخصية على الأرض' },
+        { key: 'beam', icon: '⚡', title: 'صوت الشعاع الضوئي', desc: 'يعمل عند إطلاق الشعاع الضوئي والليزر' },
+        { key: 'aura', icon: '🔥', title: 'صوت شحن الهالة', desc: 'يعمل عند ظهور وشحن الهالة حول الشخصية' },
+        { key: 'explosion', icon: '🌋', title: 'صوت الانفجار وانشقاق الأرض', desc: 'يعمل عند انشقاق الأرض والانفجارات' },
+        { key: 'lightning', icon: '🌩️', title: 'صوت البرق والرعد', desc: 'يعمل عند ضرب الصواعق والبرق' },
+        { key: 'whoosh', icon: '💨', title: 'صوت الطيران والقفز', desc: 'يعمل عند القفز والشقلبة والطيران السريع' }
+      ];
+
+      let pendingUploadSfxKey = null;
+      const sfxFileInput = document.getElementById('sfxFileUploadInput');
+
+      const decodeAndStoreCustomSfx = async (sfxKey, blobOrFile, sourceLabel) => {
+        const url = URL.createObjectURL(blobOrFile);
+        let audioBuffer = null;
+        try {
+          const { ctx } = ensureStudioAudioGraph();
+          const arr = await blobOrFile.arrayBuffer();
+          audioBuffer = await ctx.decodeAudioData(arr);
+        } catch (e) {}
+        state.customSfxClips[sfxKey] = { url, audioBuffer, label: sourceLabel };
+        renderSfxStudioCards();
+        playSfx(sfxKey, true);
+        showToast(`✅ تم حفظ وتشغيل (${sourceLabel}) لمؤثر: ${SFX_DEFINITIONS.find(x => x.key === sfxKey)?.title || sfxKey}`);
+      };
+
+      sfxFileInput?.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file || !pendingUploadSfxKey) return;
+        await decodeAndStoreCustomSfx(pendingUploadSfxKey, file, `ملف: ${file.name.slice(0, 18)}`);
+        sfxFileInput.value = '';
+      });
+
+      function renderSfxStudioCards() {
+        const grid = document.getElementById('sfxCardsGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        SFX_DEFINITIONS.forEach(item => {
+          const curPreset = state.sfxPresets[item.key] || 'anime';
+          const customClip = state.customSfxClips[item.key];
+          const isRecThis = state.activeSfxRecordKey === item.key;
+          const card = document.createElement('div');
+          card.className = 'p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between gap-2.5';
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-xs font-black text-white">${item.icon} ${item.title}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${customClip ? 'bg-emerald-500/25 text-emerald-300' : 'bg-blue-500/20 text-blue-300'}">
+                  ${customClip ? '🎙️ مخصص: ' + customClip.label : '🎵 صوت جاهز'}
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">${item.desc}</p>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-bold text-amber-300">🎵 اختر من الأصوات الجاهزة:</label>
+              <select data-sfx-preset="${item.key}" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-[11px] font-bold text-white">
+                <option value="anime" ${curPreset === 'anime' ? 'selected' : ''}>⚡ صوت أنمي قياسي (جاهز)</option>
+                <option value="heavy" ${curPreset === 'heavy' ? 'selected' : ''}>💥 صوت قوي وثقيل سينمائي (جاهز)</option>
+                <option value="sharp" ${curPreset === 'sharp' ? 'selected' : ''}>🗡️ صوت خاطف وحاد (جاهز)</option>
+                <option value="mute" ${curPreset === 'mute' ? 'selected' : ''}>🔇 كتم هذا المؤثر</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1.5 pt-1">
+              <button type="button" data-sfx-play="${item.key}" class="touch-btn py-1.5 px-2 rounded-lg bg-emerald-600 text-white text-[11px] font-black">🔊 استماع</button>
+              <button type="button" data-sfx-rec="${item.key}" class="touch-btn py-1.5 px-2 rounded-lg ${isRecThis ? 'bg-amber-500 text-slate-950 animate-pulse' : 'bg-rose-600 text-white'} text-[11px] font-black">
+                ${isRecThis ? '⏹️ إيقاف وحفظ' : '🎙️ تسجيل صوت'}
+              </button>
+              <button type="button" data-sfx-upload="${item.key}" class="touch-btn py-1.5 px-2 rounded-lg bg-purple-600 text-white text-[11px] font-black">📁 من الملفات</button>
+              <button type="button" data-sfx-reset="${item.key}" class="touch-btn py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 text-[11px] font-bold">🔄 الجاهز</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        grid.querySelectorAll('[data-sfx-preset]').forEach(sel => {
+          sel.addEventListener('change', (e) => {
+            const k = sel.getAttribute('data-sfx-preset');
+            state.sfxPresets[k] = e.target.value;
+            delete state.customSfxClips[k];
+            renderSfxStudioCards();
+            playSfx(k, true);
+          });
+        });
+
+        grid.querySelectorAll('[data-sfx-play]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const k = btn.getAttribute('data-sfx-play');
+            playSfx(k, true);
+          });
+        });
+
+        grid.querySelectorAll('[data-sfx-upload]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            pendingUploadSfxKey = btn.getAttribute('data-sfx-upload');
+            sfxFileInput?.click();
+          });
+        });
+
+        grid.querySelectorAll('[data-sfx-reset]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const k = btn.getAttribute('data-sfx-reset');
+            delete state.customSfxClips[k];
+            state.sfxPresets[k] = 'anime';
+            renderSfxStudioCards();
+            playSfx(k, true);
+            showToast('🔄 تمت استعادة الصوت الجاهز للمؤثر');
+          });
+        });
+
+        grid.querySelectorAll('[data-sfx-rec]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const k = btn.getAttribute('data-sfx-rec');
+            if (state.activeSfxRecordKey === k && state.sfxMediaRecorder && state.sfxMediaRecorder.state === 'recording') {
+              try { state.sfxMediaRecorder.stop(); } catch (e) {}
+              return;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+              showToast('⚠️ المايكروفون غير متاح في هذا المتصفح');
+              return;
+            }
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              state.sfxRecordedChunks = [];
+              state.activeSfxRecordKey = k;
+              const rec = new MediaRecorder(stream);
+              state.sfxMediaRecorder = rec;
+              rec.ondataavailable = (ev) => {
+                if (ev.data && ev.data.size > 0) state.sfxRecordedChunks.push(ev.data);
+              };
+              rec.onstop = async () => {
+                stream.getTracks().forEach(t => t.stop());
+                const blob = new Blob(state.sfxRecordedChunks, { type: rec.mimeType || 'audio/webm' });
+                state.activeSfxRecordKey = null;
+                await decodeAndStoreCustomSfx(k, blob, 'تسجيل مايكروفون');
+              };
+              rec.start();
+              renderSfxStudioCards();
+              showToast('🎙️ بدأ تسجيل المؤثر... أصدر الصوت الآن ثم اضغط (⏹️ إيقاف وحفظ)!');
+            } catch (err) {
+              state.activeSfxRecordKey = null;
+              showToast('⚠️ تعذر الوصول إلى المايكروفون');
+            }
+          });
+        });
+      }
+      renderSfxStudioCards();
 
       parseArabicScript(document.getElementById('scriptInput').value);
       requestAnimationFrame(renderLoop);
