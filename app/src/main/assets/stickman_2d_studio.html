@@ -338,6 +338,9 @@
             <button id="tabBtnCharacters" type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-extrabold text-slate-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
               <span>👥 الشخصيات</span>
             </button>
+            <button id="tabBtnReadyChar" type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-extrabold text-emerald-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
+              <span>✨ اضافه شخصيه جاهزه</span>
+            </button>
             <button id="tabBtnVoice" type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-extrabold text-slate-300 hover:text-white flex items-center gap-1.5 shrink-0 transition">
               <span>🎙️ تسجيل الصوت</span>
               <span id="voiceBadgeCount" class="px-1.5 rounded-full bg-rose-500/25 text-rose-300 text-[10px]">3</span>
@@ -626,7 +629,7 @@
 
           <!-- 2D Interactive Stage Canvas (Full HD 1920x1080 High-DPI Vector Sharpness + Full-Screen Game Mode with "🔙 عودة" Button) -->
           <div id="stageCanvasWrapper" class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border-2">
-            <canvas id="stageCanvas" width="1920" height="1080" class="w-full h-full block"></canvas>
+            <canvas id="stageCanvas" width="1280" height="720" class="w-full h-full block"></canvas>
             <div class="absolute top-2.5 right-3 left-3 flex items-center justify-between pointer-events-none">
               <div id="stageTopTitleBox" class="px-3 py-1 rounded-xl bg-slate-950 border flex items-center gap-2">
                 <span id="stageActionTitle" class="text-[11px] sm:text-xs font-extrabold text-white">المشهد قيد التشغيل</span>
@@ -979,6 +982,78 @@
 فيقوم المضروب ويكمل، فيصبح اثنين ضد اثنين في عراك شرس بالهالة السوداء والحمراء لمدة 18 ثانية.</pre>
           </div>
         </div>
+
+        <!-- ==================== أسفل التلميحات والمساعدة: زر قيمني + زر اضافه مقترح ==================== -->
+        <div class="mt-4 p-4 rounded-2xl bg-slate-950 border-2 border-amber-500/40 flex flex-col gap-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-black text-amber-300">⭐ رأيك ومقترحاتك تهمنا لتطوير التطبيق:</h3>
+              <p class="text-[11px] text-slate-300">اضغط على <strong>قيمني</strong> أو <strong>اضافه مقترح</strong> واختر الإرسال عبر البريد الإلكتروني أو عبر واتساب مباشرة:</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btnOpenRateModal" type="button" class="touch-btn px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-lg">
+                <span>⭐ قيمني</span>
+              </button>
+              <button id="btnOpenSuggestModal" type="button" class="touch-btn px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-lg">
+                <span>💡 اضافه مقترح</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- نافذة خيارات الإرسال (البريد الإلكتروني أو واتساب 715699877 / 730481250) -->
+          <div id="feedbackContactPanel" class="hidden p-4 rounded-xl bg-slate-900 border-2 border-cyan-500/50 flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <h4 id="feedbackModalTitle" class="text-xs sm:text-sm font-black text-cyan-300">⭐ تقييم التطبيق</h4>
+              <button id="btnCloseFeedbackPanel" type="button" class="touch-btn px-2.5 py-1 rounded-lg bg-rose-600/30 text-rose-300 text-xs font-black">✖ إغلاق</button>
+            </div>
+
+            <!-- شريط النجوم (يظهر عند الضغط على قيمني) -->
+            <div id="ratingStarsRow" class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-300 ml-2">اختر التقييم:</span>
+              <button type="button" data-rate-star="1" class="rate-star-btn touch-btn px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-black">⭐ 1</button>
+              <button type="button" data-rate-star="2" class="rate-star-btn touch-btn px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-black">⭐⭐ 2</button>
+              <button type="button" data-rate-star="3" class="rate-star-btn touch-btn px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-black">⭐⭐⭐ 3</button>
+              <button type="button" data-rate-star="4" class="rate-star-btn touch-btn px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-black">⭐⭐⭐⭐ 4</button>
+              <button type="button" data-rate-star="5" class="rate-star-btn touch-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 text-sm font-black">⭐⭐⭐⭐⭐ 5</button>
+            </div>
+
+            <textarea id="feedbackMessageInput" rows="3" class="w-full rounded-xl bg-slate-950 border p-2.5 text-xs text-white" placeholder="اكتب تقييمك أو مقترحك هنا...">تقييمي للتطبيق: 5 نجوم ⭐⭐⭐⭐⭐ — تطبيق ممتاز جداً!</textarea>
+
+            <div class="text-xs font-black text-amber-300">اختر طريقة الإرسال (عبر البريد الإلكتروني أو عبر واتساب):</div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button id="btnSendFeedbackEmail" type="button" class="touch-btn py-2.5 px-3 rounded-xl bg-rose-600 text-white font-black text-xs flex items-center justify-center gap-1.5">
+                <span>📧 عبر البريد الإلكتروني (zyadqasmshakr0@gmail.com)</span>
+              </button>
+              <button id="btnSendFeedbackWa1" type="button" class="touch-btn py-2.5 px-3 rounded-xl bg-emerald-600 text-white font-black text-xs flex items-center justify-center gap-1.5">
+                <span>💬 عبر واتساب (715699877)</span>
+              </button>
+              <button id="btnSendFeedbackWa2" type="button" class="touch-btn py-2.5 px-3 rounded-xl bg-teal-600 text-white font-black text-xs flex items-center justify-center gap-1.5">
+                <span>💬 عبر واتساب (730481250)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB: اضافه شخصيه جاهزه (NEW TAB) ==================== -->
+    <section id="viewReadyChar" class="hidden flex-col gap-4">
+      <div class="glass-panel rounded-2xl p-6 sm:p-10 text-center flex flex-col items-center justify-center gap-4 border-2 border-emerald-500/40">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-3xl shadow-lg">
+          ✨
+        </div>
+        <h2 class="text-lg sm:text-2xl font-black text-emerald-300">إضافة شخصية جاهزة</h2>
+        <div class="max-w-lg p-5 rounded-2xl bg-slate-900 border-2 border-amber-400/50 shadow-xl">
+          <p class="text-sm sm:text-base font-black text-amber-300 leading-relaxed">
+            🚀 قريباً سوف يتم تفعيل الميزة وستكون شبه مجاناً!
+          </p>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            ستتمكن قريباً من اختيار وإضافة شخصيات جاهزة ومصممة بالكامل إلى مشاهدك بضغطة زر واحدة وبشكل شبه مجاني.
+          </p>
+        </div>
+        <button id="btnBackFromReadyChar" type="button" class="touch-btn mt-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs sm:text-sm">
+          🎬 العودة إلى المسرح والسيناريو
+        </button>
       </div>
     </section>
 
@@ -4219,8 +4294,8 @@
 
       // استمرار مؤثرات تأثر العالم بالهالة (تطاير الصخور، اهتزاز الأرض، والبرق إذا طُلب في الوصف)
       if (pw.worldImpact || pw.groundSplit || (pw.aura && (c.auraScale || 1) >= 1.5)) {
-        state.cameraShake = Math.max(state.cameraShake || 0, 5.5);
-        if (Math.random() < 0.28) {
+        state.cameraShake = Math.max(state.cameraShake || 0, 4.5);
+        if (state.floatingAuraRocks.length < 16 && Math.random() < 0.22) {
           const span = Math.max(85, 72 * (c.auraScale || 1.5));
           state.floatingAuraRocks.push({
             x: c.x + (Math.random() - 0.5) * span * 1.6,
@@ -6439,15 +6514,15 @@
         gGrad.addColorStop(1, '#020617');
       }
       ctx.fillStyle = gGrad;
-      ctx.fillRect(-15000, GROUND_Y, 35000, 500);
+      ctx.fillRect(minVisX - 120, GROUND_Y, (maxVisX - minVisX) + 240, 440);
 
       if (shadowMode) {
         // انعكاس ضوء القمر الفضي على الأرض السوداء في مدينة الظل
         ctx.strokeStyle = 'rgba(226, 232, 240, 0.32)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(-1500, GROUND_Y);
-        ctx.lineTo(5200, GROUND_Y);
+        ctx.moveTo(minVisX - 80, GROUND_Y);
+        ctx.lineTo(maxVisX + 80, GROUND_Y);
         ctx.stroke();
       }
 
@@ -6547,11 +6622,15 @@
 
       // 3. Long Paved Two-Lane Asphalt Highway Street (شارع من خطين ذهاب وإياب يمر بمركز العالم 0)
       if (shadowMode || isTaizMode || (state.world === 'openworld' && cfg.hasStreet)) {
-        const roadLen = HIGHWAY_END_X - HIGHWAY_START_X;
-        ctx.fillStyle = shadowMode ? '#080c14' : '#94a3b8';
-        ctx.fillRect(HIGHWAY_START_X, GROUND_Y - 12, roadLen, 12);
-        ctx.fillStyle = shadowMode ? '#030509' : '#1e293b';
-        ctx.fillRect(HIGHWAY_START_X, GROUND_Y - 2, roadLen, 44);
+        const rStart = Math.max(HIGHWAY_START_X, minVisX - 80);
+        const rEnd = Math.min(HIGHWAY_END_X, maxVisX + 80);
+        const roadLen = Math.max(0, rEnd - rStart);
+        if (roadLen > 0) {
+          ctx.fillStyle = shadowMode ? '#080c14' : '#94a3b8';
+          ctx.fillRect(rStart, GROUND_Y - 12, roadLen, 12);
+          ctx.fillStyle = shadowMode ? '#030509' : '#1e293b';
+          ctx.fillRect(rStart, GROUND_Y - 2, roadLen, 44);
+        }
         ctx.fillStyle = shadowMode ? 'rgba(226, 232, 240, 0.45)' : '#f8fafc';
         for (let sx = Math.max(HIGHWAY_START_X + 20, Math.floor((minVisX - HIGHWAY_START_X) / 75) * 75 + HIGHWAY_START_X + 20); sx < Math.min(HIGHWAY_END_X - 30, maxVisX + 80); sx += 75) {
           ctx.fillRect(sx, GROUND_Y + 17, 42, 6);
@@ -6606,12 +6685,13 @@
         }
       }
 
-      // 5. Giant Mountain Zone (يدعم "جبل كبير" بقمم شاهقة وشلال متدفق!)
+      // 5. Giant Mountain Zone (يدعم "جبل كبير" بقمم شاهقة وشلال متدفق مع فحص مجال الرؤية لمنع أي بطء!)
       if (state.world === 'mountain' || (state.world === 'openworld' && cfg.hasMountain)) {
         const nearScene = !cfg.hasStreet;
         const mStart = nearScene ? 480 : MOUNTAIN_START_X;
         const mPeak = nearScene ? 820 : MOUNTAIN_PEAK_X;
         const mEnd = nearScene ? 1180 : MOUNTAIN_END_X;
+        if (mEnd + 220 >= minVisX && mStart - 280 <= maxVisX) {
         const hMult = cfg.bigMountain ? 1.32 : 1.0;
 
         // Towering Background Mountain Range
@@ -6651,11 +6731,13 @@
         // Animated Waterfall
         ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
         ctx.fillRect(mPeak - 178, GROUND_Y - 250 * hMult, 16, 250 * hMult);
+        }
       }
 
-      // 6. Active Erupting Volcano Zone ("وبجانب بركان مشتعل")
+      // 6. Active Erupting Volcano Zone ("وبجانب بركان مشتعل" مع فحص مجال الرؤية لمنع أي بطء!)
       if (state.world === 'volcano' || (state.world === 'openworld' && cfg.hasVolcano)) {
         const vx = (!cfg.hasStreet) ? 1020 : MOUNTAIN_END_X - 120;
+        if (vx + 340 >= minVisX && vx - 340 <= maxVisX) {
         // Volcano Dark Cone
         const vGrad = ctx.createLinearGradient(vx, GROUND_Y - 320, vx, GROUND_Y);
         vGrad.addColorStop(0, '#450a0a');
@@ -6694,6 +6776,7 @@
           ctx.beginPath();
           ctx.arc(vx + Math.sin(time * 2 + ly) * 14, GROUND_Y - 305 + offY, 8, 0, Math.PI * 2);
           ctx.fill();
+        }
         }
       }
 
@@ -8489,8 +8572,8 @@
 
       drawWorldEnvironment(ctx, timeSec, cam);
 
-      // 📏 رسم مسار الطيران والقياس المتري (نصف دائرة / خط مستقيم بارتفاع Xم / مسار مدمج) من موقع الضحية إلى نقطة الهبوط!
-      if (state.activeDistanceMarker) {
+      // 📏 رسم مسار الطيران والقياس المتري في شاشة العرض فقط، وإخفاء الخطوط والأرقام تماماً في الفيديو المحمل!
+      if (state.activeDistanceMarker && !state.isRecordingVideo) {
         const dm = state.activeDistanceMarker;
         const vic = state.characters[dm.victimSlot];
         ctx.save();
@@ -8871,19 +8954,21 @@
         ctx.restore();
       });
 
-      // Draw Floating Hit Texts
-      state.hitTexts.forEach(ht => {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, ht.alpha);
-        ctx.font = '900 20px Cairo';
-        ctx.textAlign = 'center';
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 4;
-        ctx.strokeText(ht.text, ht.x, ht.y);
-        ctx.fillStyle = ht.color;
-        ctx.fillText(ht.text, ht.x, ht.y);
-        ctx.restore();
-      });
+      // Draw Floating Hit Texts (تظهر في شاشة العرض فقط، وتختفي تماماً في الفيديو المحمل ليبقى الفيديو صافياً للترجمة والكلام فقط!)
+      if (!state.isRecordingVideo) {
+        state.hitTexts.forEach(ht => {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, ht.alpha);
+          ctx.font = '900 20px Cairo';
+          ctx.textAlign = 'center';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 4;
+          ctx.strokeText(ht.text, ht.x, ht.y);
+          ctx.fillStyle = ht.color;
+          ctx.fillText(ht.text, ht.x, ht.y);
+          ctx.restore();
+        });
+      }
 
       ctx.restore();
     }
@@ -8945,15 +9030,17 @@
           ctx.lineTo(w / 2, h);
           ctx.stroke();
 
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.arc(w / 2, h / 2, 20, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = '#facc15';
-          ctx.font = '900 16px Cairo';
-          ctx.textAlign = 'center';
-          ctx.fillText('📺', w / 2, h / 2 + 6);
+          if (!state.isRecordingVideo) {
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(w / 2, h / 2, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#facc15';
+            ctx.font = '900 16px Cairo';
+            ctx.textAlign = 'center';
+            ctx.fillText('📺', w / 2, h / 2 + 6);
+          }
 
           ctx.shadowBlur = 0;
           if (!state.isPlaying && !state.isRecordingVideo) {
@@ -8975,39 +9062,40 @@
           renderCameraViewport(ctx, state.camMain, 0, 0, w, h, timeSec);
         }
 
-        // رسم مؤثرات الطقس السينمائية (مطر / ثلج / عاصفة برق)
+        // رسم مؤثرات الطقس السينمائية بدفعة رسم واحدة (Single Batched Path) بدون أي ثقل على المعالج!
         if (state.weather && state.weather !== 'clear') {
           ctx.save();
           if (state.weather === 'rain' || state.weather === 'storm') {
             ctx.strokeStyle = 'rgba(186, 230, 253, 0.52)';
             ctx.lineWidth = 1.5;
-            for (let r = 0; r < 55; r++) {
+            ctx.beginPath();
+            for (let r = 0; r < 38; r++) {
               const rx = ((r * 73 + timeSec * 420) % (w + 100)) - 50;
               const ry = ((r * 47 + timeSec * 880) % h);
-              ctx.beginPath();
               ctx.moveTo(rx, ry);
               ctx.lineTo(rx - 9, ry + 22);
-              ctx.stroke();
             }
+            ctx.stroke();
             if (state.weather === 'storm' && Math.sin(timeSec * 11) > 0.96) {
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.20)';
               ctx.fillRect(0, 0, w, h);
             }
           } else if (state.weather === 'snow') {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
-            for (let s = 0; s < 45; s++) {
+            ctx.beginPath();
+            for (let s = 0; s < 32; s++) {
               const sx = ((s * 83 + Math.sin(timeSec + s) * 25) % w);
               const sy = ((s * 59 + timeSec * 140) % h);
-              ctx.beginPath();
-              ctx.arc(sx, sy, (s % 3) + 1.8, 0, Math.PI * 2);
-              ctx.fill();
+              ctx.moveTo(sx + 2.5, sy);
+              ctx.arc(sx, sy, (s % 2) + 2.0, 0, Math.PI * 2);
             }
+            ctx.fill();
           }
           ctx.restore();
         }
 
-        // 👁️ منظور عيون الشخصية (#الشخصية) في الثنائي 2D: إطار رؤية العينين ومؤشر التركيز على ما تراه الشخصية أمامها!
-        if (state.customCam2D && state.customCam2D.mode === 'pov_eyes_2d') {
+        // 👁️ منظور عيون الشخصية (#الشخصية) في الثنائي 2D: يظهر الإطار الإرشادي في شاشة العرض فقط ويختفي في الفيديو المحمل!
+        if (state.customCam2D && state.customCam2D.mode === 'pov_eyes_2d' && !state.isRecordingVideo) {
           const povC = state.characters[state.customCam2D.targetSlot ?? 0] || state.characters[0];
           ctx.save();
           ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
@@ -9948,10 +10036,115 @@
       const tabs = [
         { btn: 'tabBtnStudio', view: 'viewStudio', key: 'studio' },
         { btn: 'tabBtnCharacters', view: 'viewCharacters', key: 'characters' },
+        { btn: 'tabBtnReadyChar', view: 'viewReadyChar', key: 'ready_char' },
         { btn: 'tabBtnVoice', view: 'viewVoice', key: 'voice' },
         { btn: 'tabBtnHelp', view: 'viewHelp', key: 'help' },
         { btn: 'tabBtnVscode', view: 'viewVscode', key: 'vscode' }
       ];
+
+      document.getElementById('btnBackFromReadyChar')?.addEventListener('click', () => {
+        document.getElementById('tabBtnStudio')?.click();
+      });
+
+      // أزرار "قيمني" و "اضافه مقترح" في أسفل التلميحات والمساعدة (الإرسال عبر البريد الإلكتروني أو واتساب 715699877 / 730481250)
+      let currentFeedbackType = 'rate';
+      let currentStarRating = 5;
+      const feedbackPanel = document.getElementById('feedbackContactPanel');
+      const feedbackTitle = document.getElementById('feedbackModalTitle');
+      const feedbackInput = document.getElementById('feedbackMessageInput');
+      const starsRow = document.getElementById('ratingStarsRow');
+
+      document.getElementById('btnOpenRateModal')?.addEventListener('click', () => {
+        currentFeedbackType = 'rate';
+        if (feedbackPanel) {
+          feedbackPanel.classList.remove('hidden');
+          feedbackPanel.classList.add('flex');
+        }
+        if (starsRow) starsRow.classList.remove('hidden');
+        if (feedbackTitle) feedbackTitle.textContent = '⭐ قيمني — اختر تقييمك وأرسله عبر البريد الإلكتروني أو واتساب';
+        if (feedbackInput) feedbackInput.value = `تقييمي لتطبيق Stickman 2D Studio: ${currentStarRating} نجوم (${'⭐'.repeat(currentStarRating)}) — `;
+        setTimeout(() => {
+          try { feedbackPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+        }, 60);
+      });
+
+      document.getElementById('btnOpenSuggestModal')?.addEventListener('click', () => {
+        currentFeedbackType = 'suggest';
+        if (feedbackPanel) {
+          feedbackPanel.classList.remove('hidden');
+          feedbackPanel.classList.add('flex');
+        }
+        if (starsRow) starsRow.classList.add('hidden');
+        if (feedbackTitle) feedbackTitle.textContent = '💡 اضافه مقترح — اكتب مقترحك وأرسله عبر البريد الإلكتروني أو واتساب';
+        if (feedbackInput) {
+          feedbackInput.value = '';
+          feedbackInput.placeholder = 'اكتب مقترحك أو الميزة التي تريد إضافتها للتطبيق هنا...';
+          feedbackInput.focus();
+        }
+        setTimeout(() => {
+          try { feedbackPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+        }, 60);
+      });
+
+      document.getElementById('btnCloseFeedbackPanel')?.addEventListener('click', () => {
+        feedbackPanel?.classList.add('hidden');
+        feedbackPanel?.classList.remove('flex');
+      });
+
+      document.querySelectorAll('.rate-star-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentStarRating = parseInt(btn.getAttribute('data-rate-star'), 10) || 5;
+          document.querySelectorAll('.rate-star-btn').forEach(b => {
+            const s = parseInt(b.getAttribute('data-rate-star'), 10);
+            b.className = s === currentStarRating
+              ? 'rate-star-btn touch-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 text-sm font-black'
+              : 'rate-star-btn touch-btn px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-black';
+          });
+          if (feedbackInput) {
+            feedbackInput.value = `تقييمي لتطبيق Stickman 2D Studio: ${currentStarRating} نجوم (${'⭐'.repeat(currentStarRating)}) — `;
+          }
+        });
+      });
+
+      const getFeedbackSubjectAndBody = () => {
+        const subj = currentFeedbackType === 'rate'
+          ? `تقييم تطبيق Stickman 2D Studio (${currentStarRating} نجوم)`
+          : 'مقترح جديد لتطبيق Stickman 2D Studio';
+        const rawMsg = (feedbackInput?.value || '').trim() || (currentFeedbackType === 'rate' ? `تقييمي: ${currentStarRating} نجوم` : 'مقترح للتطبيق');
+        return { subj, body: rawMsg };
+      };
+
+      const launchExternalContactUrl = (url) => {
+        if (window.AndroidStudioBridge && typeof window.AndroidStudioBridge.openExternalUrl === 'function') {
+          window.AndroidStudioBridge.openExternalUrl(url);
+        } else if (url.startsWith('mailto:')) {
+          window.location.href = url;
+        } else {
+          const w = window.open(url, '_blank');
+          if (!w) window.location.href = url;
+        }
+      };
+
+      document.getElementById('btnSendFeedbackEmail')?.addEventListener('click', () => {
+        const { subj, body } = getFeedbackSubjectAndBody();
+        const mailUrl = `mailto:zyadqasmshakr0@gmail.com?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+        launchExternalContactUrl(mailUrl);
+        showToast('📧 جاري فتح البريد الإلكتروني لإرسال رسالتك إلى zyadqasmshakr0@gmail.com');
+      });
+
+      document.getElementById('btnSendFeedbackWa1')?.addEventListener('click', () => {
+        const { subj, body } = getFeedbackSubjectAndBody();
+        const waUrl = `https://wa.me/967715699877?text=${encodeURIComponent(subj + '\n' + body)}`;
+        launchExternalContactUrl(waUrl);
+        showToast('💬 جاري فتح واتساب لإرسال رسالتك إلى الرقم 715699877');
+      });
+
+      document.getElementById('btnSendFeedbackWa2')?.addEventListener('click', () => {
+        const { subj, body } = getFeedbackSubjectAndBody();
+        const waUrl = `https://wa.me/967730481250?text=${encodeURIComponent(subj + '\n' + body)}`;
+        launchExternalContactUrl(waUrl);
+        showToast('💬 جاري فتح واتساب لإرسال رسالتك إلى الرقم 730481250');
+      });
       tabs.forEach(t => {
         const b = document.getElementById(t.btn);
         if (b) {
@@ -10667,19 +10860,19 @@
             }
             const stream = new MediaStream(combinedTracks);
 
-            // ضبط أبعاد الكانفاس بدقة عالية متوافقة 100% مع معالج الفيديو في الهاتف والكمبيوتر دون أي ضغط يسبب تعليق الفيديو!
+            // ضبط أبعاد الكانفاس بدقة متوازنة فائقة السلاسة تمنع أي تعليق أو بطء في مشفر الفيديو على الهاتف والكمبيوتر!
             if (expVal === '16:9_1440') {
-              canvas.width = isMobileApp ? 1920 : 2560;
-              canvas.height = isMobileApp ? 1080 : 1440;
+              canvas.width = isMobileApp ? 1280 : 1920;
+              canvas.height = isMobileApp ? 720 : 1080;
             } else if (expVal === '9:16_60') {
-              canvas.width = 1080;
-              canvas.height = 1920;
+              canvas.width = isMobileApp ? 720 : 1080;
+              canvas.height = isMobileApp ? 1280 : 1920;
             } else if (expVal === '1:1_60') {
-              canvas.width = 1080;
-              canvas.height = 1080;
+              canvas.width = isMobileApp ? 720 : 1080;
+              canvas.height = isMobileApp ? 720 : 1080;
             } else {
-              canvas.width = 1920;
-              canvas.height = 1080;
+              canvas.width = 1280;
+              canvas.height = 720;
             }
 
             // On Android phones, prioritize H.264 / MP4 first so the native Android Gallery (الاستوديو) plays it immediately without ever saying "corrupted"!
@@ -10716,8 +10909,8 @@
 
             // معدل بت متوازن وعالي النقاء (8 Mbps لـ 1080p على الهاتف و 12 Mbps على الكمبيوتر) يمنع اختناق مشفر الفيديو في منتصف المشهد ويضمن تشغيلاً سلساً 100% في الاستوديو!
             const recOptions = {
-              videoBitsPerSecond: isMobileApp ? 8000000 : (expVal === '16:9_1440' ? 14000000 : 10000000),
-              audioBitsPerSecond: 192000
+              videoBitsPerSecond: isMobileApp ? 4500000 : (expVal === '16:9_1440' ? 8000000 : 6000000),
+              audioBitsPerSecond: 128000
             };
             if (mime) recOptions.mimeType = mime;
 

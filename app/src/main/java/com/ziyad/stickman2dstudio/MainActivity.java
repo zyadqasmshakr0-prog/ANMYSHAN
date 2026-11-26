@@ -59,7 +59,21 @@ public class MainActivity extends Activity {
         webView.clearCache(true);
 
         webView.addJavascriptInterface(new AndroidStudioBridge(), "AndroidStudioBridge");
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url != null && (url.startsWith("mailto:") || url.startsWith("whatsapp:") || url.contains("wa.me/") || url.contains("api.whatsapp.com"))) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "تعذر فتح تطبيق المراسلة", Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -239,6 +253,17 @@ public class MainActivity extends Activity {
                 }
             } catch (Exception ignored) {}
             pendingOutStream = null;
+        }
+
+        @JavascriptInterface
+        public void openExternalUrl(String url) {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "⚠️ تعذر فتح الرابط الخارجي: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
         }
 
         @JavascriptInterface

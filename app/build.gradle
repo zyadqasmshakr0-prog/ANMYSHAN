@@ -10,8 +10,8 @@ android {
         applicationId "com.ziyad.stickman2dstudio"
         minSdk 24
         targetSdk 34
-        versionCode 10
-        versionName "10.0-ULTRA-BLACK-AURA-BEAM"
+        versionCode 11
+        versionName "11.0-ULTRA-FAST"
     }
 
     buildTypes {
