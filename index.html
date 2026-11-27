@@ -1766,7 +1766,7 @@
 
     function extractKnockbackTrajectoryConfig(clause) {
       const c = clause || '';
-      const hasSemicircle = /نصف\s*دائر[ةه]|نص\s*دائر[ةه]|شبه\s*دائر[ةه]|بشكل\s*دائر|بشكل\s*قوس|قوس\s*دائري/.test(c);
+      const hasSemicircle = /نصف\s*دائر[ةه]|نص\s*دائر[ةه]|شبه\s*دائر[ةه]|بشكل\s*دائر|دائري[ةه]?|بشكل\s*قوس|قوس\s*دائري/.test(c);
       const hasStraight = /بخط\s*مستقيم|خط\s*مستقيم|بشكل\s*مستقيم|بارتفاع\s*\d+|بإرتفاع\s*\d+/.test(c);
       const hasHybrid = /مزيج|مدمج|الاثنين|الأثنين|سابقين|سابقيات/.test(c) || (hasSemicircle && hasStraight);
       let trajectoryType = 'hybrid';
@@ -2269,7 +2269,8 @@
         const hasJumpDodge = /بقفز[ةه]|يقفز|قفز[ةه]/.test(escPart);
         const hasBackDodge = /تراجع|ترجع|يتراجع|وراء|خلف|يهرب/.test(escPart);
 
-        if (/تجنب\s*الركل|تفادى\s*الركل|ينجو\s*من\s*الركل/.test(clause) && kickCount > 0) {
+        const hasOrdinalWord = /الأخير[ةه]|الاخير[ةه]|الرابع[ةه]|الخامس[ةه]|الثالث[ةه]|ال\s*[345]/.test(clause);
+        if (!hasOrdinalWord && /تجنب\s*الركل(?:تين|ات)?|تفادى\s*الركل(?:تين|ات)?|ينجو\s*من\s*الركل(?:تين|ات)?/.test(clause) && kickCount > 0) {
           let kIdx = 0;
           strikes.forEach(st => {
             if (st.kind === 'kick') {
@@ -4076,7 +4077,8 @@
           const hasBackDodge = /تراجع|ترجع|يتراجع|وراء|خلف|يهرب/.test(clause);
           prevCombo.hasDodge = true;
           prevCombo.escapeMeters = extractDistanceMeters(clause, prevCombo.escapeMeters || 3.0);
-          if (/تجنب\s*الركل|تفادى\s*الركل|ينجو\s*من\s*الركل/.test(clause)) {
+          const isSpecificLastOrOrdinal = /الأخير[ةه]|الاخير[ةه]|الرابع[ةه]|الخامس[ةه]|الثالث[ةه]|ال\s*[345]/.test(clause);
+          if (!isSpecificLastOrOrdinal && /تجنب\s*الركل(?:تين|ات)|تفادى\s*الركل(?:تين|ات)|ينجو\s*من\s*الركل(?:تين|ات)/.test(clause)) {
             let kIdx = 0;
             prevCombo.strikes.forEach(st => {
               if (st.kind === 'kick') {
@@ -4087,10 +4089,15 @@
             });
             prevCombo.title += ' 🛡️ + تجنب الركلتين بنجاح!';
           } else {
-            const lastSt = prevCombo.strikes[prevCombo.strikes.length - 1];
-            lastSt.dodged = true;
-            lastSt.dodgeStyle = (hasJumpDodge && !hasBackDodge) ? 'jump' : 'escape_dash';
-            prevCombo.title += ` ⚡ + نجاة وهروب (${prevCombo.escapeMeters}م)!`;
+            let targetDodgeIdx = prevCombo.strikes.length - 1;
+            if (/الأول[ىه]|الاول[ىه]|ال\s*1/.test(clause)) targetDodgeIdx = 0;
+            else if (/الثاني[ةه]|ال\s*2/.test(clause) && prevCombo.strikes.length >= 2) targetDodgeIdx = 1;
+            else if (/الثالث[ةه]|ال\s*3/.test(clause) && prevCombo.strikes.length >= 3) targetDodgeIdx = 2;
+            else if (/الرابع[ةه]|ال\s*4/.test(clause) && prevCombo.strikes.length >= 4) targetDodgeIdx = 3;
+            const targetSt = prevCombo.strikes[Math.min(prevCombo.strikes.length - 1, targetDodgeIdx)];
+            targetSt.dodged = true;
+            targetSt.dodgeStyle = (hasJumpDodge && !hasBackDodge) ? 'jump' : 'escape_dash';
+            prevCombo.title += ` ⚡ + تجنب الضربة #${targetDodgeIdx + 1} وهروب (${prevCombo.escapeMeters}م)!`;
           }
           return;
         }
@@ -4152,7 +4159,7 @@
             const comboDur = explicitDur > 0 ? explicitDur : Math.min(7.5, Math.max(2.6, 0.55 + totalHits * (comboCfg.isAerialFlyingCombo ? 0.72 : 0.52)));
             const aerialTag = comboCfg.isAerialFlyingCombo ? '🦅 لكمات طائرة (رفع للجو + إسقاط للأرض بقوة)' : '⚡ ضربات أرضية سريعة متتالية';
             const dodgeTag = comboCfg.hasDodge ? ` + نجاة/تجنب ${state.characters[cVic]?.name || '#' + (cVic + 1)}` : '';
-            events.push({
+            const comboEvObj = {
               type: 'combo_assault_2d',
               actorSlot: cAtt,
               victimSlot: cVic,
@@ -4165,7 +4172,12 @@
               powers,
               title: `🥊💥 ${state.characters[cAtt]?.name || '#' + (cAtt + 1)} يوجه (${totalHits}) ضربات [${aerialTag}] إلى ${state.characters[cVic]?.name || '#' + (cVic + 1)}${dodgeTag}!`,
               duration: comboDur
-            });
+            };
+            if (isParallel && events.length > 0) {
+              mergeWithPreviousParallelEvent(events, comboEvObj, currentSplitMode);
+            } else {
+              events.push(comboEvObj);
+            }
             return;
           }
         }
@@ -4329,13 +4341,41 @@
           d.recorded = true;
         }
       });
-      // ربط سلس بين الضربة (knockout) وحركة ضرب المنبطح أو القفز على المنبطح التي تليها مباشرة، بحيث تبقى الشخصية المنبطحة تحاول الوقوف دون أن تقف مبكراً!
+      // 1) إذا جاء حدث "ينطلق علي بسرعة كبيرة باتجاه عمر" (run_distance) مباشرة بعد ضربة طيران (knockout) لنفس المهاجم، ندمج الانطلاق داخل طيران الضربة نفسها ليلحقه في نفس اللحظة بدون أي توقف!
+      for (let i = events.length - 2; i >= 0; i--) {
+        const curE = events[i];
+        const nxtE = events[i + 1];
+        if (curE.type === 'knockout' && nxtE.type === 'run_distance' && nxtE.actorSlot === curE.actorSlot) {
+          curE.chaseWhileVictimFlies = true;
+          curE.instantChainToNext = true;
+          curE.keepVictimStrugglingForNext = true;
+          events.splice(i + 1, 1);
+        }
+      }
+
+      // 2) ربط سلس فوري (بلا توقف 0.0 ثانية!) بين الضربات المتتابعة (knockout -> combo_assault_2d -> knockout / ground_strike_2d / dive_on_downed_2d)
       for (let i = 0; i < events.length - 1; i++) {
         const curE = events[i];
         const nxtE = events[i + 1];
-        if (curE.type === 'knockout' && (nxtE.type === 'ground_strike_2d' || nxtE.type === 'dive_on_downed_2d' || nxtE.type === 'grab_and_throw_2d')) {
+        const nextIsFollowupAttack = (
+          nxtE.type === 'combo_assault_2d' ||
+          nxtE.type === 'knockout' ||
+          nxtE.type === 'ground_strike_2d' ||
+          nxtE.type === 'dive_on_downed_2d' ||
+          nxtE.type === 'grab_and_throw_2d'
+        );
+        if (curE.type === 'knockout' && nextIsFollowupAttack) {
           curE.keepVictimStrugglingForNext = true;
-          curE.duration = Math.max(1.25, Math.min(curE.duration, 1.45 + (curE.meters || 1) * 0.03));
+          curE.instantChainToNext = true;
+          if (nxtE.actorSlot === curE.actorSlot && (nxtE.type === 'combo_assault_2d' || nxtE.type === 'knockout')) {
+            curE.chaseWhileVictimFlies = true;
+            nxtE.instantChainFromPrev = true;
+          }
+          // إلغاء مهلة التوقف (1.42 ثانية) بعد الهبوط تماماً لتتصل الضربات ببعضها كسلسلة واحدة سريعة!
+          curE.duration = Math.max(0.92, Math.min(1.28, 0.72 + (curE.meters || 1) * 0.032));
+        }
+        if (curE.type === 'combo_assault_2d' && nxtE.type === 'knockout' && nxtE.actorSlot === curE.actorSlot) {
+          nxtE.instantChainFromPrev = true;
         }
       }
       state.timeline = events;
@@ -4464,6 +4504,37 @@
     function mergeWithPreviousParallelEvent(events, newEv, currentSplitMode) {
       const prev = events[events.length - 1];
       if (!prev) { events.push(newEv); return; }
+
+      // حالة خاصة 1: إذا كانت الضربة السابقة (knockout مثل: "علي يلكم عمر لكمة خارقة يطير لمسافة 10 متر بشكل دائري") وتلاها "في نفس اللحظة ينطلق علي بسرعة كبيرة باتجاه عمر ويضرب عمر ضربات متتالية":
+      // لا ندمجهما كحدثين منفصلين متوازيين لنفس الشخصية، بل نجعل المهاجم (علي) ينطلق بسرعة كبيرة خلف الضحية (عمر) أثناء طيران عمر في الجو، وفور وصوله يبدأ الضربات المتتالية بلا أي توقف (0.0 ثانية انتظار)!
+      if (prev.type === 'knockout' && (newEv.actorSlot === prev.actorSlot || newEv.type === 'combo_assault_2d' || newEv.type === 'run_distance')) {
+        prev.chaseWhileVictimFlies = true;
+        prev.instantChainToNext = true;
+        prev.keepVictimStrugglingForNext = true;
+        prev.duration = Math.max(0.92, Math.min(1.25, 0.72 + (prev.meters || 10) * 0.032));
+        if (newEv.type === 'run_distance' && newEv.actorSlot === prev.actorSlot) {
+          prev.title += ` ⚡ + اندفاع فوري خلفه بسرعة كبيرة!`;
+          return;
+        }
+        newEv.instantChainFromPrev = true;
+        events.push(newEv);
+        return;
+      }
+
+      // حالة خاصة 2: عند دمج شعاعين متقابلين في نفس اللحظة ("يطلق علي شعاع بسمك 1 متر وبنفس الوقت يطلق عمر شعاع بسمك نص متر يطير عمر للخلف متأثر")، نمرر خاصية الطيران للخلف (beamHasFlyKnock) لكلا الشعاعين ليطبقها المحرك تلقائياً على الطرف الأضعف فقط (أو الاثنين معاً إذا تساوت قوتهما)!
+      const shareBeamKnockback = (ev1, ev2) => {
+        if (ev1 && ev2 && ev1.type === 'superpower' && ev2.type === 'superpower' && ev1.powers && ev2.powers && ev1.powers.beam && ev2.powers.beam) {
+          if (ev1.powers.beamHasFlyKnock || ev2.powers.beamHasFlyKnock) {
+            const kbM = Math.max(ev1.powers.beamKnockbackMeters || 12, ev2.powers.beamKnockbackMeters || 12);
+            ev1.powers.beamHasFlyKnock = true;
+            ev2.powers.beamHasFlyKnock = true;
+            ev1.powers.beamKnockbackMeters = kbM;
+            ev2.powers.beamKnockbackMeters = kbM;
+          }
+        }
+      };
+      shareBeamKnockback(prev, newEv);
+
       const rActors = prev.actors || (prev.actorSlot !== undefined ? [prev.actorSlot] : [0]);
       const lActors = newEv.actors || (newEv.actorSlot !== undefined ? [newEv.actorSlot] : [1]);
       const maxDur = Math.max(prev.duration || 3.0, newEv.duration || 3.0);
@@ -5190,9 +5261,37 @@
             c.pose = 'idle';
           }
 
-          // تأثر العدو بالشعاع الضوئي ودعم دفع الشخصية لمسافات طويلة (بخط مستقيم / نصف دائرة / مزيج) تماماً مثل الركل واللكم!
-          const launchThreshold = pw.beamHasFlyKnock ? 0.24 : 0.48;
+          // فحص ما إذا كان هناك تصادم إشعاعين متقابلين في نفس اللحظة:
+          // نقيس قطر الهالة وحجم الإشعاع لكل شخصية؛ فإذا كان هذا المهاجم (c) هو الأضعف، فإن شعاعه لا يدفع الخصم الأقوى إطلاقاً (بل يطير للخلف الأضعف فقط، أما لو كانا متساويين فيطير الاثنان معاً)!
+          const oppBeam = state.energyBeams.find(eb => eb.fromSlot === tChar.slot);
+          const isMutualBeamClash = Boolean(oppBeam || tChar.beamActive);
+          let selfIsWeakerInClash = false;
+          let bothEqualInClash = false;
+          if (isMutualBeamClash) {
+            const auraSelf = Math.max(0.5, c.auraDiameterM || ((c.auraScale || 1.0) * 78 / 36));
+            const beamSelf = Math.max(0.2, (activeBeam && activeBeam.thicknessMeters) || c.beamThicknessM || pw.beamThicknessMeters || 1.0);
+            const auraOpp = Math.max(0.5, tChar.auraDiameterM || ((tChar.auraScale || 1.0) * 78 / 36));
+            const beamOpp = Math.max(0.2, (oppBeam && oppBeam.thicknessMeters) || tChar.beamThicknessM || 1.0);
+            const powerSelf = Math.pow(auraSelf, 1.45) * Math.pow(beamSelf, 1.55);
+            const powerOpp = Math.pow(auraOpp, 1.45) * Math.pow(beamOpp, 1.55);
+            const diffRatio = Math.abs(powerSelf - powerOpp) / Math.max(0.01, Math.max(powerSelf, powerOpp));
+            if (diffRatio <= 0.04) {
+              bothEqualInClash = true;
+            } else if (powerSelf < powerOpp) {
+              selfIsWeakerInClash = true;
+            }
+          }
+
+          if (selfIsWeakerInClash) {
+            // هذه الشخصية هي الأضعف في تصادم الإشعاعين: شعاعها يندفع للخلف نحوها ولا يؤثر أبداً على الخصم الأقوى!
+            if (progress < 0.44) {
+              c.pose = 'beam_cast';
+            }
+          } else {
+          // هذه الشخصية هي الأقوى (فتدفع الأضعف وتجعله يطير للخلف وحده)، أو أن الشخصيتين متساويتان في القوة تماماً (فيطير الاثنان للخلف عند انفجار الملتقى)!
+          const launchThreshold = isMutualBeamClash ? 0.44 : (pw.beamHasFlyKnock ? 0.24 : 0.48);
           if (progress >= 0.06 && progress < launchThreshold) {
+            if (!bothEqualInClash) {
             tChar.facing = -dirToTarget;
             tChar.pose = 'brawl';
             tChar.combatPhase = 'recoil';
@@ -5206,9 +5305,15 @@
               spawnShockwave(tChar.x, tChar.y - 60, bCol === '#111827' ? '#a855f7' : bCol, Math.max(48, wPx * 1.4));
               spawnGroundCrackAndRocks(tChar.x, tChar.y);
             }
+            }
           } else if (progress >= launchThreshold) {
             if (!ev._beamImpactDone) {
               ev._beamImpactDone = true;
+              if (isMutualBeamClash && !bothEqualInClash) {
+                // الشعاع الأقوى يبتلع شعاع الأضعف عند وصول الملتقى إليه ويطيح بالأضعف فقط للخلف!
+                state.energyBeams = state.energyBeams.filter(eb => eb.fromSlot !== tChar.slot);
+                tChar.beamActive = false;
+              }
               const pushDir = (pw.beamExplicitDir && pw.beamExplicitDir !== 0) ? pw.beamExplicitDir : dirToTarget;
               const meters = pw.beamKnockbackMeters || 6.0;
               const origX = tChar.x;
@@ -5335,6 +5440,7 @@
                 spawnShockwave(tChar.x, tChar.y, '#94a3b8', 75);
               }
             }
+          }
           }
         } else {
           if (progress < 0.75) c.pose = 'beam_cast';
@@ -7149,8 +7255,9 @@
             const gAtt = getGroundYAt(att.x) + (att.zLaneOffset || 0);
             const gVic = getGroundYAt(vic.x) + (vic.zLaneOffset || 0);
 
-            // المرحلة 1 (0% .. 18%): اندفاع المهاجم بسرعة إلى موقع الخصم مهما كانت المسافة بينهما!
-            const dashEnd = 0.18;
+            // المرحلة 1: اندفاع المهاجم بسرعة إلى موقع الخصم (وإذا كان ملتحماً به بعد مطاردته أثناء الطيران يبدأ الضرب فوراً بلا أي توقف!)
+            const initDistToVic = Math.abs(vic.x - (ev._attStartX ?? att.x));
+            const dashEnd = (ev.instantChainFromPrev && initDistToVic <= 85) ? 0.03 : (initDistToVic <= 68 ? 0.05 : 0.18);
             if (progress < dashEnd) {
               const k = progress / dashEnd;
               const startX = ev._attStartX ?? att.x;
@@ -7632,7 +7739,7 @@
             const dir = (ev.explicitDir && ev.explicitDir !== 0) ? ev.explicitDir : (vic.x >= att.x ? 1 : -1);
             att.facing = dir;
             vic.facing = -dir;
-            const strikeMoment = 0.38;
+            const strikeMoment = (ev.instantChainFromPrev && Math.abs(vic.x - att.x) <= 85) ? 0.14 : 0.34;
             if (state.eventElapsed < strikeMoment) {
               // المهاجم يندفع إلى موقع الضحية الحالي ويسدد الركلة أو اللكمة بالاتجاه المطلوب تماماً!
               const approachProg = state.eventElapsed / strikeMoment;
@@ -7697,9 +7804,9 @@
                 }
               }
 
-              // تحريك الضحية على المسار الفيزيائي المحدد من موقعه الحالي (origX) إلى (destX) ثم نهوضه تلقائياً ليقف بلا حركة (إلا إذا مات)!
-              const postLandTime = ev.victimDies ? 0.25 : 1.42;
-              const flightDur = Math.max(0.45, ev.duration - strikeMoment - postLandTime);
+              // تحريك الضحية على المسار الفيزيائي المحدد من موقعه الحالي (origX) إلى (destX)؛ وإذا كان هناك هجوم متابع (chaseWhileVictimFlies / instantChainToNext) يندفع المهاجم خلفه في نفس اللحظة بلا توقف 0.0 ثانية!
+              const postLandTime = (ev.instantChainToNext || ev.chaseWhileVictimFlies) ? 0.0 : (ev.victimDies ? 0.25 : 0.85);
+              const flightDur = Math.max(0.42, ev.duration - strikeMoment - postLandTime);
               const rawU = (state.eventElapsed - strikeMoment) / flightDur;
               const u = Math.max(0, Math.min(1, rawU));
               const origX = ev._origX ?? vic.x;
@@ -7709,8 +7816,21 @@
               const peakH = ev._peakH || 150;
               const laneOff = vic.zLaneOffset || 0;
 
-              att.combatPhase = 'guard';
-              att.pose = u > 0.35 ? 'idle' : 'brawl';
+              if (ev.chaseWhileVictimFlies) {
+                // المهاجم ينطلق بسرعة كبيرة في نفس اللحظة خلف الضحية أثناء طيرانها ليصل معه مباشرة ويكمل الضربات المتتالية بلا أي توقف!
+                const chaseU = Math.max(0, Math.min(1, (u - 0.08) / 0.88));
+                const attStart = (origX - dir * 48);
+                const attEnd = (destX - dir * 46);
+                att.x = attStart + (attEnd - attStart) * chaseU;
+                att.y = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+                att.facing = dir;
+                att.pose = chaseU < 0.96 ? 'run' : 'brawl';
+                att.trail.push({ x: att.x, y: att.y, alpha: 0.78, color: att.auraActive ? att.auraColor : att.color });
+                if (att.trail.length > 9) att.trail.shift();
+              } else {
+                att.combatPhase = 'guard';
+                att.pose = u > 0.35 ? 'idle' : 'brawl';
+              }
               vic.isDead = Boolean(ev.victimDies);
               vic.stayProne = Boolean(ev.victimDies);
 
