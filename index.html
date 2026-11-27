@@ -1692,7 +1692,12 @@
         .replace(/(?:^|\s)و?تسعين(?=\s|$)/g, ' 90')
         .replace(/(?:^|\s)و?(?:مئة|مائة|ميه|مية)(?=\s|$)/g, ' 100')
         .replace(/(?:^|\s)و?(?:مئتين|مائتين)(?=\s|$)/g, ' 200')
-        .replace(/اثنين\s*ونص(?:ف)?|إثنين\s*ونص(?:ف)?/g, '2.5');
+        .replace(/اثنين\s*ونص(?:ف)?|إثنين\s*ونص(?:ف)?/g, '2.5')
+        .replace(/(\d+)\s*متر\s*ونص(?:ف)?/g, '$1.5 متر')
+        .replace(/مترين\s*ونص(?:ف)?|متران\s*ونص(?:ف)?/g, '2.5 متر')
+        .replace(/متر\s*ونص(?:ف)?/g, '1.5 متر')
+        .replace(/نصف\s*متر|نص\s*متر/g, '0.5 متر')
+        .replace(/(\d+)\s*ونص(?:ف)?/g, '$1.5');
       return out;
     }
 
@@ -1806,13 +1811,25 @@
     }
 
     function extractAuraSizeConfig(clause) {
-      if (!clause) return { auraScale: 1.0, diameterMeters: 0, hasExplicitSize: false };
-      const diamMatch = clause.match(/(?:بقطر|قطر(?:ها|ه)?|بحجم|حجم(?:ها|ه)?|بعرض|عرض(?:ها|ه)?|بمساح[ةه])\s*(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م)?/);
+      if (!clause) return { auraScale: 1.0, diameterMeters: 0, fromDiameterMeters: 0, isAuraBoost: false, hasExplicitSize: false };
+      // فحص صيغة "يكبر هالته من 3 متر قطر إلى 5 متر قطر" أو "من 3 إلى 5 متر"
+      const fromToMatch = clause.match(/من\s*(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م)?\s*(?:قطر)?\s*(?:إلى|الى|ل)\s*(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م)?/);
+      if (fromToMatch) {
+        const fromDm = Math.max(0.5, Math.min(25, parseFloat(fromToMatch[1])));
+        const toDm = Math.max(0.5, Math.min(25, parseFloat(fromToMatch[2])));
+        const sc = Math.min(4.5, Math.max(0.55, (toDm * 36) / 78));
+        return { auraScale: sc, diameterMeters: toDm, fromDiameterMeters: fromDm, isAuraBoost: true, hasExplicitSize: true };
+      }
+      const isBoostVerb = /يكبر|تكبر|يرفع|ترفع|يزيد|تزيد|يقوي|تقوي|يضاعف|تضاعف|تزداد|تتضخم/.test(clause) && /هال[ةه]|هالت[هه]|طاق[ةه]|طاقت[هه]/.test(clause);
+      const diamMatch = clause.match(/(?:بقطر|قطر(?:ها|ه)?|بقدر|قدر(?:ها|ه)?|بحجم|حجم(?:ها|ه)?|بعرض|عرض(?:ها|ه)?|بمساح[ةه]|إلى|الى)\s*(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م|قطر)?/) ||
+                        (isBoostVerb ? clause.match(/(\d+(?:\.\d+)?)\s*(?:متر|أمتار|امتار|م)?\s*(?:قطر)?/) : null);
       if (diamMatch) {
         const dm = Math.max(0.5, Math.min(25, parseFloat(diamMatch[1])));
-        // قطر 6 متر -> نصف قطر 216 بكسل (auraScale = 2.77) ليغطي مساحة ضخمة حول الشخصية!
-        const sc = Math.min(4.2, Math.max(0.55, (dm * 36) / 78));
-        return { auraScale: sc, diameterMeters: dm, hasExplicitSize: true };
+        const sc = Math.min(4.5, Math.max(0.55, (dm * 36) / 78));
+        return { auraScale: sc, diameterMeters: dm, fromDiameterMeters: 0, isAuraBoost: isBoostVerb, hasExplicitSize: true };
+      }
+      if (isBoostVerb) {
+        return { auraScale: 2.35, diameterMeters: 0, fromDiameterMeters: 0, isAuraBoost: true, hasExplicitSize: true };
       }
       if (/هال[ةه][^،,.]*?(?:عملاق[ةه]|هائل[ةه]|عظيم[ةه])/.test(clause)) {
         return { auraScale: 2.65, diameterMeters: 5.8, hasExplicitSize: true };
@@ -1841,7 +1858,7 @@
 
       let thicknessMeters = 0.65;
       let sizeExplicit = false;
-      const thMatch = clause.match(/(?:بسمك|سمك[هه]?|بقطر|قطر[هه]?|بعرض|عرض[هه]?|بحجم|حجم[هه]?)\s*(\d+(?:\.\d+)?)\s*(سم|سنتيمتر|متر|أمتار|امتار|م)?/);
+      const thMatch = clause.match(/(?:بسمك|سمك[هه]?|بقدر|قدر[هه]?|بقطر|قطر[هه]?|بعرض|عرض[هه]?|بحجم|حجم[هه]?)\s*(\d+(?:\.\d+)?)\s*(سم|سنتيمتر|متر|أمتار|امتار|م)?/);
       if (thMatch) {
         let val = parseFloat(thMatch[1]);
         const unit = thMatch[2] || 'متر';
@@ -2156,6 +2173,149 @@
       state.vehicles.push(v);
       state.activeVehicleId = v.id;
       return v;
+    }
+
+    function parseArabicCountWord(w, fallback = 1) {
+      if (!w) return fallback;
+      const s = normalizeDigits(String(w).trim());
+      const n = parseInt(s, 10);
+      if (!isNaN(n) && n >= 1) return Math.min(12, n);
+      if (/لكمتين|لكمتان|ركلتين|ركلتان|ضربتين|ضربتان|اثنين|إثنين|اثنتين|ثنتين/.test(s)) return 2;
+      if (/ثلاث/.test(s)) return 3;
+      if (/أربع|اربع/.test(s)) return 4;
+      if (/خمس/.test(s)) return 5;
+      if (/ست/.test(s)) return 6;
+      if (/عد[ةه]|عدت|متتالي/.test(s)) return 4;
+      return fallback;
+    }
+
+    function parseSmartComboConfig2D(clause, att, vic) {
+      if (!clause) return null;
+      // لا نصنف الجملة ككومبو ضربات متتالية إلا إذا احتوت على:
+      // 1) عدد ضربات/لكمات/ركلات (>= 2)، أو 2) جمع (لكمات / ركلات / ضربات متتالية / لكمات طائرة)، أو 3) مزيج لكم مع ركل في نفس الجملة، أو 4) تجنب/تفادي الركلتين أو اللكمة الأخيرة!
+      const hasPluralOrSerial = /لكمات|ركلات|ضربات\s*متتالي|متتالي[ةه]|عد[ةه]\s*لكمات|عدت\s*لكمات|عد[ةه]\s*ضربات|لكمتين|لكمتان|ركلتين|ركلتان|(\d+)\s*(?:لكم|ركل|ضرب)|تجنب\s*الركل|ينجو\s*من\s*ال(?:لكم|كلم|ضرب)|الكم[ةه]\s*ال\s*\d+|اللكم[ةه]\s*ال\s*\d+/.test(clause);
+      const hasBothPunchAndKick = (/لكم|يلكم/.test(clause) && /ركل|يركل/.test(clause));
+      if (!hasPluralOrSerial && !hasBothPunchAndKick) return null;
+
+      // استخراج عدد اللكمات وعدد الركلات بذكاء مهما تغيرت الصياغة
+      let punchCount = 0;
+      let kickCount = 0;
+      const pMatch = clause.match(/(\d+|واحد[ةه]?|ثنتين|اثنين|إثنين|ثلاث[ةه]?|أربع[ةه]?|اربع[ةه]?|خمس[ةه]?|ست[ةه]?|عد[ةه]|عدت)?\s*(لكمات|لكمتين|لكمتان|لكم[ةه])/);
+      if (pMatch) {
+        if (/لكمتين|لكمتان/.test(pMatch[2])) punchCount = 2;
+        else if (pMatch[1]) punchCount = parseArabicCountWord(pMatch[1], 3);
+        else if (/لكمات/.test(pMatch[2])) punchCount = 3;
+        else punchCount = 1;
+      }
+      const kMatch = clause.match(/(\d+|واحد[ةه]?|ثنتين|اثنين|إثنين|ثلاث[ةه]?|أربع[ةه]?|اربع[ةه]?|خمس[ةه]?)?\s*(ركلات|ركلتين|ركلتان|ركل[ةه]|ركل)(?![؀-ۿ])/);
+      if (kMatch && !/تجنب\s*الركل|تفادى\s*الركل/.test(kMatch[0])) {
+        if (/ركلتين|ركلتان/.test(kMatch[2])) kickCount = 2;
+        else if (kMatch[1]) kickCount = parseArabicCountWord(kMatch[1], 2);
+        else if (/ركلات/.test(kMatch[2])) kickCount = 2;
+        else if (/مع\s*ركل/.test(clause)) kickCount = 1;
+      }
+      // في حال كتب "يوجه علي 2 لكمات لعمر مع 2 ركل ولاكن عمر تجنب الركلتين"
+      const explicitKickCountInClause = clause.match(/(?:مع|و)\s*(\d+|ثنتين|اثنين|ثلاث)?\s*(?:ركلات|ركلتين|ركل)/);
+      if (explicitKickCountInClause) {
+        kickCount = explicitKickCountInClause[1] ? parseArabicCountWord(explicitKickCountInClause[1], 2) : (/ركلتين/.test(explicitKickCountInClause[0]) ? 2 : Math.max(kickCount, 2));
+      }
+      if (punchCount === 0 && kickCount === 0) {
+        const gMatch = clause.match(/(\d+|ثلاث[ةه]?|أربع[ةه]?|اربع[ةه]?|خمس[ةه]?|عد[ةه]|عدت)?\s*ضربات/);
+        punchCount = gMatch && gMatch[1] ? parseArabicCountWord(gMatch[1], 4) : 4;
+      }
+
+      // قاعدة المستخدم الصارمة: القفز لتوجيه لكمة أو ركلة لا يظهر إلا إذا قال الوصف "لكمات طائرة / ركلات طائرة" أو ذكر ارتفاع الخصم للجو وإعادته للأرض بقوة!
+      const isAerialFlyingCombo = /طائر[ةه]|طائره|يطير\s*لفوق|يرتفع|ارتفاع|تعيده\s*للأرض|تعيده\s*للالرض|يعيده\s*إلى\s*الأرض|يعيده\s*الى\s*الارض|ليعيده\s*إلى\s*الأرض/.test(clause);
+
+      // بناء قائمة الضربات المتتالية
+      const strikes = [];
+      for (let i = 0; i < punchCount; i++) {
+        strikes.push({ kind: 'punch', dodged: false, dodgeStyle: 'none', aerialRole: 'ground' });
+      }
+      for (let i = 0; i < kickCount; i++) {
+        strikes.push({ kind: 'kick', dodged: false, dodgeStyle: 'none', aerialRole: 'ground' });
+      }
+      if (strikes.length < 2) {
+        strikes.push({ kind: 'punch', dodged: false, dodgeStyle: 'none', aerialRole: 'ground' });
+      }
+
+      // إذا كانت لكمات/ضربات طائرة (أو فيها ارتفاع وإعادة للأرض بقوة):
+      // نوزع أدوار الضربات بذكاء دون الحاجة لأن يشرح الكاتب كل تفصيل:
+      // الضربة 1: ترفع الخصم للجو (launch_up)
+      // الضربات الوسطى (في حال 4+ ضربات): ضربات متابعة في الهواء (air_combo)
+      // الضربة قبل الأخيرة (أو الضربة 2 إذا كان المجموع 2 أو 3): يقفز المهاجم ويلكمه ليعيده إلى الأرض بقوة (air_slam_down)
+      // الضربة الأخيرة (إذا كان المجموع >= 3): يهبط المهاجم من الجو ليوجه الضربة القاضية على الأرض (ground_finisher) — وفي هذا الوقت بالضبط يمكن للخصم الهروب 3 متر!
+      if (isAerialFlyingCombo) {
+        const n = strikes.length;
+        strikes[0].aerialRole = 'launch_up';
+        if (n === 2) {
+          strikes[1].aerialRole = 'air_slam_down';
+        } else if (n === 3) {
+          strikes[1].aerialRole = 'air_slam_down';
+          strikes[2].aerialRole = 'ground_finisher';
+        } else if (n >= 4) {
+          for (let k = 1; k < n - 2; k++) strikes[k].aerialRole = 'air_combo';
+          strikes[n - 2].aerialRole = 'air_slam_down';
+          strikes[n - 1].aerialRole = 'ground_finisher';
+        }
+      }
+
+      // فحص التجنب / التفادي / النجاة / الهروب من بعض الضربات أو الضربة الأخيرة!
+      const hasDodge = /تجنب|يتجنب|تفادى|يتفادى|ينجو|يهرب|تهرب|هرب/.test(clause);
+      let escapeMeters = 3.0;
+      if (hasDodge) {
+        const escPart = clause.slice(Math.max(0, clause.search(/تجنب|يتجنب|تفادى|يتفادى|ينجو|يهرب|تهرب/)));
+        escapeMeters = extractDistanceMeters(escPart, 3.0);
+        const hasJumpDodge = /بقفز[ةه]|يقفز|قفز[ةه]/.test(escPart);
+        const hasBackDodge = /تراجع|ترجع|يتراجع|وراء|خلف|يهرب/.test(escPart);
+
+        if (/تجنب\s*الركل|تفادى\s*الركل|ينجو\s*من\s*الركل/.test(clause) && kickCount > 0) {
+          let kIdx = 0;
+          strikes.forEach(st => {
+            if (st.kind === 'kick') {
+              st.dodged = true;
+              if (hasJumpDodge && hasBackDodge) {
+                st.dodgeStyle = (kIdx % 2 === 0) ? 'jump' : 'backstep';
+              } else if (hasJumpDodge) {
+                st.dodgeStyle = 'jump';
+              } else {
+                st.dodgeStyle = 'backstep';
+              }
+              kIdx++;
+            }
+          });
+        } else if (/الأخير[ةه]|الاخير[ةه]|الثالث[ةه]|ال\s*3|الكم[ةه]\s*ال\s*\d+|اللكم[ةه]\s*ال\s*\d+|الكلم[ةه]\s*الاخير|يهرب/.test(clause)) {
+          const lastSt = strikes[strikes.length - 1];
+          lastSt.dodged = true;
+          lastSt.dodgeStyle = (hasJumpDodge && !hasBackDodge) ? 'jump' : 'escape_dash';
+        } else {
+          // تجنب عام (إذا وجدت ركلات يتجنب الركلات، وإلا يتجنب الضربة الأخيرة)
+          let anyKickMarked = false;
+          strikes.forEach((st, idx) => {
+            if (st.kind === 'kick') {
+              st.dodged = true;
+              st.dodgeStyle = (hasJumpDodge && (!hasBackDodge || idx % 2 === 0)) ? 'jump' : 'backstep';
+              anyKickMarked = true;
+            }
+          });
+          if (!anyKickMarked) {
+            const lastSt = strikes[strikes.length - 1];
+            lastSt.dodged = true;
+            lastSt.dodgeStyle = hasJumpDodge ? 'jump' : 'escape_dash';
+          }
+        }
+      }
+
+      return {
+        actorSlot: att,
+        victimSlot: vic,
+        punchCount,
+        kickCount,
+        isAerialFlyingCombo,
+        hasDodge,
+        escapeMeters,
+        strikes
+      };
     }
 
     function parseArabicScript(rawText) {
@@ -2655,6 +2815,9 @@
 
       // 4. Split text into sequential / parallel clauses just like Godot AnimationStudioPro.gd!
       let work = norm0;
+      // حماية عبارات التجنب والهروب الملتصقة بالكومبو (مثل "وفي نفس اللحظة عمر ينجو من اللكمة الأخيرة يهرب لمسافة 3 متر" أو "ولكن عمر تجنب الركلتين") من الانفصال الخاطئ!
+      work = work.replace(/\s+(?:وفي\s*نفس\s*ال(?:لحظ[ةه]|حض[ةه]|وقت)|في\s*نفس\s*ال(?:لحظ[ةه]|حض[ةه]|وقت)|ولكن|ولاكن)\s+([^.|\n]{0,95}?(?:ينجو|يتجنب|تجنب|يتفادى|تفادى|يهرب)[^.|\n]{0,65})/g, ' [COMBO_DODGE] $1');
+
       const parallelConnectors = [
         ' وفي الوقت نفسه ', ' في الوقت نفسه ', ' وبنفس الوقت ', ' بنفس الوقت ',
         ' وفي نفس الوقت ', ' في نفس الوقت ', ' وفي نفس اللحظة ', ' في نفس اللحظة ',
@@ -2731,7 +2894,15 @@
         );
         const prevIsCollision = /يصطدمان|يتصادمان|ليصطدما|يستطمان|يسطدمان|يصطدمون/.test(prevC);
         const curIsCollisionEffectsOnly = (/هز[ةه]\s*أرضي|هز[ةه]\s*ارضي|هز\s*المباني|قلع\s*الأشجار|قلع\s*الاشجار|اقتلاع\s*الأشجار|يظهر\s*صوت|يضهر\s*صوت|يضهر\s*صور|يظهر\s*صور/.test(curC)) && !/يطير|تطير|يركل|يلكم|يمشي|يركض|ينطلق/.test(curC);
-        if ((prevIsStrike && curIsKnockContinuation && !curC.startsWith('[PARALLEL]')) || (prevIsCollision && curIsCollisionEffectsOnly)) {
+        const curIsComboDetailOrDodge = (
+          /^(?:و)?(?:لاكن|لكن|تجنب|يتجنب|تفادى|يتفادى|ينجو|فإنه\s*ينجو|فانه\s*ينجو|واحد[ةه]\s*يطير|والثاني[ةه]\s*يقفز|بمعنى\s*أنه|حتى\s*لو\s*ارتف|وبعد\s*أن\s*يعود|ب\s*الوقت\s*الذي\s*سوف\s*يحتاج|الكم[ةه]\s*ال|اللكم[ةه]\s*ال)/.test(curC) ||
+          (/تجنب\s*الركل|ينجو\s*من\s*ال(?:لكم|كلم|ضرب)|تعيده\s*للأرض|يعيده\s*إلى\s*الأرض|ليوجه\s*ال(?:لكم|كلم)/.test(curC) && !/ينطلق\s+[؀-ۿ]+\s+بسرع/.test(curC))
+        );
+        const prevIsBeamOrAura = /شعاع|إشعاع|اشعاع|هال[ةه]|هالت[هه]/.test(prevC);
+        const curIsBeamClashContinuation = /^(?:و)?(?:يلتقي|يلتقيان|يتلاقى|فيصبح\s*ملتقى|ملتقى\s*ال[إا]شعاع|لأنه?\s*هالت[هه]|لانه?\s*هالت[هه]|سوف\s*يدفع\s*هال|يدفع\s*هال|يدفع\s*شعاع|ويصبح\s*ال[إا]شعاع)/.test(curC);
+        if ((prevIsStrike && (curIsKnockContinuation || curIsComboDetailOrDodge) && !curC.startsWith('[PARALLEL]')) ||
+            (prevIsCollision && curIsCollisionEffectsOnly) ||
+            (prevIsBeamOrAura && curIsBeamClashContinuation)) {
           rawClauses[rawClauses.length - 1] = prevC + ' ' + curC;
         } else {
           rawClauses.push(curC);
@@ -3898,6 +4069,107 @@
           return;
         }
 
+        // 🛡️ إذا كان الحدث السابق مباشرة هو كومبو ضربات (combo_assault_2d) وجاءت هذه الجملة لتصف تجنب/تفادي الركلتين أو الهروب من الضربة الأخيرة ("ولكن عمر تجنب الركلتين بقفزة أو تراجع إلى الوراء فإنه ينجو" / "يهرب عمر لمسافة 3 متر")، ندمج التجنب في الكومبو السابق!
+        if (events.length > 0 && events[events.length - 1].type === 'combo_assault_2d' && (/تجنب|يتجنب|تفادى|يتفادى|ينجو|يهرب|تهرب/.test(clause)) && !/ينطلق.*ليوجه|يلكمه\s*\d+/.test(clause)) {
+          const prevCombo = events[events.length - 1];
+          const hasJumpDodge = /بقفز[ةه]|يقفز|قفز[ةه]/.test(clause);
+          const hasBackDodge = /تراجع|ترجع|يتراجع|وراء|خلف|يهرب/.test(clause);
+          prevCombo.hasDodge = true;
+          prevCombo.escapeMeters = extractDistanceMeters(clause, prevCombo.escapeMeters || 3.0);
+          if (/تجنب\s*الركل|تفادى\s*الركل|ينجو\s*من\s*الركل/.test(clause)) {
+            let kIdx = 0;
+            prevCombo.strikes.forEach(st => {
+              if (st.kind === 'kick') {
+                st.dodged = true;
+                st.dodgeStyle = (hasJumpDodge && hasBackDodge) ? (kIdx % 2 === 0 ? 'jump' : 'backstep') : (hasJumpDodge ? 'jump' : 'backstep');
+                kIdx++;
+              }
+            });
+            prevCombo.title += ' 🛡️ + تجنب الركلتين بنجاح!';
+          } else {
+            const lastSt = prevCombo.strikes[prevCombo.strikes.length - 1];
+            lastSt.dodged = true;
+            lastSt.dodgeStyle = (hasJumpDodge && !hasBackDodge) ? 'jump' : 'escape_dash';
+            prevCombo.title += ` ⚡ + نجاة وهروب (${prevCombo.escapeMeters}م)!`;
+          }
+          return;
+        }
+
+        // ⚡🔥💥 نظام صدام وتلاقي الإشعاعين وزيادة مقدار/قطر الهالة وحجم الإشعاع لتحديد مكان الملتقى بدقة!
+        // يدعم:
+        // - "يلتقي الاثنين معن في منتصف المسافة بينهما"
+        // - "ثما علي يكبر هالته من 3 متر قطر الى 5 متر قطر ويصبح الاشعاع حجمه متر ونصف فيصبح ملتقى الاشعاعين قريب من عمر"
+        // - "وإذا رفع عمر هالته سوف يدفع هاله علي"
+        const isBeamClashOrBoostClause = (
+          /ملتقى\s*ال[إا]شعاع|يلتقي\s*الاثن|يلتقيان.*منتصف|يدفع\s*هال[ةه]|يدفع\s*شعاع|يدفع\s*إشعاع/.test(clause) ||
+          ((/يكبر|تكبر|يرفع|ترفع|يزيد|تزيد|يقوي|تقوي|يضاعف|تضاعف/.test(clause)) && (/هال[ةه]|هالت[هه]|ال[إا]شعاع|الشعاع/.test(clause))) ||
+          (/يصبح\s*ال[إا]شعاع|يصبح\s*الشعاع/.test(clause) && /حجم|سمك|قطر|قدر|متر/.test(clause))
+        );
+        if (isBeamClashOrBoostClause) {
+          const boostActor = mentioned.length > 0 ? mentioned[0] : lastActor;
+          const oppSlot = mentioned.length > 1 ? mentioned[1] : (boostActor === 0 ? 1 : 0);
+          lastActor = boostActor;
+          const auraCfg = extractAuraSizeConfig(clause);
+          const beamCfg = extractBeamConfigFromClause(clause);
+          const hasExplicitBeamResize = beamCfg.sizeExplicit || /يصبح\s*ال[إا]شعاع|يصبح\s*الشعاع|شعاع|إشعاع|اشعاع/.test(clause);
+          const isPureMidpointMeet = /يلتقي\s*الاثن|يلتقيان.*منتصف/.test(clause) && !auraCfg.isAuraBoost && !auraCfg.hasExplicitSize && !beamCfg.sizeExplicit;
+          const bcDur = explicitDur > 0 ? explicitDur : 3.2;
+          events.push({
+            type: 'beam_clash_scale_2d',
+            actorSlot: boostActor,
+            opponentSlot: oppSlot,
+            isPureMidpointMeet,
+            newAuraDiameterM: auraCfg.diameterMeters > 0 ? auraCfg.diameterMeters : 0,
+            fromAuraDiameterM: auraCfg.fromDiameterMeters > 0 ? auraCfg.fromDiameterMeters : 0,
+            isAuraBoost: auraCfg.isAuraBoost || /يدفع\s*هال[ةه]|يرفع.*هالت/.test(clause),
+            newBeamThicknessM: (hasExplicitBeamResize && beamCfg.sizeExplicit) ? beamCfg.thicknessMeters : 0,
+            title: isPureMidpointMeet
+              ? `⚡💥 تلاقي الإشعاعين في منتصف المسافة بين ${state.characters[0]?.name || '#1'} و ${state.characters[1]?.name || '#2'}!`
+              : `🔥⚡ ${state.characters[boostActor]?.name || '#' + (boostActor + 1)} يرفع قوة هالته${auraCfg.diameterMeters > 0 ? ' (قطر ' + auraCfg.diameterMeters + 'م)' : ''}${beamCfg.sizeExplicit ? ' وحجم شعاعه (' + beamCfg.thicknessMeters + 'م)' : ''} فيدفع ملتقى الإشعاعين نحو ${state.characters[oppSlot]?.name || '#' + (oppSlot + 1)}!`,
+            duration: bcDur
+          });
+          return;
+        }
+
+        // 🥊🦵💥 نظام الضربات المتتالية الذكي (N لكمات + M ركلات / لكمات طائرة / إعادة الخصم للأرض بقوة / تجنب الركلتين بقفزة أو تراجع / الهروب من اللكمة الأخيرة أثناء الهبوط!)
+        const isMutualBrawlCheck = /يتعارك|تتعارك|تتعراك|يتعاركان|يتعاركون|تتعاركان|عراك|عارك|يتقاتل|يتقاتلان|يتقاتلون|قتال|يشتبك|تشتبك|يشتبكان|يشتبكون|اشتباك|يتضارب|يتضاربان|يتضاربون|مضارب[ةه]|معرك[ةه]|حرب/.test(clause) && !/يوجه|يلكمه|لكمات|ركلات|ضربات\s*متتالي/.test(clause);
+        if (!isMutualBrawlCheck) {
+          let cAtt = mentioned.length > 0 ? mentioned[0] : lastActor;
+          let cVic = mentioned.length > 1 ? mentioned[1] : (cAtt === 0 ? 1 : 0);
+          // إذا ذكر الاسم بعد "ينطلق X بسرعة باتجاه Y ويلكمه 4 لكمات طائرة" فإن X هو المهاجم و Y هو الهدف!
+          const dashToMatch = clause.match(/(?:ينطلق|تنطلق|يهجم|يندفع)\s+([؀-ۿ]+)\s+(?:بسرع[ةه]\s+)?(?:باتجاه|ب\s*إتجاه|ب\s*اتجاه|نحو|على)\s+([؀-ۿ]+)/);
+          if (dashToMatch) {
+            const s1 = findCharacterSlotsInText(dashToMatch[1]);
+            const s2 = findCharacterSlotsInText(dashToMatch[2]);
+            if (s1.length > 0) cAtt = s1[0];
+            if (s2.length > 0) cVic = s2[0];
+          }
+          const comboCfg = parseSmartComboConfig2D(clause, cAtt, cVic);
+          if (comboCfg) {
+            lastActor = cAtt;
+            lastKnockedChar = cVic;
+            const totalHits = comboCfg.strikes.length;
+            const comboDur = explicitDur > 0 ? explicitDur : Math.min(7.5, Math.max(2.6, 0.55 + totalHits * (comboCfg.isAerialFlyingCombo ? 0.72 : 0.52)));
+            const aerialTag = comboCfg.isAerialFlyingCombo ? '🦅 لكمات طائرة (رفع للجو + إسقاط للأرض بقوة)' : '⚡ ضربات أرضية سريعة متتالية';
+            const dodgeTag = comboCfg.hasDodge ? ` + نجاة/تجنب ${state.characters[cVic]?.name || '#' + (cVic + 1)}` : '';
+            events.push({
+              type: 'combo_assault_2d',
+              actorSlot: cAtt,
+              victimSlot: cVic,
+              punchCount: comboCfg.punchCount,
+              kickCount: comboCfg.kickCount,
+              isAerialFlyingCombo: comboCfg.isAerialFlyingCombo,
+              hasDodge: comboCfg.hasDodge,
+              escapeMeters: comboCfg.escapeMeters,
+              strikes: comboCfg.strikes,
+              powers,
+              title: `🥊💥 ${state.characters[cAtt]?.name || '#' + (cAtt + 1)} يوجه (${totalHits}) ضربات [${aerialTag}] إلى ${state.characters[cVic]?.name || '#' + (cVic + 1)}${dodgeTag}!`,
+              duration: comboDur
+            });
+            return;
+          }
+        }
+
         // ⚔️ فحص الفرق بين (العراك المتبادل المستمر: عراك / عارك / يتعاركان / قتال / اشتباك) وبين (الضربة المفردة باتجاه واحد: أحمد يركل علي / ركل أحمد خالد يطير لمسافة 100 متر بدون تأليف رد تلقائي!)
         const isMutualBrawl = /يتعارك|تتعارك|تتعراك|يتعاركان|يتعاركون|تتعاركان|عراك|عارك|يتقاتل|يتقاتلان|يتقاتلون|قتال|يشتبك|تشتبك|يشتبكان|يشتبكون|اشتباك|يتضارب|يتضاربان|يتضاربون|مضارب[ةه]|معرك[ةه]|حرب|يبادله/.test(clause);
         const isChase = /مطارد[ةه]|يطارد|يلحق|يهرب/.test(clause);
@@ -4275,6 +4547,10 @@
         c.auraActive = Boolean(c.initialAuraActive);
         if (c.customAuraColor) c.auraColor = c.customAuraColor;
         c.auraScale = c.customAuraScale || 1.0;
+        c.auraDiameterM = c.customAuraDiameterM || 3.0;
+        c.targetAuraDiameterM = c.auraDiameterM;
+        c.beamThicknessM = 1.0;
+        c.targetBeamThicknessM = 1.0;
         c.fireActive = false;
         c.lightningActive = false;
         c.flyingActive = false;
@@ -4418,8 +4694,14 @@
         if (powers.auraSizeExplicit && powers.auraScale) {
           c.auraScale = powers.auraScale;
           c.customAuraScale = powers.auraScale;
+          if (powers.auraDiameterMeters > 0) {
+            c.auraDiameterM = powers.auraDiameterMeters;
+            c.targetAuraDiameterM = powers.auraDiameterMeters;
+          }
         } else if (!c.auraScale) {
           c.auraScale = 1.0;
+          c.auraDiameterM = c.auraDiameterM || 3.0;
+          c.targetAuraDiameterM = c.auraDiameterM;
         }
         playSfx('aura');
         const swMax = Math.round(85 * (c.auraScale || 1.0));
@@ -4504,8 +4786,10 @@
         const chosenBeamCol = (powers.beamColorExplicit && powers.beamColor)
           ? powers.beamColor
           : (c.auraActive ? c.auraColor : '#00d4ff');
-        const chosenWidthPx = powers.beamWidthPx || 24;
-        const chosenThickM = powers.beamThicknessMeters || 0.65;
+        const chosenThickM = powers.beamSizeExplicit ? (powers.beamThicknessMeters || 1.0) : (c.beamThicknessM || 1.0);
+        const chosenWidthPx = Math.min(210, Math.max(8, Math.round(chosenThickM * 36)));
+        c.beamThicknessM = chosenThickM;
+        c.targetBeamThicknessM = chosenThickM;
         if (tChar) {
           // لو كان الهدف (عمر) خلفه، يظهر التفاته بوضوح ثم يطلق الشعاع باتجاهه!
           const neededFacing = tChar.x >= c.x ? 1 : -1;
@@ -5125,6 +5409,7 @@
 
       state.activeSpeakerSlot = -1;
       state.activeSubtitle = null;
+      const keepBeamsForClash = (ev.type === 'beam_clash_scale_2d');
       state.characters.forEach(c => {
         c.speech = null;
         if (c.pose === 'talk') {
@@ -5132,7 +5417,7 @@
         }
         c.fireActive = false;
         c.lightningActive = false;
-        c.beamActive = false;
+        if (!keepBeamsForClash) c.beamActive = false;
         c.shieldActive = false;
         c.rocketFlight = false;
       });
@@ -5735,6 +6020,90 @@
             c.pose = 'knockdown';
           }
         });
+        return;
+      }
+
+      if (ev.type === 'beam_clash_scale_2d') {
+        const cA = state.characters[ev.actorSlot ?? 0];
+        const cB = state.characters[ev.opponentSlot ?? 1];
+        if (cA && cB) {
+          cA.visible = true;
+          cB.visible = true;
+          cA.auraActive = true;
+          cB.auraActive = true;
+          cA.pose = 'beam_cast';
+          cB.pose = 'beam_cast';
+          cA.facing = cB.x >= cA.x ? 1 : -1;
+          cB.facing = -cA.facing;
+
+          // تأكد من وجود شعاعين متقابلين نشطين لكلا الشخصيتين في ساحة الصدام!
+          [cA, cB].forEach((ch, idx) => {
+            const other = idx === 0 ? cB : cA;
+            let eb = state.energyBeams.find(b => b.fromSlot === ch.slot);
+            const curTh = ch.beamThicknessM || 1.0;
+            const bCol = ch.auraColor || (ch.slot === 0 ? '#ef4444' : '#00d4ff');
+            if (!eb) {
+              eb = {
+                fromSlot: ch.slot,
+                toSlot: other.slot,
+                dir: ch.facing,
+                color: bCol,
+                widthPx: Math.round(curTh * 36),
+                thicknessMeters: curTh,
+                alpha: 1.0,
+                sustained: true,
+                life: ev.duration + 2.5,
+                maxLife: ev.duration + 2.5
+              };
+              state.energyBeams.push(eb);
+            } else {
+              eb.toSlot = other.slot;
+              eb.life = Math.max(eb.life || 2.0, ev.duration + 2.5);
+              eb.alpha = 1.0;
+            }
+          });
+
+          if (!ev.isPureMidpointMeet) {
+            if (ev.fromAuraDiameterM > 0) {
+              cA.auraDiameterM = ev.fromAuraDiameterM;
+            }
+            if (ev.newAuraDiameterM > 0) {
+              cA.targetAuraDiameterM = ev.newAuraDiameterM;
+            } else if (ev.isAuraBoost) {
+              // إذا كتب "وإذا رفع عمر هالته سوف يدفع هالة علي" بدون رقم محدد، يرفع قطر هالته ليتفوق على خصمه ويدفع الشعاع!
+              cA.targetAuraDiameterM = Math.max((cA.auraDiameterM || 3.0) * 1.65, (cB.auraDiameterM || 3.0) + 2.2);
+            }
+            if (ev.newBeamThicknessM > 0) {
+              cA.targetBeamThicknessM = ev.newBeamThicknessM;
+            }
+            playSfx('aura');
+            playSfx('beam');
+            spawnShockwave(cA.x, cA.y - 55, cA.auraColor || '#ef4444', 120);
+          } else {
+            playSfx('beam');
+          }
+        }
+        return;
+      }
+
+      if (ev.type === 'combo_assault_2d') {
+        const att = state.characters[ev.actorSlot];
+        const vic = state.characters[ev.victimSlot];
+        if (att && vic) {
+          att.visible = true;
+          vic.visible = true;
+          if (!att.isDead) { att.kdState = null; att.kdTimer = 0; }
+          if (!vic.isDead) { vic.kdState = null; vic.kdTimer = 0; }
+          ev._attStartX = att.x;
+          ev._lastStrikeIdx = -1;
+          ev._dodgeTriggeredForIdx = -1;
+          ev._airSlamCraterDone = false;
+          const dir = vic.x >= att.x ? 1 : -1;
+          att.facing = dir;
+          vic.facing = -dir;
+          att.pose = 'run';
+          if (ev.powers) applyPowersToChar(att, ev.powers, ev.victimSlot);
+        }
         return;
       }
 
@@ -6740,6 +7109,220 @@
             chaser.facing = 1;
             runner.x += 220 * dt;
             chaser.x = runner.x - 95;
+          }
+        } else if (ev.type === 'beam_clash_scale_2d') {
+          const cA = state.characters[ev.actorSlot ?? 0];
+          const cB = state.characters[ev.opponentSlot ?? 1];
+          if (cA && cB) {
+            cA.pose = 'beam_cast';
+            cB.pose = 'beam_cast';
+            cA.facing = cB.x >= cA.x ? 1 : -1;
+            cB.facing = -cA.facing;
+            // تكبير تدريجي سلس لقطر الهالة وسمك الشعاع أثناء اللقطة
+            if (cA.targetAuraDiameterM && cA.targetAuraDiameterM !== cA.auraDiameterM) {
+              cA.auraDiameterM += (cA.targetAuraDiameterM - (cA.auraDiameterM || 3.0)) * Math.min(1, dt * 3.8);
+              cA.auraScale = Math.min(4.6, Math.max(0.55, (cA.auraDiameterM * 36) / 78));
+              cA.customAuraScale = cA.auraScale;
+            }
+            if (cA.targetBeamThicknessM && cA.targetBeamThicknessM !== cA.beamThicknessM) {
+              cA.beamThicknessM += (cA.targetBeamThicknessM - (cA.beamThicknessM || 1.0)) * Math.min(1, dt * 3.8);
+            }
+            // تحديث سمك وعمر الشعاعين المتصادمين في state.energyBeams
+            state.energyBeams.forEach(eb => {
+              const owner = state.characters[eb.fromSlot];
+              if (owner) {
+                eb.thicknessMeters = owner.beamThicknessM || eb.thicknessMeters || 1.0;
+                eb.widthPx = Math.min(210, Math.max(8, Math.round(eb.thicknessMeters * 36)));
+                eb.life = Math.max(eb.life || 1.5, 1.5);
+                eb.alpha = 1.0;
+              }
+            });
+            state.cameraShake = Math.max(state.cameraShake || 0, 5.5);
+          }
+        } else if (ev.type === 'combo_assault_2d') {
+          const att = state.characters[ev.actorSlot];
+          const vic = state.characters[ev.victimSlot];
+          if (att && vic && Array.isArray(ev.strikes) && ev.strikes.length > 0) {
+            const dir = vic.x >= (ev._attStartX ?? att.x) ? 1 : (att.facing || 1);
+            att.facing = dir;
+            vic.facing = -dir;
+            const gAtt = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+            const gVic = getGroundYAt(vic.x) + (vic.zLaneOffset || 0);
+
+            // المرحلة 1 (0% .. 18%): اندفاع المهاجم بسرعة إلى موقع الخصم مهما كانت المسافة بينهما!
+            const dashEnd = 0.18;
+            if (progress < dashEnd) {
+              const k = progress / dashEnd;
+              const startX = ev._attStartX ?? att.x;
+              const targetX = vic.x - dir * 52;
+              att.x = startX + (targetX - startX) * k;
+              att.y = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+              att.pose = 'run';
+              att.trail.push({ x: att.x, y: att.y, alpha: 0.72, color: att.auraActive ? att.auraColor : att.color });
+              if (att.trail.length > 8) att.trail.shift();
+            } else {
+              // المرحلة 2 (18% .. 100%): تنفيذ سلسلة الضربات المتتالية (أرضية أو طائرة) مع التجنب/القفز/التراجع/الهروب!
+              const comboP = Math.min(0.999, (progress - dashEnd) / (1.0 - dashEnd));
+              const totalStrikes = ev.strikes.length;
+              const sIdx = Math.min(totalStrikes - 1, Math.floor(comboP * totalStrikes));
+              const localP = (comboP * totalStrikes) - sIdx;
+              const curStrike = ev.strikes[sIdx];
+              const role = curStrike.aerialRole || 'ground';
+
+              // تحديد نوع حركة الذراع أو الرجل
+              att.pose = 'brawl';
+              if (curStrike.kind === 'kick') {
+                att.attackType = (ev.isAerialFlyingCombo && role !== 'ground') ? 'jump_kick' : 'roundhouse_kick';
+              } else {
+                if (role === 'launch_up') att.attackType = 'uppercut';
+                else if (role === 'air_slam_down' || role === 'ground_finisher') att.attackType = 'ground_smash';
+                else att.attackType = 'punch';
+              }
+              att.combatPhase = localP < 0.28 ? 'windup' : (localP < 0.74 ? 'strike' : 'recover');
+              att.phaseProgress = localP < 0.28 ? (localP / 0.28) : ((localP - 0.28) / 0.46);
+
+              // التحقق مما إذا كانت هذه الضربة يتم تجنبها (بقفزة أو تراجع للوراء أو هروب 3 متر أثناء هبوط المهاجم!)
+              if (curStrike.dodged) {
+                if (role === 'ground_finisher' && ev.isAerialFlyingCombo) {
+                  // المهاجم يهبط من السماء إلى موقع ارتطام الخصم لتوجيه الضربة الأخيرة، وفي نفس هذا الوقت يهرب الخصم لمسافة 3 متر!
+                  const slamX = ev._slamCraterX ?? vic.x;
+                  att.x += ((slamX - dir * 20) - att.x) * 0.25;
+                  att.y = gAtt - 185 * (1 - localP);
+                  if (ev._dodgeTriggeredForIdx !== sIdx) {
+                    ev._dodgeTriggeredForIdx = sIdx;
+                    ev._escStartX = vic.x;
+                    ev._escTargetX = vic.x + dir * Math.max(110, (ev.escapeMeters || 3.0) * PIXELS_PER_METER);
+                    playSfx('whoosh');
+                    spawnHitText(vic.x, vic.y - 120, `⚡ هروب خاطف (${ev.escapeMeters || 3}م) والنجاة!`, '#38bdf8');
+                  }
+                  const escK = Math.min(1, localP / 0.82);
+                  vic.kdState = null;
+                  vic.x = (ev._escStartX ?? vic.x) + ((ev._escTargetX ?? vic.x) - (ev._escStartX ?? vic.x)) * escK;
+                  vic.y = getGroundYAt(vic.x) + (vic.zLaneOffset || 0);
+                  vic.pose = escK < 0.92 ? 'run' : 'idle';
+                  vic.trail.push({ x: vic.x, y: vic.y, alpha: 0.78, color: '#38bdf8' });
+                  if (vic.trail.length > 7) vic.trail.shift();
+                  if (localP >= 0.85 && !ev._finisherMissImpact) {
+                    ev._finisherMissImpact = true;
+                    spawnGroundCrackAndRocks(att.x + dir * 20, gAtt);
+                    spawnShockwave(att.x + dir * 20, gAtt, '#94a3b8', 75);
+                    state.cameraShake = 10;
+                    playSfx('fall');
+                  }
+                } else if (curStrike.dodgeStyle === 'jump') {
+                  // تجنب الضربة/الركلة بقفزة عالية رشيقة فوق رجل/يد المهاجم!
+                  att.y = gAtt;
+                  att.x += ((vic.x - dir * 50) - att.x) * 0.2;
+                  if (ev._dodgeTriggeredForIdx !== sIdx) {
+                    ev._dodgeTriggeredForIdx = sIdx;
+                    playSfx('whoosh');
+                    spawnHitText(vic.x, vic.y - 135, '🤸 تجنب بقفزة!', '#34d399');
+                  }
+                  vic.kdState = null;
+                  vic.pose = 'jump_arc';
+                  vic._jumpProgress = localP;
+                  vic.y = gVic - Math.sin(localP * Math.PI) * 125;
+                } else {
+                  // تجنب الضربة/الركلة بالتراجع السريع إلى الوراء!
+                  att.y = gAtt;
+                  if (ev._dodgeTriggeredForIdx !== sIdx) {
+                    ev._dodgeTriggeredForIdx = sIdx;
+                    ev._backStartX = vic.x;
+                    ev._backTargetX = vic.x + dir * Math.max(85, (ev.escapeMeters || 2.5) * 32);
+                    playSfx('whoosh');
+                    spawnHitText(vic.x, vic.y - 125, '💨 تراجع للوراء ونجاة!', '#38bdf8');
+                  }
+                  const bk = Math.min(1, localP / 0.78);
+                  vic.kdState = null;
+                  vic.x = (ev._backStartX ?? vic.x) + ((ev._backTargetX ?? vic.x) - (ev._backStartX ?? vic.x)) * bk;
+                  vic.y = getGroundYAt(vic.x) + (vic.zLaneOffset || 0);
+                  vic.pose = bk < 0.88 ? 'run' : 'brawl';
+                  vic.combatPhase = 'guard';
+                }
+              } else {
+                // الضربة تصيب الخصم! (مع التفرقة الدقيقة بين الضربات الأرضية وبين اللكمات الطائرة!)
+                const targetAttX = vic.x - dir * 48;
+                att.x += (targetAttX - att.x) * 0.34;
+
+                if (role === 'launch_up') {
+                  // الضربة الطائرة 1: تطير بالخصم للأعلى في الهواء! (والمهاجم على الأرض يرفعه بلكمة صاعدة)
+                  att.y = gAtt;
+                  const liftH = localP < 0.32 ? 0 : Math.min(180, ((localP - 0.32) / 0.68) * 180);
+                  vic.y = gVic - liftH;
+                  vic.pose = 'brawl';
+                  vic.combatPhase = 'recoil';
+                  vic.hitReactionType = 'high_snap';
+                } else if (role === 'air_combo') {
+                  // ضربات متابعة في الجو: يقفز المهاجم لمستوى الخصم في الهواء ويوجه له اللكمة الطائرة!
+                  const airH = 175;
+                  att.y = gAtt - airH;
+                  vic.y = gVic - airH + Math.sin(localP * Math.PI) * 12;
+                  vic.pose = 'brawl';
+                  vic.combatPhase = 'recoil';
+                  vic.hitReactionType = (sIdx % 2 === 0) ? 'gut_fold' : 'high_snap';
+                } else if (role === 'air_slam_down') {
+                  // الضربة الطائرة التي تعيده إلى الأرض بقوة: يقفز المهاجم فوق الخصم في الجو ويلكمه ليرتطم بالأرض بقوة بينما المهاجم لا يزال في الجو!
+                  const airH = 180;
+                  if (localP < 0.38) {
+                    const k = localP / 0.38;
+                    att.y = gAtt - airH * k;
+                    vic.y = gVic - airH;
+                    vic.pose = 'brawl';
+                    vic.combatPhase = 'recoil';
+                  } else {
+                    const k = (localP - 0.38) / 0.62;
+                    att.y = gAtt - airH * (1 - k * 0.25); // المهاجم في الجو يبدأ بالنزول
+                    vic.y = (gVic - airH) + airH * Math.min(1, k * 1.35); // الخصم يعود إلى الأرض بقوة!
+                    if (k >= 0.72) {
+                      vic.y = gVic;
+                      vic.kdState = 'getting_up';
+                      vic.kdTimer = 0.14;
+                      vic.pose = 'knockdown';
+                      ev._slamCraterX = vic.x;
+                      if (!ev._airSlamCraterDone) {
+                        ev._airSlamCraterDone = true;
+                        spawnGroundCrackAndRocks(vic.x, gVic);
+                        spawnShockwave(vic.x, gVic, '#ef4444', 95);
+                        state.cameraShake = 14;
+                        playSfx('fall');
+                      }
+                    }
+                  }
+                } else if (role === 'ground_finisher') {
+                  // الضربة الطائرة الأخيرة: يهبط المهاجم من الجو ليوجه اللكمة الأخيرة على الخصم!
+                  const startAirH = ev.isAerialFlyingCombo ? 140 : 0;
+                  att.y = gAtt - startAirH * Math.max(0, 1 - localP * 1.7);
+                  vic.y = gVic;
+                  if (localP >= 0.52) {
+                    vic.kdState = 'airborne';
+                    vic.kdDir = dir;
+                    vic.vx = dir * 13.5;
+                    vic.vy = -8.5;
+                    vic.pose = 'knockdown';
+                  }
+                } else {
+                  // ضربة أرضية سريعة متتالية (بدون أي قفز لأن الوصف لم يقل لكمات طائرة!)
+                  att.y = gAtt;
+                  vic.y = gVic;
+                  vic.pose = 'brawl';
+                  vic.combatPhase = 'recoil';
+                  vic.hitReactionType = (sIdx % 2 === 0) ? 'gut_fold' : 'high_snap';
+                }
+
+                if (ev._lastStrikeIdx !== sIdx && localP >= 0.32) {
+                  ev._lastStrikeIdx = sIdx;
+                  vic.hitFlashTimer = 0.14;
+                  vic.x += dir * (role === 'ground_finisher' ? 36 : 18);
+                  const hx = vic.x - dir * 10;
+                  const hy = vic.y - 68;
+                  const sCol = att.auraActive ? att.auraColor : '#facc15';
+                  spawnShockwave(hx, hy, sCol, role === 'air_slam_down' || role === 'ground_finisher' ? 88 : 54);
+                  state.xSlashes.push({ x: hx, y: hy, size: 32, alpha: 0.95, color: sCol });
+                  state.cameraShake = (role === 'air_slam_down' || role === 'ground_finisher') ? 13 : 6.5;
+                  playSfx(curStrike.kind === 'kick' ? 'kick' : 'punch');
+                }
+              }
+            }
           }
         } else if (ev.type === 'post_collision_recoil_2d') {
           (ev.actors || [0, 1]).forEach(slot => {
@@ -10303,7 +10886,59 @@
         ctx.restore();
       });
 
-      // Draw Kamehameha / Laser Energy Beams (مع التحكم الكامل بسمك الشعاع بالمتر ولونه بما في ذلك الشعاع الأسود!)
+      // Draw Kamehameha / Laser Energy Beams + حساب مكان ملتقى الإشعاعين بدقة رياضية حسب قطر الهالة وحجم الشعاع لكل شخصية!
+      let activeClashPoint = null;
+      if (state.energyBeams.length >= 2) {
+        const ebA = state.energyBeams[0];
+        const ebB = state.energyBeams.find(b => b.fromSlot !== ebA.fromSlot);
+        const charA = ebA ? state.characters[ebA.fromSlot] : null;
+        const charB = ebB ? state.characters[ebB.fromSlot] : null;
+        if (charA && charB && charA.visible && charB.visible) {
+          const dirAB = charB.x >= charA.x ? 1 : -1;
+          const sxA = charA.x + dirAB * 33 * (charA.scale || 1);
+          const syA = charA.y - 70 * (charA.scale || 1);
+          const sxB = charB.x - dirAB * 33 * (charB.scale || 1);
+          const syB = charB.y - 70 * (charB.scale || 1);
+
+          // قياس قطر الهالة (بالمتر) وحجم/سمك الشعاع (بالمتر) لكل شخصية لتحديد نقطة الملتقى بدقة!
+          const auraDiamA = Math.max(0.5, charA.auraDiameterM || ((charA.auraScale || 1.0) * 78 / 36));
+          const auraDiamB = Math.max(0.5, charB.auraDiameterM || ((charB.auraScale || 1.0) * 78 / 36));
+          const beamSizeA = Math.max(0.2, ebA.thicknessMeters || charA.beamThicknessM || 1.0);
+          const beamSizeB = Math.max(0.2, ebB.thicknessMeters || charB.beamThicknessM || 1.0);
+
+          // القوة الفيزيائية لكل شعاع = (قطر الهالة ^ 1.45) × (سمك الشعاع ^ 1.55)
+          // عندما يتساوى الاثنان (مثلاً 3م و1م لكل منهما) تكون النسبة 0.50 بالضبط في منتصف المسافة بينهما!
+          // وعندما يكبر علي هالته إلى 5م وشعاعه إلى 1.5م تزيد قوته فيندفع الملتقى ليصبح قريباً من عمر!
+          const powerA = Math.pow(auraDiamA, 1.45) * Math.pow(beamSizeA, 1.55);
+          const powerB = Math.pow(auraDiamB, 1.45) * Math.pow(beamSizeB, 1.55);
+          const targetRatioFromA = Math.max(0.14, Math.min(0.86, powerA / Math.max(0.01, powerA + powerB)));
+
+          if (state._beamClashRatio === undefined || isNaN(state._beamClashRatio)) {
+            state._beamClashRatio = targetRatioFromA;
+          } else {
+            state._beamClashRatio += (targetRatioFromA - state._beamClashRatio) * 0.14;
+          }
+          const r = state._beamClashRatio;
+          activeClashPoint = {
+            x: sxA + (sxB - sxA) * r,
+            y: syA + (syB - syA) * r,
+            colA: ebA.color || '#ef4444',
+            colB: ebB.color || '#00d4ff',
+            wA: ebA.widthPx || 36,
+            wB: ebB.widthPx || 36,
+            auraDiamA,
+            auraDiamB,
+            beamSizeA,
+            beamSizeB,
+            nameA: charA.name,
+            nameB: charB.name,
+            ratio: r
+          };
+        }
+      } else {
+        state._beamClashRatio = undefined;
+      }
+
       state.energyBeams.forEach(eb => {
         const cFrom = state.characters[eb.fromSlot];
         const cTo = eb.toSlot >= 0 ? state.characters[eb.toSlot] : null;
@@ -10315,8 +10950,8 @@
           const bDir = cTo ? (cTo.x >= cFrom.x ? 1 : -1) : (eb.dir || cFrom.facing || 1);
           const sx = cFrom.x + bDir * 33 * (cFrom.scale || 1);
           const sy = cFrom.y - 70 * (cFrom.scale || 1);
-          const ex = cTo ? cTo.x : (sx + bDir * 720);
-          const ey = cTo ? (cTo.y - 62 * (cTo.scale || 1)) : sy;
+          const ex = activeClashPoint ? activeClashPoint.x : (cTo ? cTo.x : (sx + bDir * 720));
+          const ey = activeClashPoint ? activeClashPoint.y : (cTo ? (cTo.y - 62 * (cTo.scale || 1)) : sy);
           ctx.lineCap = 'round';
 
           if (isBlackBeam) {
@@ -10399,6 +11034,68 @@
           ctx.restore();
         }
       });
+
+      // رسم كرة تصادم وملتقى الإشعاعين (Beam Clash Vortex) في الموقع المحسوب بدقة بين الشخصيتين!
+      if (activeClashPoint) {
+        ctx.save();
+        const cx = activeClashPoint.x;
+        const cy = activeClashPoint.y;
+        const baseR = Math.max(22, (activeClashPoint.wA + activeClashPoint.wB) * 0.52) + Math.sin(timeSec * 24) * 5;
+
+        // الهالة الخارجية المتصادمة بلوني الشعاعين
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = activeClashPoint.colA === '#111827' ? '#a855f7' : activeClashPoint.colA;
+        ctx.beginPath();
+        ctx.arc(cx - 5, cy, baseR * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = activeClashPoint.colB === '#111827' ? '#a855f7' : activeClashPoint.colB;
+        ctx.beginPath();
+        ctx.arc(cx + 5, cy, baseR * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        // قلب ملتقى الإشعاعين المشتعل والشرارات البرقية
+        ctx.globalAlpha = 0.96;
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(cx, cy, baseR * 0.78, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        for (let sp = 0; sp < 6; sp++) {
+          const ang = (sp / 6) * Math.PI * 2 + timeSec * 11;
+          const r1 = baseR * 0.55;
+          const r2 = baseR * 1.55;
+          ctx.strokeStyle = sp % 2 === 0 ? '#facc15' : '#ffffff';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(ang) * r1, cy + Math.sin(ang) * r1);
+          ctx.lineTo(cx + Math.cos(ang + 0.22) * r2, cy + Math.sin(ang + 0.22) * r2);
+          ctx.stroke();
+        }
+
+        // في شاشة العرض فقط (وليس في الفيديو المحمل!) نعرض شارة قياس قطر الهالة وحجم الشعاع وموقع الملتقى
+        if (!state.isRecordingVideo) {
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(cx - 115, cy - baseR - 36, 230, 22, 7);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#fef08a';
+          ctx.font = '900 10px Cairo';
+          ctx.textAlign = 'center';
+          ctx.fillText(
+            `⚡ ملتقى الإشعاعين (${Math.round(activeClashPoint.ratio * 100)}%) | هالة: ${activeClashPoint.auraDiamA.toFixed(1)}م ضد ${activeClashPoint.auraDiamB.toFixed(1)}م`,
+            cx,
+            cy - baseR - 21
+          );
+        }
+        ctx.restore();
+      }
 
       // Draw Shockwaves
       state.shockwaves.forEach(sw => {
