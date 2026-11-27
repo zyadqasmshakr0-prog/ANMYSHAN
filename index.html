@@ -463,11 +463,17 @@
             <div class="grid grid-cols-2 gap-1.5">
               <input id="toolCharCustomNameInput" type="text" placeholder="تغيير اسم الشخصية (اختياري)..." class="bg-slate-900 border rounded-lg px-2 py-1 text-xs text-white font-bold">
               <select id="toolCreatureTypeSelect" class="bg-slate-900 border rounded-lg px-2 py-1 text-xs text-amber-300 font-extrabold">
+                <option value="stickman_face">😀 ستيك مان بملامح الوجه (البطل الكلاسيكي)</option>
+                <option value="stickman_face_fierce">😠 ستيك مان بملامح الوجه (المقاتل الشرس)</option>
+                <option value="stickman_face_smirk">😏 ستيك مان بملامح الوجه (الزعيم الواثق)</option>
+                <option value="stickman_face_scar">⚔️ ستيك مان بملامح الوجه (المحارب ذو الندبة)</option>
+                <option value="stickman_face_shock">😲 ستيك مان بملامح الوجه (التفاعلي / المندهش)</option>
+                <option value="stickman_face_dark">🖤 ستيك مان بملامح الوجه (الأسود الكلاسيكي)</option>
+                <option value="human">🧍‍♂️ مقاتل بشري (أنمي)</option>
                 <option value="shadow">🧣 Shadow – الظل (الطور الأساسي بالوشاح الأحمر)</option>
                 <option value="shadow_crimson">🔥 Shadow – الظل (طور الهالة الحمراء الخارقة)</option>
                 <option value="shadow_lightning">⚡ Shadow – الظل (طور البرق الأبيض الخاطف)</option>
                 <option value="shadow_void">🌑 Shadow – الظل (طور الظلام والهالة السوداء)</option>
-                <option value="human">🧍‍♂️ مقاتل بشري (أنمي)</option>
                 <option value="dinosaur">🦖 ديناصور عملاق (T-Rex)</option>
                 <option value="zombie">🧟 زومبي متوحش</option>
                 <option value="dog">🐕 كلب / ذئب شرس</option>
@@ -1186,7 +1192,15 @@
       { id: 'monster_dog', name: 'كلب الهجوم الشرس', badge: '🐕 حيوان 1', desc: 'كلب حراسة وهجوم شرس رباعي الأرجل يركض وينقض بالأنياب.', defaultColor: '#92400e', creatureType: 'dog', headType: 'classic', bodyWidth: 5, weapon: 'none' },
       { id: 'monster_wolf', name: 'الذئب الأسود المتوحش', badge: '🐺 حيوان 2', desc: 'ذئب ليلي أسود بعيون حمراء متوهجة ينقض بسرعة خاطفة.', defaultColor: '#1e293b', creatureType: 'dog', headType: 'classic', bodyWidth: 5, weapon: 'none' },
       { id: 'monster_zombie', name: 'الزومبي المتوحش', badge: '🧟 وحش زومبي', desc: 'زومبي أخضر متوحش من غابة الموتى يهاجم بلا توقف.', defaultColor: '#84cc16', creatureType: 'zombie', headType: 'classic', bodyWidth: 6, weapon: 'none' },
-      { id: 'monster_alien', name: 'المتحول من الفضاء', badge: '👽 وحش فضائي', desc: 'كائن فضائي متحول بمجسّات طاقة خلفية وشعاع ليزر وطيران خارق.', defaultColor: '#2dd4bf', creatureType: 'alien', headType: 'robot', bodyWidth: 6, weapon: 'none' }
+      { id: 'monster_alien', name: 'المتحول من الفضاء', badge: '👽 وحش فضائي', desc: 'كائن فضائي متحول بمجسّات طاقة خلفية وشعاع ليزر وطيران خارق.', defaultColor: '#2dd4bf', creatureType: 'alien', headType: 'robot', bodyWidth: 6, weapon: 'none' },
+
+      // رابعاً: شخصيات ستيك مان الكلاسيكية مع ملامح الوجه التعبيرية الكاملة (6 شخصيات جديدة بجانب كل الشخصيات الموجودة!)
+      { id: 'stickman_face_hero', name: 'ستيك مان بملامح الوجه (البطل)', badge: '😀 ستيك مان 1', desc: 'ستيك مان كلاسيكي برأس دائري صافي وملامح وجه كاملة (عيون بحدقة ولمعة، حواجب متحركة، أنف واضح، وفم تفاعلي للكلام والقتال).', defaultColor: '#38bdf8', creatureType: 'stickman_face', headType: 'stickman_face', faceMood: 'hero', bodyWidth: 5, weapon: 'none' },
+      { id: 'stickman_face_fierce', name: 'ستيك مان بملامح الوجه (المقاتل الشرس)', badge: '😠 ستيك مان 2', desc: 'ستيك مان بملامح وجه قتالية حادة وحواجب غاضبة وفم يكشر عن أسنانه في الهجوم.', defaultColor: '#ef4444', creatureType: 'stickman_face_fierce', headType: 'stickman_face', faceMood: 'fierce', bodyWidth: 5, weapon: 'none' },
+      { id: 'stickman_face_smirk', name: 'ستيك مان بملامح الوجه (الزعيم الواثق)', badge: '😏 ستيك مان 3', desc: 'ستيك مان بملامح وجه واثقة وابتسامة تحدّي جانبية ونظرة حادة.', defaultColor: '#facc15', creatureType: 'stickman_face_smirk', headType: 'stickman_face', faceMood: 'smirk', bodyWidth: 5, weapon: 'none' },
+      { id: 'stickman_face_scar', name: 'ستيك مان بملامح الوجه (المحارب ذو الندبة)', badge: '⚔️ ستيك مان 4', desc: 'ستيك مان بملامح وجه كاملة مع ندبة قتالية على الخد والعين ونظرة حاسمة.', defaultColor: '#10b981', creatureType: 'stickman_face_scar', headType: 'stickman_face', faceMood: 'scar', bodyWidth: 5, weapon: 'none' },
+      { id: 'stickman_face_shock', name: 'ستيك مان بملامح الوجه (التفاعلي)', badge: '😲 ستيك مان 5', desc: 'ستيك مان بملامح وجه سينمائية كبيرة تتفاعل بوضوح مع الصدمة والضحك والقتال.', defaultColor: '#a855f7', creatureType: 'stickman_face_shock', headType: 'stickman_face', faceMood: 'shock', bodyWidth: 5, weapon: 'none' },
+      { id: 'stickman_face_dark', name: 'ستيك مان بملامح الوجه (الأسود الكلاسيكي)', badge: '🖤 ستيك مان 6', desc: 'ستيك مان أسود كلاسيكي برأس فاتح وملامح وجه واضحة وكاملة.', defaultColor: '#111827', creatureType: 'stickman_face_dark', headType: 'stickman_face', faceMood: 'dark', bodyWidth: 5, weapon: 'none' }
     ];
 
     const DEFAULT_15_NAMES = Array.from({ length: 15 }, (_, i) => `الشخصية رقم ${i + 1}`);
@@ -1960,6 +1974,18 @@
       if (/أجنح[ةه]|اجنح[ةه]|جناحين|مجنح/.test(clause)) c.customHasWings = true;
       if (/بلا\s*عصاب[ةه]|بدون\s*عصاب[ةه]/.test(clause)) c.customHasHeadband = false;
       else if (/عصاب[ةه]\s*رأس|ربط[ةه]\s*رأس/.test(clause)) c.customHasHeadband = true;
+      if (/ستيك\s*مان|استيك\s*مان|ملامح\s*الوجه|بملامح\s*وجه|ملامح\s*وجه/.test(clause)) {
+        c.customHasStickmanFace = true;
+        c.customHairStyle = 'bald';
+        if (/غاضب|شرس/.test(clause)) c.creatureType = 'stickman_face_fierce';
+        else if (/ندب[ةه]/.test(clause)) c.creatureType = 'stickman_face_scar';
+        else if (/واثق|مبتسم/.test(clause)) c.creatureType = 'stickman_face_smirk';
+        else c.creatureType = 'stickman_face';
+        syncCharacterArchetype(c);
+      }
+      if (/ندب[ةه]|جرح\s*في\s*الوجه/.test(clause)) {
+        c.customHasFaceScar = true;
+      }
       if (/ضخم|عملاق|كبير\s*الحجم/.test(clause)) {
         c.scale = 1.42;
         c.targetScale = 1.42;
@@ -1973,9 +1999,19 @@
       return cType === "shadow" || cType === "shadow_crimson" || cType === "shadow_lightning" || cType === "shadow_void";
     }
 
+    function isStickmanFaceType(cType, arch) {
+      return (typeof cType === 'string' && cType.startsWith('stickman_face')) || (arch && arch.headType === 'stickman_face');
+    }
+
     function syncCharacterArchetype(c) {
       if (!c) return;
       const typeToArch = {
+        stickman_face: 'stickman_face_hero',
+        stickman_face_fierce: 'stickman_face_fierce',
+        stickman_face_smirk: 'stickman_face_smirk',
+        stickman_face_scar: 'stickman_face_scar',
+        stickman_face_shock: 'stickman_face_shock',
+        stickman_face_dark: 'stickman_face_dark',
         shadow: 'shadow_base',
         shadow_crimson: 'shadow_crimson',
         shadow_lightning: 'shadow_lightning',
@@ -2422,10 +2458,17 @@
         }
       }
 
-      // Pattern C: Direct inline name e.g. "الشخصية واحد أحمد تركض" or "الشخصية رقم 1 أحمد"
-      const directNameRg = /(?:الشخصي[ةه]|شخصي[ةه])\s*(?:رقم\s*)?(\d+|واحد|إثنين|اثنين|ثاني[ةه]|ثلاث[ةه]|أربع[ةه]|اربع[ةه])\s+([؀-ۿ]{3,12})/g;
+      // Pattern C: Direct inline name e.g. "الشخصية واحد أحمد تركض" or "الشخصية رقم 1 أحمد" or "وتظهر شخصيه ثالثه محمد"
+      const directNameRg = /(?:الشخصي[ةه]|شخصي[ةه])\s*(?:رقم\s*)?(\d+|واحد|الأولى|الاولى|إثنين|اثنين|ثاني[ةه]|الثاني[ةه]|ثلاث[ةه]|ثالث[ةه]|الثالث[ةه]|أربع[ةه]|اربع[ةه]|رابع[ةه]|الرابع[ةه]|خمس[ةه]|خامس[ةه]|الخامس[ةه])\s+(?:اسمها\s+|اسمه\s+|سمها\s+|سمه\s+)?([؀-ۿ]{2,14})/g;
       while ((nm = directNameRg.exec(norm0)) !== null) {
-        const sl = wordToSlot(nm[1]);
+        const wNum = nm[1].replace(/^ال/, '');
+        let sl = wordToSlot(wNum);
+        if (sl < 0) {
+          if (/ثالث/.test(wNum)) sl = 2;
+          else if (/رابع/.test(wNum)) sl = 3;
+          else if (/خامس/.test(wNum)) sl = 4;
+          else if (/سادس/.test(wNum)) sl = 5;
+        }
         const candidate = nm[2].trim();
         if (sl >= 0 && sl < 15 && !forbiddenNameWords.has(candidate)) {
           state.characters[sl].name = candidate;
@@ -2482,7 +2525,8 @@
       const has2v1Escalation = /اثنين\s*ضد\s*واحد|اثنان\s*ضد\s*واحد|2\s*ضد\s*1|يظهر\s*واحد|يضهر\s*واحد/.test(norm0);
       const startsWithOneOnly = /يظهر\s*شخصي[ةه]\s*ثاني|يضهر\s*شخصي[ةه]\s*ثاني|تظهر\s*شخصي[ةه]\s*ثاني|تضهر\s*شخصي[ةه]\s*ثاني|يظهر\s*رقم\s*2|يضهر\s*رقم\s*2/.test(norm0);
       const startsWithCafeFriends = /جالسين|يجلس.*في\s*المقهى|اثنين\s*جالسين/.test(norm0);
-      const startsWithTwoOnly = /يبدأ\s*ب\s*اثنين|يبدأ\s*باثنين|اثنين\s*فقط|يظهر\s*واحد|يضهر\s*واحد/.test(norm0) || hasCarReinforcements || has2v2Escalation || has2v1Escalation || startsWithCafeFriends;
+      const hasThirdCharDelayed = /(?:يظهر|تظهر|يضهر|تضهر|يدخل|تدخل|ينضم|يأتي|ياتي)\s*(?:شخصي[ةه]\s*)?(?:ثالث[ةه]|الثالث[ةه]|رقم\s*3|3)|ثنتين\s*شخصيات|اثنتين\s*شخصيات|شخصيتين/.test(norm0);
+      const startsWithTwoOnly = /يبدأ\s*ب\s*اثنين|يبدأ\s*باثنين|اثنين\s*فقط|يظهر\s*واحد|يضهر\s*واحد/.test(norm0) || hasThirdCharDelayed || hasCarReinforcements || has2v2Escalation || has2v1Escalation || startsWithCafeFriends;
 
       if (targetCount === -1) targetCount = maxMentioned;
       else if (maxMentioned > targetCount) targetCount = maxMentioned;
@@ -2523,6 +2567,9 @@
         c.customHatType = '';
         c.customHasWings = false;
         c.customHasHeadband = null;
+        c.customHasStickmanFace = /ستيك\s*مان|استيك\s*مان|ملامح\s*الوجه/.test(norm0);
+        c.customHasFaceScar = false;
+        c.deathHideCountdown = 0;
         c.scale = 1.0;
         c.targetScale = 1.0;
         if (isGangWar && state.activeCharCount >= 6) {
@@ -2615,6 +2662,25 @@
       ];
       parallelConnectors.forEach(conn => { work = work.split(conn).join('|[PARALLEL]'); });
 
+      // إزالة عبارات الملاحظات الجانبية خارج السيناريو (مثل "كلام خارج السيناريو" / "لاضافه حماس" / "لإضافة حماس") حتى لا تؤثر على فهم الجمل الملتصقة!
+      work = work
+        .replace(/كلام\s*خارج\s*السيناريو/g, ' ')
+        .replace(/ل[إا]ضاف[ةه]\s*حماس/g, ' ')
+        // حماية "يقفز للجو ثم ينقض عليه" من الانقسام عند كلمة "ثم" لتبقى حركة انقضاض واحدة متكاملة!
+        .replace(/(يقفز|تقفز)([^.|،\n]{0,35}?)\s+(?:و)?(?:ثم|ثما)\s+(ينقض|تنقض|ينقص|تنقص|يسقط|يصقط)/g, '$1$2 و$3');
+
+      // ميزة المشهد الموحد (كتابة ملتصقة في نفس السطر بدون الضغط على سطر جديد \n):
+      // إذا كتب الكاتب حدثين لشخصيتين في نفس السطر مثل "ينطلق عمر بسرعه باتجاه علي وينطلق علي بسرعه ب إتجاه عمر" أو "خالد يشحن هاله وعلي يشحن هاله" بدون سطر جديد، ينفذهما التطبيق بنفس اللحظة [PARALLEL] بسلاسة تامة!
+      work = work.split('\n').map(singleLine => {
+        if (!singleLine || singleLine.includes('»') || /الراوي/.test(singleLine)) return singleLine;
+        return singleLine
+          .replace(/\s+و(يقف|تقف)\s+(?=(?:الشخصي|شخصي|رقم|الطيب|الشرير|علي|أحمد|احمد|حمد|خالد|محمد|عمر|زيد|سارة|ساره|حمزة|حمزه|فهد|سلمان|ياسر|طارق|سعيد|ناصر|ماجد))/g, '|[PARALLEL]$1 ')
+          .replace(/\s+و(ينطلق|تنطلق)\s+(?=(?:الشخصي|شخصي|رقم|الطيب|الشرير|علي|أحمد|احمد|حمد|خالد|محمد|عمر|زيد|سارة|ساره|حمزة|حمزه|فهد|سلمان|ياسر|طارق|سعيد|ناصر|ماجد|بسرع))/g, '|[PARALLEL]$1 ')
+          .replace(/\s+و((?:الشخصي[ةه]\s*\d+|رقم\s*\d+|الطيب|الشرير|علي|أحمد|احمد|حمد|خالد|محمد|عمر|زيد|سارة|ساره|حمزة|حمزه|فهد|سلمان|ياسر|طارق|سعيد|ناصر|ماجد)\s+(?:يشحن|تشحن|ينطلق|تنطلق|يطلق|تطلق|يطير|تطير))/g, '|[PARALLEL]$1')
+          .replace(/\s+و(يشحن|تشحن)\s+(?=(?:الشخصي|شخصي|رقم|الطيب|الشرير|علي|أحمد|احمد|حمد|خالد|محمد|عمر|زيد|سارة|ساره|حمزة|حمزه|فهد|سلمان|ياسر|طارق|سعيد|ناصر|ماجد|هال))/g, '|[PARALLEL]$1 ')
+          .replace(/\s+و(يطلقان|تطلقان|يطلقون|يشحنان|ينطلقان|ينطلقون\s*الاثنين)\s+/g, '|$1 ');
+      }).join('|');
+
       // الحفاظ على جملة الراوي التي تبدأ برمز » كاملة حتى نهاية السطر!
       work = work.replace(/\n/g, '|').replace(/[،,.؛]/g, (m, offset, fullStr) => {
         const lastPipe = fullStr.lastIndexOf('|', offset);
@@ -2622,11 +2688,12 @@
         if (lineSlice.includes('»') || /الراوي/.test(lineSlice)) return '،';
         return '|';
       });
-      [' ومن ثم ', ' ومن ثما ', ' ثم ', ' ثما ', ' وبعدها ', ' فجأة ', ' حيث '].forEach(c => {
+      [' ومن ثم ', ' ومن ثما ', ' وثم ', ' وثما ', ' ثم ', ' ثما ', ' وبعدها ', ' فجأة ', ' حيث '].forEach(c => {
         work = work.split(c).join('|');
       });
       work = work
         .replace(/ وتنقسم الشاش/g, '|تنقسم الشاش').replace(/ فتنقسم الشاش/g, '|تنقسم الشاش')
+        .replace(/ وتظهر شخصي/g, '|تظهر شخصي').replace(/ وتضهر شخصي/g, '|تضهر شخصي').replace(/ ويظهر شخصي/g, '|يظهر شخصي').replace(/ ويضهر شخصي/g, '|يضهر شخصي')
         .replace(/ وتظهر السيار/g, '|تظهر السيار').replace(/ وتضهر السيار/g, '|تضهر السيار').replace(/ فتظهر السيار/g, '|تظهر السيار').replace(/ فتضهر السيار/g, '|تضهر السيار')
         .replace(/ وتظهر سيار/g, '|تظهر سيار').replace(/ وتضهر سيار/g, '|تضهر سيار').replace(/ فتظهر سيار/g, '|تظهر سيار').replace(/ فتضهر سيار/g, '|تضهر سيار')
         .replace(/ ويخرج منها /g, '|يخرج منها ').replace(/ وينزل منها /g, '|ينزل منها ')
@@ -2642,6 +2709,9 @@
         .replace(/ وطار /g, '|طار ').replace(/ فطار /g, '|فطار ').replace(/ ويحلق /g, '|يحلق ').replace(/ ويهبط /g, '|يهبط ').replace(/ ويرتفع /g, '|يرتفع ')
         .replace(/ ويشحن /g, '|يشحن ').replace(/ وتشحن /g, '|تشحن ').replace(/ فيشحن /g, '|يشحن ')
         .replace(/ ويظهر هال/g, '|يظهر هال').replace(/ وتظهر هال/g, '|تظهر هال').replace(/ ويضهر هال/g, '|يضهر هال').replace(/ وتضهر هال/g, '|تضهر هال').replace(/ ويطلق شعاع/g, '|يطلق شعاع').replace(/ وتطلق شعاع/g, '|تطلق شعاع').replace(/ فيطلق شعاع/g, '|يطلق شعاع').replace(/ ويضرب شعاع/g, '|يضرب شعاع')
+        .replace(/ ويطلقان /g, '|يطلقان ').replace(/ وتطلقان /g, '|تطلقان ')
+        .replace(/ ويستطمان/g, '|يستطمان').replace(/ ويصطدمان/g, '|يصطدمان').replace(/ ويتصادمان/g, '|يتصادمان')
+        .replace(/ وبعد الاصطدام /g, '|بعد الاصطدام ').replace(/ وبعد الاصطام /g, '|بعد الاصطام ').replace(/ بعد الاصطدام /g, '|بعد الاصطدام ').replace(/ بعد الاصطام /g, '|بعد الاصطام ')
         .replace(/ ويركل /g, '|يركل ').replace(/ وتركل /g, '|تركل ').replace(/ فيركل /g, '|يركل ').replace(/ ويلكم /g, '|يلكم ').replace(/ فيلكم /g, '|يلكم ')
         .replace(/ وفي اخر المشهد /g, '|في اخر المشهد ').replace(/ في اخر المشهد /g, '|في اخر المشهد ')
         .replace(/ وفي آخر المشهد /g, '|في آخر المشهد ').replace(/ في آخر المشهد /g, '|في آخر المشهد ')
@@ -2659,7 +2729,9 @@
           (/^(?:و|ف)?(?:يطير|يطيير|تطير|طار|طارت|يعني\s*يطير)/.test(curC) && /لمساف|مساف|نصف\s*دائر|نص\s*دائر|بخط\s*مستقيم|بارتفاع|للخلف|به|بها|مزيج/.test(curC)) ||
           (/نصف\s*دائر[ةه]|نص\s*دائر[ةه]|بخط\s*مستقيم|بارتفاع\s*\d+.*عن\s*الأرض|مزيج\s*من/.test(curC) && !/ركل|يركل|لكم|يلكم|ضرب|يضرب|يتعارك|عراك/.test(curC))
         );
-        if (prevIsStrike && curIsKnockContinuation && !curC.startsWith('[PARALLEL]')) {
+        const prevIsCollision = /يصطدمان|يتصادمان|ليصطدما|يستطمان|يسطدمان|يصطدمون/.test(prevC);
+        const curIsCollisionEffectsOnly = (/هز[ةه]\s*أرضي|هز[ةه]\s*ارضي|هز\s*المباني|قلع\s*الأشجار|قلع\s*الاشجار|اقتلاع\s*الأشجار|يظهر\s*صوت|يضهر\s*صوت|يضهر\s*صور|يظهر\s*صور/.test(curC)) && !/يطير|تطير|يركل|يلكم|يمشي|يركض|ينطلق/.test(curC);
+        if ((prevIsStrike && curIsKnockContinuation && !curC.startsWith('[PARALLEL]')) || (prevIsCollision && curIsCollisionEffectsOnly)) {
           rawClauses[rawClauses.length - 1] = prevC + ' ' + curC;
         } else {
           rawClauses.push(curC);
@@ -2948,17 +3020,56 @@
           return;
         }
 
-        // 💥 0-ج. ركض الشخصيتين نحو بعضهما والاصطدام في مركز العالم (نقطة الصفر 0) في الثنائي 2D
-        if (/يصطدمان|يتصادمان|ليصطدما|يستطمان|يسطدمان|يصطدمون|يركضان\s*نحو\s*بعضهما|ركضوان\s*نحو\s*بعضهما/.test(clause) || (/مركز\s*العالم|نقط[ةه]\s*الصفر/.test(clause) && /يركضان|ركضوان|يجريان|يتصادمان|يصطدمان|يستطمان/.test(clause))) {
+        // 💥 0-ج. ركض/انطلاق الشخصيتين نحو بعضهما والاصطدام في مركز العالم (مع صوت وهزة أرضية وهز المباني وقلع الأشجار حسب الوصف!)
+        if (/يصطدمان|يتصادمان|ليصطدما|يستطمان|يسطدمان|يصطدمون|يركضان\s*نحو\s*بعضهما|ركضوان\s*نحو\s*بعضهما|ينطلقون\s*الاثنين\s*مع/.test(clause) || (/مركز\s*العالم|نقط[ةه]\s*الصفر/.test(clause) && /يركضان|ركضوان|يجريان|يتصادمان|يصطدمان|يستطمان/.test(clause))) {
           const colSlots = findCharacterSlotsInText(clause);
           const rA = colSlots.length >= 1 ? colSlots[0] : 0;
           const rB = colSlots.length >= 2 ? colSlots[1] : (rA === 0 ? 1 : 0);
-          const colDur = extractDurationSeconds(clause, 2.6);
+          const hasQuake = /هز[ةه]\s*أرضي|هز[ةه]\s*ارضي|زلزال|تهتز\s*الأرض|تهتز\s*الارض|يضهر\s*صور|يظهر\s*صوت|يضهر\s*صوت/.test(clause);
+          const hasBuildingShake = /هز\s*المباني|تهتز\s*المباني|اهتزاز\s*المباني|تتمايل\s*المباني|المباني/.test(clause) || hasQuake;
+          const hasTreeUproot = /قلع\s*الأشجار|قلع\s*الاشجار|اقتلاع\s*الأشجار|اقتلاع\s*الاشجار|تقتلع\s*الأشجار|تطير\s*الأشجار|الأشجار|الاشجار/.test(clause);
+          // إذا كان الحدث السابق مباشرة هو انطلاق الشخصيتين نحو بعضهما، ندمجه مع الاصطدام ليكون انطلاقاً واصطداماً واحداً فائق السلاسة!
+          const prevEv = events[events.length - 1];
+          if (prevEv && (prevEv.type === 'parallel_single_2d' || prevEv.type === 'run_distance') && !/يصطدمان|يستطمان/.test(prevEv.title || '')) {
+            events.pop();
+          }
+          const colDur = extractDurationSeconds(clause, 2.4);
+          const extraEffectsTxt = [
+            hasQuake ? 'هزة أرضية وصوت انفجار' : '',
+            hasBuildingShake ? 'هز المباني' : '',
+            hasTreeUproot ? 'قلع الأشجار' : ''
+          ].filter(Boolean).join(' + ');
           events.push({
             type: 'collide_world_center_2d',
             actors: [rA, rB],
-            title: `💥 انطلاق واصطدام #${rA + 1} و #${rB + 1} في مركز العالم (نقطة الصفر 0)!`,
+            hasQuake: true,
+            hasBuildingShake,
+            hasTreeUproot,
+            title: `💥 انطلاق واصطدام ${state.characters[rA]?.name || '#' + (rA + 1)} و ${state.characters[rB]?.name || '#' + (rB + 1)} في المنتصف${extraEffectsTxt ? ' (' + extraEffectsTxt + ')' : ''}!`,
             duration: colDur
+          });
+          return;
+        }
+
+        // 🦶💨 0-د. الطيران للخلف بعد الاصطدام ("بعد الاصطدام يطير عمر للخلف ووجهه للأمام وكذلك علي"):
+        // افتراضياً بعد الاصطدام يطير للخلف ووجهه للأمام وليس مضروباً ويهبط على الأرض بقدميه، إلا إذا قال الوصف "متأثر" فيصل منبطحاً على ظهره!
+        const prevIsCollideEv = events.length > 0 && (events[events.length - 1].type === 'collide_world_center_2d' || events[events.length - 1].type === 'post_collision_recoil_2d');
+        if ((/بعد\s*الاصطدام|بعد\s*الاصطام|وجه[هه]?\s*للأمام|وجه[هه]?\s*للامام|وجه[هه]?\s*للأم|بقدميه|على\s*قدميه/.test(clause) && /يطير|تطير|طار|يرتد/.test(clause)) || (prevIsCollideEv && /يطير.*للخلف|تطير.*للخلف/.test(clause))) {
+          const recSlots = findCharacterSlotsInText(clause);
+          const hasBothWords = /وكذلك|وكذالك|والثاني|والأول|كلاهما|الاثنين|الأثنين|معاً|معا|يطيران/.test(clause);
+          const recoilActors = (hasBothWords || recSlots.length >= 2) ? [0, 1] : (recSlots.length === 1 ? [recSlots[0]] : [0, 1]);
+          const isAffectedProne = /متأثر|متاثر|مضروب|منبطح|على\s*ظهره|على\s*ضهره|يسقط\s*أرض/.test(clause);
+          const recMeters = extractDistanceMeters(clause, 12.0);
+          const recDur = extractDurationSeconds(clause, 1.85);
+          events.push({
+            type: 'post_collision_recoil_2d',
+            actors: recoilActors,
+            meters: recMeters,
+            isAffectedProne,
+            title: isAffectedProne
+              ? `💥 ارتداد وطيران بعد الاصطدام (${recoilActors.map(s => state.characters[s]?.name || '#' + (s + 1)).join(' و ')}) متأثراً ويسقط منبطحاً!`
+              : `🦶💨 ارتداد بعد الاصطدام (${recoilActors.map(s => state.characters[s]?.name || '#' + (s + 1)).join(' و ')}) للخلف ووجهه للأمام والهبوط على قدميه!`,
+            duration: recDur
           });
           return;
         }
@@ -3246,17 +3357,31 @@
           return;
         }
 
-        // 🌟 New Character Appearing Mid-Scene ("يظهر رقم 3" / "يظهر واحد" / "ويأتي واحد من أقصى المدينة ليركل واحد حتى يطير")
-        if (!hasVehWord && /يظهر|يضهر|يدخل|ينضم|يأتي|ياتي|يتدخل/.test(clause) && !/تظهرهما|تظهر\s*الجميع|يظهر\s*المشهد|هال[ةه]|شرار|شعاع|ليزر|مطر|أمطار|امطار|برق|صاعق|صواعق|رعد|نار|لهب|ضوء|طاق[ةه]|ثقب|نيزك|نيازك|عاصف|ثلج|الأرض|الارض|يتأثر|تتأثر|يتاثر|تتاثر/.test(clause)) {
-          let appearList = mentioned.filter(s => s >= 1 && (state.characters[s].hiddenAtStart || s >= 2));
+        // 🌟 New Character Appearing Mid-Scene ("وتظهر شخصيه ثالثه محمد" / "يظهر رقم 3" / "يظهر واحد" / "ويأتي واحد من أقصى المدينة ليركل واحد حتى يطير")
+        if (!hasVehWord && /يظهر|تظهر|يضهر|تضهر|يدخل|تدخل|ينضم|تنضم|يأتي|تأتي|ياتي|يتدخل|تتدخل/.test(clause) && !/تظهرهما|تظهر\s*الجميع|يظهر\s*المشهد|يظهر\s*صوت|يضهر\s*صوت|يظهر\s*صور|يضهر\s*صور|هال[ةه]|شرار|شعاع|ليزر|مطر|أمطار|امطار|برق|صاعق|صواعق|رعد|نار|لهب|ضوء|طاق[ةه]|ثقب|نيزك|نيازك|عاصف|ثلج|الأرض|الارض|يتأثر|تتأثر|يتاثر|تتاثر/.test(clause)) {
+          let appearList = mentioned.filter(s => s >= 1);
           if (appearList.length === 0) {
             if (/ثاني[ةه]|2/.test(clause)) appearList = [1];
+            else if (/ثالث[ةه]|3/.test(clause)) appearList = [2];
+            else if (/رابع[ةه]|4/.test(clause)) appearList = [3];
+            else if (/خامس[ةه]|5/.test(clause)) appearList = [4];
             else if (/سادس|6/.test(clause)) appearList = [5];
-            else if (nextReinforceIdx < state.activeCharCount) {
-              appearList = [nextReinforceIdx];
+            else {
+              appearList = [Math.min(14, Math.max(2, nextReinforceIdx))];
               nextReinforceIdx++;
             }
           }
+          // إذا ذكر اسماً جديداً بعد "تظهر شخصية ثالثة محمد"، نضمن تعيين الاسم لتلك الشخصية وإخفاءها في بداية المشهد حتى لحظة وصول السطر!
+          const inlineApName = clause.match(/(?:شخصي[ةه]|رقم)\s*(?:ثاني[ةه]|ثالث[ةه]|رابع[ةه]|خامس[ةه]|\d+)?\s*(?:اسمها|اسمه|سمها|سمه)?\s+([؀-ۿ]{3,12})/);
+          if (inlineApName && appearList.length > 0 && !forbiddenNameWords.has(inlineApName[1])) {
+            state.characters[appearList[0]].name = inlineApName[1].trim();
+          }
+          appearList.forEach(apIdx => {
+            if (apIdx >= 1 && apIdx < 15) {
+              state.characters[apIdx].hiddenAtStart = true;
+              state.activeCharCount = Math.max(state.activeCharCount, apIdx + 1);
+            }
+          });
           const fromFarCity = /أقصى|اقصى|بعيد|المدين[ةه]/.test(clause);
           const hasFlyingKick = /ليركل|يركل|ركل[ةه]|حتى\s*يطير/.test(clause);
           let kickVictim = revealedFighters.includes(2) ? 2 : 0;
@@ -3373,6 +3498,157 @@
           return;
         }
 
+        // 💀 موت الشخصية واختفاؤها تلقائياً بعد 30 ثانية من تنفيذ السطر ("تموت الشخصيه علي فهيا تختفي بعد 30 من تنفيذ السطر")
+        if (/تموت|يموت|مات|ماتت|يتوفى|تتوفى|يسقط\s*ميت|يلفظ\s*أنفاس/.test(clause) && !/يركل|تركل|ركل|يلكم|تلكم|لكم|يضرب|تضرب|ضرب|شعاع|ليزر|يقذف|يرمي|ينقض|ينقص/.test(clause)) {
+          const deadSlot = mentioned.length > 0 ? mentioned[0] : lastKnockedChar;
+          const afterMatch = clause.match(/بعد\s*(\d+(?:\.\d+)?)/);
+          const hideAfterSec = afterMatch ? Math.max(1.0, parseFloat(afterMatch[1])) : 30.0;
+          events.push({
+            type: 'char_death_2d',
+            actorSlot: deadSlot,
+            hideAfterSec,
+            title: `💀 موت ${state.characters[deadSlot]?.name || '#' + (deadSlot + 1)} (وتختفي من المشهد بعد ${hideAfterSec} ثانية من تنفيذ السطر)`,
+            duration: explicitDur > 0 ? explicitDur : 1.6
+          });
+          return;
+        }
+
+        // 🏃💨 إذا كان السطر السابق مباشرة هو انقضاض جوي (dive_on_downed_2d) وهذا السطر هو هروب المنبطح ("وخالد يهرب بسرعه لمسافة 3 متر")، ندمجه في نفس الانقضاض ليحدث الهروب بأقل من ثانية أثناء السقوط!
+        if (events.length > 0 && events[events.length - 1].type === 'dive_on_downed_2d' && /يهرب|تهرب|هرب|يتفادى|تتفادى|يفلت|ينجو/.test(clause)) {
+          const prevDive = events[events.length - 1];
+          prevDive.targetEscapes = true;
+          prevDive.escapeMeters = extractDistanceMeters(clause, 3.0);
+          prevDive.duration = 0.88; // أقل من ثانية واحدة!
+          prevDive.title += ` ⚡ + هروب خاطف (${prevDive.escapeMeters}م) بأقل من ثانية!`;
+          return;
+        }
+
+        // 🏋️‍♂️💥 حمل الشخصية وقذفها بعيداً ("حمل الشخصيه وقذفها بعيداً" / "يحمل علي عمر ويقذفه لمسافة 40 متر" / "يمسكه ويرميه بعيداً")
+        if (/يحمل|تحمل|حمل|حمله|يرفع|ترفع|رفعه|يشيل|تشيل/.test(clause) && (/يقذف|تقذف|قذف|قذفه|يرمي|ترمي|رمى|رماه|يطرح|تطرح|بعيد|يطير/.test(clause) || mentioned.length >= 2)) {
+          const att = mentioned.length > 0 ? mentioned[0] : lastActor;
+          const vic = mentioned.length > 1 ? mentioned[1] : (att !== lastKnockedChar ? lastKnockedChar : (att === 0 ? 1 : 0));
+          lastActor = att;
+          lastKnockedChar = vic;
+          const throwMeters = extractDistanceMeters(clause, 32.0);
+          const kbCfg = extractKnockbackTrajectoryConfig(clause);
+          const victimDies = /يموت|تموت|مات|ماتت|ميت/.test(clause);
+          const thDur = explicitDur > 0 ? explicitDur : Math.min(7.5, Math.max(3.3, 2.5 + throwMeters * 0.035));
+          events.push({
+            type: 'grab_and_throw_2d',
+            actorSlot: att,
+            victimSlot: vic,
+            meters: throwMeters,
+            trajectoryType: kbCfg.trajectoryType,
+            heightMeters: kbCfg.heightMeters,
+            explicitDir: kbCfg.explicitDir,
+            victimDies,
+            title: `🏋️‍♂️💥 ${state.characters[att]?.name || '#' + (att + 1)} يحمل ${state.characters[vic]?.name || '#' + (vic + 1)} فوق رأسه ويقذفه بعيداً (${throwMeters} متر)!`,
+            duration: thDur
+          });
+          return;
+        }
+
+        // 🦅⬇️ النوع الثاني من ضرب المنبطح: القفز والانقضاض الجوي على المنبطح (بنصف دائرة ⌒ أو بزاوية 90 مثل رقم 8 ٨ يقفز للجو ثم ينقض عليه) مع حساب المسافة تلقائياً ودعم هروب المنبطح بأقل من ثانية!
+        const isAerialDiveOnTarget = (
+          (/يقفز|تقفز|قفز|ينقض|تنقض|ينقص|تنقص/.test(clause) && (/عليه|عليها|فوق[هه]?|لفوق|المنبطح|منبطح|زاوي[ةه]\s*90|رقم\s*8|ينقض|ينقص/.test(clause) || (mentioned.length >= 2 && /على/.test(clause))))
+        );
+        if (isAerialDiveOnTarget) {
+          const att = mentioned.length > 0 ? mentioned[0] : lastActor;
+          const vic = mentioned.length > 1 ? mentioned[1] : (att !== lastKnockedChar ? lastKnockedChar : (att === 0 ? 1 : 0));
+          lastActor = att;
+          lastKnockedChar = vic;
+          const isSemicircleDive = /نصف\s*دائر|نص\s*دائر|بشكل\s*قوس/.test(clause) && !/زاوي[ةه]\s*90|رقم\s*8/.test(clause);
+          const diveStyle = isSemicircleDive ? 'semicircle' : 'angle90_eight';
+          const targetEscapes = /يهرب|تهرب|هرب|يتفادى|تتفادى|تفادى|يفلت|ينجو/.test(clause);
+          let escapeMeters = 3.0;
+          if (targetEscapes) {
+            const escPart = clause.slice(Math.max(0, clause.search(/يهرب|تهرب|هرب|يتفادى|تتفادى/)));
+            escapeMeters = extractDistanceMeters(escPart, 3.0);
+          }
+          const launchVictimOnHit = !targetEscapes && /حتى\s*يطير|يطير|لمساف/.test(clause);
+          const launchMeters = launchVictimOnHit ? extractDistanceMeters(clause, 18.0) : 0;
+          // إذا هرب المنبطح أثناء سقوط المهاجم عليه، يحدث الانقضاض والهروب معاً بأقل من ثانية (0.88 ثانية)!
+          const diveDur = targetEscapes ? 0.88 : (explicitDur > 0 ? explicitDur : (launchVictimOnHit ? 3.2 : 2.1));
+          const styleLabel = diveStyle === 'semicircle' ? 'بنصف دائرة ⌒' : 'بزاوية 90° مثل رقم (٨)';
+          events.push({
+            type: 'dive_on_downed_2d',
+            actorSlot: att,
+            victimSlot: vic,
+            diveStyle,
+            targetEscapes,
+            escapeMeters,
+            launchVictimOnHit,
+            launchMeters,
+            title: targetEscapes
+              ? `🦅⚡ ${state.characters[att]?.name || '#' + (att + 1)} ينقض ${styleLabel} على ${state.characters[vic]?.name || '#' + (vic + 1)} و${state.characters[vic]?.name || '#' + (vic + 1)} يهرب بسرعة (${escapeMeters}م) بأقل من ثانية!`
+              : `🦅💥 ${state.characters[att]?.name || '#' + (att + 1)} يقفز وينقض ${styleLabel} لفوق المنبطح ${state.characters[vic]?.name || '#' + (vic + 1)} (وهو يحاول الوقوف)!`,
+            duration: diveDur
+          });
+          return;
+        }
+
+        // 👊⬇️ النوع الأول من حركة ضرب المنبطح ("وثما ضربه المنبطح" / "يلكمه وهو منبطح أو يركله حتى يطير" والشخصية المنبطحة تحاول الوقوف!)
+        const isGroundStrikeClause = /المنبطح|منبطح|وهو\s*منبطح|وهوا\s*منبطح|وهو\s*على\s*الأرض|وهو\s*ساقط/.test(clause) && (/ضرب|يضرب|تضرب|لكم|يلكم|تلكم|ركل|يركل|تركل|يرفس|يدوس|يطير/.test(clause));
+        if (isGroundStrikeClause) {
+          const att = (mentioned.length >= 2) ? mentioned[0] : lastActor;
+          const vic = (mentioned.length >= 2) ? mentioned[1] : ((mentioned.length === 1 && mentioned[0] !== lastActor) ? mentioned[0] : (att !== lastKnockedChar ? lastKnockedChar : (att === 0 ? 1 : 0)));
+          lastActor = att;
+          lastKnockedChar = vic;
+          const isKickGround = /ركل|يركل|تركل|يرفس/.test(clause);
+          const launchFly = /يطير|يطيير|تطير|طار|لمساف|بعيد/.test(clause) || isKickGround;
+          const meters = extractDistanceMeters(clause, launchFly ? 22.0 : 8.0);
+          const kbCfg = extractKnockbackTrajectoryConfig(clause);
+          const victimDies = /يموت|تموت|مات|ماتت|ميت/.test(clause);
+          const gsDur = explicitDur > 0 ? explicitDur : Math.min(6.5, Math.max(2.6, 2.0 + meters * 0.035));
+          events.push({
+            type: 'ground_strike_2d',
+            actorSlot: att,
+            victimSlot: vic,
+            attackMove: isKickGround ? 'ground_kick' : 'ground_punch',
+            meters,
+            trajectoryType: kbCfg.trajectoryType,
+            heightMeters: kbCfg.heightMeters,
+            explicitDir: kbCfg.explicitDir,
+            victimDies,
+            title: `💥⬇️ ضرب المنبطح: ${state.characters[att]?.name || '#' + (att + 1)} ${isKickGround ? 'يركل' : 'يلكم'} المنبطح ${state.characters[vic]?.name || '#' + (vic + 1)} (وهو يحاول الوقوف) حتى يطير ${meters} متر!`,
+            duration: gsDur
+          });
+          return;
+        }
+
+        // ⚡⚡ إطلاق إشعاع مزدوج في نفس اللحظة ("ويطلقان إشعاع" / "يطلقان شعاع")
+        if (/يطلقان|تطلقان|يطلقون/.test(clause) && /شعاع|إشعاع|اشعاع|ليزر|طاق[ةه]/.test(clause)) {
+          const bActors = mentioned.length >= 2 ? [mentioned[0], mentioned[1]] : [0, 1];
+          const p0 = parseClausePowers(clause);
+          const p1 = parseClausePowers(clause);
+          const bDur = explicitDur > 0 ? explicitDur : 3.2;
+          const evA = {
+            type: 'superpower',
+            title: `⚡ ${state.characters[bActors[0]]?.name || '#1'} يطلق شعاع طاقة`,
+            actorSlot: bActors[0],
+            targetSlot: bActors[1],
+            powers: p0,
+            duration: bDur
+          };
+          const evB = {
+            type: 'superpower',
+            title: `⚡ ${state.characters[bActors[1]]?.name || '#2'} يطلق شعاع طاقة`,
+            actorSlot: bActors[1],
+            targetSlot: bActors[0],
+            powers: p1,
+            duration: bDur
+          };
+          events.push({
+            type: 'parallel_single_2d',
+            title: `⚡⚡ في نفس اللحظة: ${state.characters[bActors[0]]?.name || '#1'} و ${state.characters[bActors[1]]?.name || '#2'} يطلقان إشعاع الطاقة معاً!`,
+            duration: bDur,
+            autoSplit: false,
+            subEvents: [evA, evB],
+            actors: bActors
+          });
+          return;
+        }
+
         // 🤸 القفز والشقلبة الهوائية في الثنائي 2D (مثل: "يقفز" أو "يتشقلب" أو "شقلبة هوائية")
         if (/يقفز|تقفز|قفز[ةه]|يتشقلب|تتشقلب|تشقلب|شقلب[ةه]/.test(clause) && !/يركل|يضرب/.test(clause)) {
           const jmpDur = explicitDur > 0 ? explicitDur : 0.85;
@@ -3474,7 +3750,7 @@
 
         // 🏃‍♂️🔄 فحص الانعطاف أو الركض أو المشي في الاتجاهات (يمين/شرق، يسار/غرب، شمال/مسار علوي، جنوب/مسار سفلي، للأمام حسب الوجه، مركز العالم، اقتراب، ابتعاد)
         const isTurnVerb2D = /ينعطف|تنعطف|انعطاف|انعطف|يلتف|تلتف|يلتفت|تلتفت|ينحرف|يستدير/.test(clause);
-        const isMoveVerb2D = isTurnVerb2D || /تركض|يركض|يكرض|تجري|يجري|تمشي|يمشي|يسير|تسير|يتقدم|تتقدم|يتحرك|تتحرك|يقترب|تقترب|يبتعد|تبتعد|يتراجع|تتراجع|يهرب|تهرب/.test(clause);
+        const isMoveVerb2D = isTurnVerb2D || /ينطلق|تنطلق|يندفع|تندفع|تركض|يركض|يكرض|تجري|يجري|تمشي|يمشي|يسير|تسير|يتقدم|تتقدم|يتحرك|تتحرك|يقترب|تقترب|يبتعد|تبتعد|يتراجع|تتراجع|يهرب|تهرب/.test(clause);
         const hasFollowSpeedWords = /يركض\s*وراء|يكرض\s*وراء|يجري\s*وراء|يمشي\s*وراء|يركض\s*خلف|يتبع|يلحق|يطارد|بسرع[ةه]\s*\d+|سرع[ةه]\s*\d+|المساف[ةه]\s*بينهم/.test(clause);
         if (isMoveVerb2D && !hasFollowSpeedWords && !/يتعارك|عراك|عارك|يشتبك|يضرب|ضرب|يركل|ركل|يلكم|لكم|شعاع|ليزر|كاميهاميها|موج[ةه]\s*طاق|هال[ةه]|تنشق\s*الأرض|تنشق\s*الارض|انشقاق\s*الأرض|ضهور\s*مطر|ظهور\s*مطر|يتأثر\s*العالم|تتأثر\s*العالم|يتاثر\s*العالم|تتاثر\s*العالم/.test(clause)) {
           const runMeters = extractDistanceMeters(clause, isTurnVerb2D ? 8.0 : 12.0);
@@ -3484,7 +3760,7 @@
           if (/مركز\s*العالم|نقط[ةه]\s*الصفر/.test(clause)) {
             moveDir2D = 'world_center';
             targetLane2D = 0;
-          } else if (/يقترب|تقترب|نحو\s+[؀-ۿ]/.test(clause) && mentioned.length >= 2) {
+          } else if ((/يقترب|تقترب|نحو|باتجاه|ب\s*إتجاه|ب\s*اتجاه/.test(clause)) && mentioned.length >= 2) {
             moveDir2D = 'towards_target';
           } else if (/يبتعد|تبتعد|يتراجع|تتراجع|يهرب|تهرب/.test(clause)) {
             moveDir2D = 'away_from_target';
@@ -3781,6 +4057,15 @@
           d.recorded = true;
         }
       });
+      // ربط سلس بين الضربة (knockout) وحركة ضرب المنبطح أو القفز على المنبطح التي تليها مباشرة، بحيث تبقى الشخصية المنبطحة تحاول الوقوف دون أن تقف مبكراً!
+      for (let i = 0; i < events.length - 1; i++) {
+        const curE = events[i];
+        const nxtE = events[i + 1];
+        if (curE.type === 'knockout' && (nxtE.type === 'ground_strike_2d' || nxtE.type === 'dive_on_downed_2d' || nxtE.type === 'grab_and_throw_2d')) {
+          curE.keepVictimStrugglingForNext = true;
+          curE.duration = Math.max(1.25, Math.min(curE.duration, 1.45 + (curE.meters || 1) * 0.03));
+        }
+      }
       state.timeline = events;
       state.dialogueList = dialogues;
       state.currentVoiceIndex = Math.min(state.currentVoiceIndex || 0, Math.max(0, dialogues.length - 1));
@@ -4023,6 +4308,8 @@
       state.groundFissures = [];
       state.floatingAuraRocks = [];
       state.rockDebris = [];
+      state.uprootedTrees = [];
+      state.buildingShakeTimer = 0;
       state.worldQuakeTimer = 0;
       state.skyDarkenFactor = 0;
       state.weather = state.initialWeather || 'clear';
@@ -4095,6 +4382,24 @@
           alpha: 1.0
         });
       }
+    }
+
+    function spawnUprootedTrees2D(centerX, y = GROUND_Y) {
+      if (!Array.isArray(state.uprootedTrees)) state.uprootedTrees = [];
+      const offsets = [-320, -210, -115, 115, 215, 330];
+      offsets.forEach((off, idx) => {
+        const dir = off >= 0 ? 1 : -1;
+        state.uprootedTrees.push({
+          x: centerX + off,
+          y: y,
+          vx: dir * (2.6 + (idx % 3) * 1.4),
+          vy: -(6.5 + (idx % 2) * 2.5),
+          rot: dir * 0.12,
+          vRot: dir * (0.045 + (idx % 2) * 0.02),
+          scale: 0.85 + (idx % 3) * 0.12,
+          landed: false
+        });
+      });
     }
 
     function applyPowersToChar(c, powers, targetSlot = -1) {
@@ -4640,6 +4945,9 @@
 
               tChar.isDead = Boolean(pw.victimDies);
               tChar.stayProne = Boolean(pw.victimDies);
+              if (tChar.isDead && (!tChar.deathHideCountdown || tChar.deathHideCountdown <= 0)) {
+                tChar.deathHideCountdown = 30.0;
+              }
               tChar.hitFlashTimer = 0.20;
 
               if (pw.beamHasFlyKnock) {
@@ -5430,6 +5738,116 @@
         return;
       }
 
+      if (ev.type === 'char_death_2d') {
+        const c = state.characters[ev.actorSlot];
+        if (c) {
+          c.visible = true;
+          c.isDead = true;
+          c.stayProne = true;
+          c.kdState = 'prone';
+          c.kdTimer = 0;
+          c.pose = 'knockdown';
+          c.deathHideCountdown = ev.hideAfterSec || 30.0;
+          playSfx('fall');
+          spawnShockwave(c.x, c.y, '#ef4444', 65);
+          spawnHitText(c.x, c.y - 110, `💀 مات ${c.name} (يختفي بعد ${Math.round(c.deathHideCountdown)}ث)`, '#ef4444');
+        }
+        return;
+      }
+
+      if (ev.type === 'post_collision_recoil_2d') {
+        (ev.actors || [0, 1]).forEach((slot, idx) => {
+          const c = state.characters[slot];
+          if (c) {
+            c.visible = true;
+            // تحديد اتجاه الارتداد للخلف مع بقاء الوجه للأمام باتجاه الخصم!
+            const oppSlot = (ev.actors && ev.actors.length >= 2) ? ev.actors[(idx + 1) % ev.actors.length] : (slot === 0 ? 1 : 0);
+            const opp = state.characters[oppSlot];
+            const faceOpponentDir = (opp && Math.abs(opp.x - c.x) > 2) ? (opp.x >= c.x ? 1 : -1) : (c.facing || (idx === 0 ? -1 : 1));
+            const moveBackDir = -faceOpponentDir;
+            const pxDist = Math.min(480, Math.max(95, (ev.meters || 12) * 18));
+            c.facing = faceOpponentDir; // وجهه للأمام باتجاه الخصم!
+            c._recoilStartX = c.x;
+            c._recoilTargetX = c.x + moveBackDir * pxDist;
+            c._recoilBackDir = moveBackDir;
+            if (ev.isAffectedProne) {
+              c.kdState = 'airborne';
+              c.kdDir = moveBackDir;
+              c.pose = 'knockdown';
+            } else {
+              c.kdState = null;
+              c.pose = 'post_collision_fly_forward';
+            }
+          }
+        });
+        ev._recoilLanded = false;
+        playSfx('whoosh');
+        return;
+      }
+
+      if (ev.type === 'grab_and_throw_2d') {
+        ev._throwLaunched = false;
+        ev._landImpactDone = false;
+        const att = state.characters[ev.actorSlot];
+        const vic = state.characters[ev.victimSlot];
+        if (att) {
+          att.visible = true;
+          att.stayProne = false;
+          if (!att.isDead) { att.kdState = null; att.kdTimer = 0; }
+          att.pose = 'run';
+        }
+        if (vic) {
+          vic.visible = true;
+        }
+        return;
+      }
+
+      if (ev.type === 'ground_strike_2d') {
+        ev._gsHitDone = false;
+        ev._landImpactDone = false;
+        const att = state.characters[ev.actorSlot];
+        const vic = state.characters[ev.victimSlot];
+        if (att) {
+          att.visible = true;
+          att.stayProne = false;
+          if (!att.isDead) { att.kdState = null; att.kdTimer = 0; }
+          att.pose = 'run';
+        }
+        if (vic) {
+          vic.visible = true;
+          // الشخصية المنبطحة تكون على الأرض وتحاول الوقوف!
+          vic.kdState = 'getting_up';
+          vic.kdTimer = 0.12;
+          vic.pose = 'knockdown';
+        }
+        return;
+      }
+
+      if (ev.type === 'dive_on_downed_2d') {
+        ev._diveImpactDone = false;
+        const att = state.characters[ev.actorSlot];
+        const vic = state.characters[ev.victimSlot];
+        if (att && vic) {
+          att.visible = true;
+          vic.visible = true;
+          if (!att.isDead) { att.kdState = null; att.kdTimer = 0; }
+          ev._startX = att.x;
+          ev._targetX = vic.x;
+          const dir = vic.x >= att.x ? 1 : -1;
+          att.facing = dir;
+          vic.facing = -dir;
+          // الشخصية المنبطحة تحاول الوقوف على الأرض بينما المهاجم يقفز وينقض عليها!
+          vic.kdState = 'getting_up';
+          vic.kdTimer = 0.14;
+          vic.pose = 'knockdown';
+          ev._vicEscapeStartX = vic.x;
+          const escDir = dir; // يهرب بعيداً عن نقطة السقوط
+          ev._vicEscapeTargetX = vic.x + escDir * Math.max(90, (ev.escapeMeters || 3.0) * PIXELS_PER_METER);
+          playSfx('whoosh');
+        }
+        return;
+      }
+
       if (ev.type === 'knockout') {
         ev._koDone = false;
         ev._landImpactDone = false;
@@ -5438,7 +5856,7 @@
         if (att) {
           att.visible = true;
           att.stayProne = false;
-          if (att.kdState) { att.kdState = null; att.kdTimer = 0; }
+          if (att.kdState && !att.isDead) { att.kdState = null; att.kdTimer = 0; }
           att.pose = 'brawl';
           att.attackType = ev.attackMove || 'roundhouse_kick';
           applyPowersToChar(att, ev.powers, ev.victimSlot);
@@ -5506,26 +5924,39 @@
       const idealDist = 58;
       const curDist = Math.abs(dx);
 
-      // إذا كان أحد المقاتلين يسقط أو ينهض، يركض المقاتل الآخر ليقترب منه دون أن يضرب في الهواء من بعيد!
+      // قتال شرس مستمر بلا انتظار أحمق عند الانبطاح:
+      // المنبطح لا يهاجم أبداً، والعدو الواقف لا ينتظر حتى ينهض المنبطح بل يندفع إليه فوراً ويضربه وهو منبطح (وهو يحاول الوقوف) حتى يطير!
       if (cA.kdState || cB.kdState) {
-        if (!cA.kdState) {
-          cA.facing = dir;
-          if (curDist > idealDist + 24) {
-            cA.x += dir * 320 * dt;
-            cA.pose = 'run';
-          } else {
-            cA.pose = 'brawl';
-            cA.combatPhase = 'guard';
-          }
-        }
-        if (!cB.kdState) {
-          cB.facing = -dir;
-          if (curDist > idealDist + 24) {
-            cB.x -= dir * 320 * dt;
-            cB.pose = 'run';
-          } else {
-            cB.pose = 'brawl';
-            cB.combatPhase = 'guard';
+        const standingAtk = !cA.kdState ? cA : (!cB.kdState ? cB : null);
+        const downedVic = cA.kdState ? cA : cB;
+        if (standingAtk && downedVic && !downedVic.isDead) {
+          const atkDir = downedVic.x >= standingAtk.x ? 1 : -1;
+          standingAtk.facing = atkDir;
+          const distToDowned = Math.abs(downedVic.x - standingAtk.x);
+          if (distToDowned > 48) {
+            standingAtk.x += atkDir * 440 * dt;
+            standingAtk.y = getGroundYAt(standingAtk.x) + (standingAtk.zLaneOffset || 0);
+            standingAtk.pose = 'run';
+            standingAtk.combatPhase = 'dash';
+          } else if (downedVic.kdState === 'prone' || downedVic.kdState === 'getting_up') {
+            // وصل فوق المنبطح: يوجه له ضربة أرضية ساحقة وهو منبطح فيجعله يطير فوراً بلا انتظار!
+            standingAtk.pose = 'brawl';
+            standingAtk.combatPhase = 'strike';
+            standingAtk.attackType = 'ground_smash';
+            standingAtk._groundSmashClock = (standingAtk._groundSmashClock || 0) + dt * 5.2;
+            if (standingAtk._groundSmashClock >= 0.42) {
+              standingAtk._groundSmashClock = 0;
+              downedVic.kdState = 'airborne';
+              downedVic.kdTimer = 0;
+              downedVic.kdDir = atkDir;
+              downedVic.vx = atkDir * 14.5;
+              downedVic.vy = -10.2;
+              downedVic.hitFlashTimer = 0.16;
+              spawnShockwave(downedVic.x, downedVic.y - 24, standingAtk.auraActive ? standingAtk.auraColor : '#ef4444', 88);
+              spawnGroundCrackAndRocks(downedVic.x, getGroundYAt(downedVic.x));
+              state.cameraShake = 12;
+              playSfx('ko');
+            }
           }
         }
         return;
@@ -6044,10 +6475,21 @@
             } else {
               if (!ev._impactDone) {
                 ev._impactDone = true;
-                spawnShockwave(CITY_CENTER_X, GROUND_Y - 55, '#facc15', 115);
-                spawnGroundCrackAndRocks(CITY_CENTER_X, GROUND_Y);
-                spawnHitText(CITY_CENTER_X, GROUND_Y - 135, '💥 اصطدام في مركز العالم (0)!', '#facc15');
-                state.cameraShake = 14;
+                const colX = (cA.x + cB.x) * 0.5;
+                const colY = getGroundYAt(colX);
+                spawnShockwave(colX, colY - 55, '#facc15', 145);
+                spawnShockwave(colX, colY - 55, '#ef4444', 105);
+                spawnGroundFissure2D(colX, colY, 1.85, '#f97316');
+                if (ev.hasBuildingShake !== false) {
+                  state.buildingShakeTimer = 3.6;
+                }
+                if (ev.hasTreeUproot) {
+                  spawnUprootedTrees2D(colX, colY);
+                }
+                spawnHitText(colX, colY - 135, '💥 اصطدام عنيف وهزة أرضية!', '#facc15');
+                state.cameraShake = 24;
+                state.worldQuakeTimer = 3.0;
+                playSfx('explosion');
                 playSfx('ko');
               }
               simulateCombatPair(cA, cB, dt, false);
@@ -6299,6 +6741,291 @@
             runner.x += 220 * dt;
             chaser.x = runner.x - 95;
           }
+        } else if (ev.type === 'post_collision_recoil_2d') {
+          (ev.actors || [0, 1]).forEach(slot => {
+            const c = state.characters[slot];
+            if (!c) return;
+            const sX = c._recoilStartX ?? c.x;
+            const tX = c._recoilTargetX ?? c.x;
+            const laneOff = c.zLaneOffset || 0;
+            if (ev.isAffectedProne) {
+              // إذا قال الوصف "متأثر": يطير للخلف ويوصل منبطحاً على ظهره كما في المشاهد العادية!
+              const u = Math.min(1, progress / 0.85);
+              c.x = sX + (tX - sX) * u;
+              const gY = getGroundYAt(c.x) + laneOff;
+              c.y = gY - Math.sin(u * Math.PI) * 105;
+              c.kdState = u < 0.96 ? 'airborne' : 'prone';
+              c.kdTimer = u * 0.34;
+              c.pose = 'knockdown';
+              if (u >= 0.96 && !ev._recoilLanded) {
+                ev._recoilLanded = true;
+                spawnGroundCrackAndRocks(c.x, gY);
+                playSfx('fall');
+              }
+            } else {
+              // افتراضياً بعد الاصطدام: يطير للخلف ووجهه للأمام وليس مضروباً، ويهبط على الأرض بقدميه وليس على ظهره!
+              if (progress < 0.72) {
+                const u = progress / 0.72;
+                c.x = sX + (tX - sX) * (0.85 * u);
+                const gY = getGroundYAt(c.x) + laneOff;
+                c.y = gY - Math.sin(u * Math.PI) * 78;
+                c.kdState = null;
+                c.pose = 'post_collision_fly_forward';
+                c.trail.push({ x: c.x, y: c.y, alpha: 0.65, color: c.auraActive ? c.auraColor : c.color });
+                if (c.trail.length > 8) c.trail.shift();
+              } else {
+                const u = (progress - 0.72) / 0.28;
+                c.x = sX + (tX - sX) * (0.85 + 0.15 * (1 - Math.pow(1 - u, 2)));
+                const gY = getGroundYAt(c.x) + laneOff;
+                c.y = gY;
+                c.kdState = null;
+                c.pose = u < 0.75 ? 'feet_slide_land' : 'brawl';
+                c.combatPhase = 'guard';
+                if (!ev._recoilLanded) {
+                  ev._recoilLanded = true;
+                  spawnShockwave(c.x, gY, '#94a3b8', 58);
+                  playSfx('fall');
+                }
+                // غبار انزلاق القدمين على الأرض أثناء الهبوط المتوازن!
+                if (u < 0.75 && Math.random() < 0.6) {
+                  state.particles.push({
+                    x: c.x + c.facing * 14,
+                    y: gY - 2,
+                    vx: c.facing * (2 + Math.random() * 2),
+                    vy: -1 - Math.random() * 1.5,
+                    r: 4,
+                    color: 'rgba(226, 232, 240, 0.75)',
+                    alpha: 0.9
+                  });
+                }
+              }
+            }
+          });
+        } else if (ev.type === 'grab_and_throw_2d') {
+          const att = state.characters[ev.actorSlot];
+          const vic = state.characters[ev.victimSlot];
+          if (att && vic) {
+            const dir = (ev.explicitDir && ev.explicitDir !== 0) ? ev.explicitDir : (vic.x >= att.x ? 1 : -1);
+            att.facing = dir;
+            if (progress < 0.22) {
+              // 1. الاندفاع نحو الخصم للإمساك به
+              const targetAttX = vic.x - dir * 32;
+              att.x += (targetAttX - att.x) * 0.32;
+              att.y = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+              att.pose = 'run';
+            } else if (progress < 0.46) {
+              // 2. حمل ورفع الشخصية عالياً فوق الرأس بكلتا اليدين!
+              const liftK = (progress - 0.22) / 0.24;
+              att.pose = 'lift_carry';
+              att.y = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+              vic.x = att.x + dir * 8;
+              vic.y = att.y - (42 + liftK * 76);
+              vic.facing = -dir;
+              vic.kdDir = dir;
+              vic.kdState = 'prone';
+              vic.pose = 'knockdown';
+            } else {
+              // 3. قذف الشخصية بعيداً بقوة هائلة!
+              if (!ev._throwLaunched) {
+                ev._throwLaunched = true;
+                const meters = ev.meters || 32.0;
+                const origX = vic.x;
+                const pxPerM = meters > 25 ? 24 : PIXELS_PER_METER;
+                ev._origX = origX;
+                ev._origY = vic.y;
+                ev._destX = origX + dir * meters * pxPerM;
+                ev._peakH = Math.min(300, Math.max(130, Math.abs(ev._destX - origX) * 0.22));
+                att.pose = 'brawl';
+                att.combatPhase = 'strike';
+                att.attackType = 'punch';
+                spawnShockwave(att.x + dir * 24, att.y - 95, '#facc15', 95);
+                state.cameraShake = 14;
+                playSfx('kick');
+              }
+              const u = Math.min(1, (progress - 0.46) / 0.50);
+              const origX = ev._origX ?? vic.x;
+              const destX = ev._destX ?? vic.x;
+              const laneOff = vic.zLaneOffset || 0;
+              vic.x = origX + (destX - origX) * u;
+              const gY = getGroundYAt(vic.x) + laneOff;
+              const startLiftH = Math.max(60, gY - (ev._origY ?? (gY - 115)));
+              vic.y = gY - (startLiftH * (1 - u) + (ev._peakH || 140) * Math.sin(u * Math.PI));
+              vic.kdState = u < 0.96 ? 'airborne' : 'prone';
+              vic.kdTimer = u * 0.34;
+              vic.pose = 'knockdown';
+              att.pose = u > 0.35 ? 'idle' : 'brawl';
+              if (u >= 0.96 && !ev._landImpactDone) {
+                ev._landImpactDone = true;
+                vic.y = gY;
+                vic.isDead = Boolean(ev.victimDies);
+                vic.stayProne = Boolean(ev.victimDies);
+                if (vic.isDead && (!vic.deathHideCountdown || vic.deathHideCountdown <= 0)) vic.deathHideCountdown = 30.0;
+                spawnGroundCrackAndRocks(vic.x, gY);
+                spawnShockwave(vic.x, gY, '#ef4444', 88);
+                state.cameraShake = 13;
+                playSfx('fall');
+              }
+            }
+          }
+        } else if (ev.type === 'ground_strike_2d') {
+          // النوع الأول من ضرب المنبطح: الضحية منبطحة وتحاول الوقوف، والمهاجم يلكمها أو يركلها وهي منبطحة فتطير!
+          const att = state.characters[ev.actorSlot];
+          const vic = state.characters[ev.victimSlot];
+          if (att && vic) {
+            const dir = (ev.explicitDir && ev.explicitDir !== 0) ? ev.explicitDir : (vic.x >= att.x ? 1 : -1);
+            att.facing = dir;
+            vic.facing = -dir;
+            const hitMoment = 0.34;
+            if (progress < hitMoment) {
+              const k = progress / hitMoment;
+              const targetAttX = vic.x - dir * 42;
+              att.x += (targetAttX - att.x) * 0.32;
+              att.y = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+              att.pose = 'brawl';
+              att.attackType = 'ground_smash';
+              att.combatPhase = k < 0.5 ? 'windup' : 'strike';
+              // الشخصية المنبطحة تحاول الوقوف أثناء اقتراب المهاجم!
+              vic.kdState = 'getting_up';
+              vic.kdTimer = 0.10 + k * 0.26;
+              vic.pose = 'knockdown';
+            } else {
+              if (!ev._gsHitDone) {
+                ev._gsHitDone = true;
+                const meters = ev.meters || 22.0;
+                const origX = vic.x;
+                const pxPerM = meters > 25 ? 24 : PIXELS_PER_METER;
+                ev._origX = origX;
+                ev._destX = origX + dir * meters * pxPerM;
+                ev._peakH = Math.min(280, Math.max(115, Math.abs(ev._destX - origX) * 0.20));
+                att.pose = 'brawl';
+                att.combatPhase = 'strike';
+                att.attackType = 'ground_smash';
+                vic.hitFlashTimer = 0.18;
+                spawnShockwave(vic.x, vic.y - 25, '#ef4444', 95);
+                spawnGroundCrackAndRocks(vic.x, getGroundYAt(vic.x));
+                state.cameraShake = 14;
+                playSfx('ko');
+              }
+              const u = Math.min(1, (progress - hitMoment) / (1 - hitMoment - 0.06));
+              const origX = ev._origX ?? vic.x;
+              const destX = ev._destX ?? vic.x;
+              const laneOff = vic.zLaneOffset || 0;
+              vic.x = origX + (destX - origX) * u;
+              const gY = getGroundYAt(vic.x) + laneOff;
+              vic.y = gY - (ev._peakH || 130) * Math.sin(u * Math.PI);
+              vic.kdState = u < 0.96 ? 'airborne' : 'prone';
+              vic.kdTimer = u * 0.34;
+              vic.pose = 'knockdown';
+              att.pose = u > 0.3 ? 'idle' : 'brawl';
+              if (u >= 0.96 && !ev._landImpactDone) {
+                ev._landImpactDone = true;
+                vic.y = gY;
+                vic.isDead = Boolean(ev.victimDies);
+                vic.stayProne = Boolean(ev.victimDies);
+                if (vic.isDead && (!vic.deathHideCountdown || vic.deathHideCountdown <= 0)) vic.deathHideCountdown = 30.0;
+                spawnGroundCrackAndRocks(vic.x, gY);
+                spawnShockwave(vic.x, gY, '#94a3b8', 75);
+                playSfx('fall');
+              }
+            }
+          }
+        } else if (ev.type === 'dive_on_downed_2d') {
+          // النوع الثاني من ضرب المنبطح: القفز والانقضاض الجوي على المنبطح (مهما كانت المسافة بينهما يحسبها التطبيق!)
+          // يدعم القفز بنصف دائرة (⌒) أو بزاوية 90 مثل رقم 8 (٨: يقفز للجو ثم ينقض عليه)، مع محاولة المنبطح للوقوف أو هروبه الخاطف بأقل من ثانية!
+          const att = state.characters[ev.actorSlot];
+          const vic = state.characters[ev.victimSlot];
+          if (att && vic) {
+            const sX = ev._startX ?? att.x;
+            const tX = ev._targetX ?? vic.x;
+            const dir = tX >= sX ? 1 : -1;
+            att.facing = dir;
+            const distPx = Math.abs(tX - sX);
+            const apexH = Math.min(320, Math.max(165, distPx * 0.52));
+            const landP = ev.targetEscapes ? 0.88 : 0.78;
+            const u = Math.min(1.0, progress / landP);
+
+            if (ev.diveStyle === 'semicircle') {
+              // مسار نصف دائرة (⌒) من موقع المهاجم إلى موقع المنبطح بالضبط!
+              att.x = sX + (tX - sX) * u;
+              const gY = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+              const semi = 0.65 * Math.sin(u * Math.PI) + 0.35 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * u - 1, 2)));
+              att.y = gY - apexH * semi;
+              att.pose = u < 0.55 ? 'jump_arc' : 'brawl';
+              if (u >= 0.55) {
+                att.combatPhase = 'strike';
+                att.attackType = 'ground_smash';
+              }
+            } else {
+              // مسار زاوية 90° مثل رقم 8 بالعربي (٨ / ∧): يقفز بزاوية حادة للأعلى للجو ثم ينقض مباشرة على موقع المنبطح!
+              const peakX = sX + (tX - sX) * 0.48;
+              if (u < 0.5) {
+                const k = u / 0.5;
+                att.x = sX + (peakX - sX) * k;
+                const gY = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+                att.y = gY - apexH * k;
+                att.pose = 'jump_arc';
+                att._jumpProgress = k * 0.5;
+              } else {
+                const k = (u - 0.5) / 0.5;
+                att.x = peakX + (tX - peakX) * k;
+                const gY = getGroundYAt(att.x) + (att.zLaneOffset || 0);
+                att.y = (gY - apexH) + apexH * k;
+                att.pose = 'brawl';
+                att.combatPhase = 'strike';
+                att.attackType = 'ground_smash';
+              }
+            }
+            att.trail.push({ x: att.x, y: att.y, alpha: 0.78, color: att.auraActive ? att.auraColor : att.color });
+            if (att.trail.length > 9) att.trail.shift();
+
+            // سلوك الشخصية المنبطحة أثناء قفز وسقوط المهاجم:
+            if (ev.targetEscapes) {
+              // المنبطح لا يفعل شيئاً غير الهروب فقط: بمجرد أن يبدأ المهاجم بالسقوط عليه (u >= 0.35)، يهرب المنبطح بسرعة لمسافة 3 متر بأقل من ثانية!
+              if (u < 0.35) {
+                vic.kdState = 'getting_up';
+                vic.kdTimer = 0.14 + u * 0.4;
+                vic.pose = 'knockdown';
+              } else {
+                const escK = Math.min(1.0, (u - 0.35) / 0.62);
+                const eStart = ev._vicEscapeStartX ?? tX;
+                const eTarget = ev._vicEscapeTargetX ?? (tX + dir * 135);
+                vic.kdState = null;
+                vic.kdTimer = 0;
+                vic.x = eStart + (eTarget - eStart) * escK;
+                vic.y = getGroundYAt(vic.x) + (vic.zLaneOffset || 0);
+                vic.facing = eTarget >= eStart ? 1 : -1;
+                vic.pose = escK < 0.95 ? 'run' : 'idle';
+                vic.trail.push({ x: vic.x, y: vic.y, alpha: 0.75, color: '#38bdf8' });
+                if (vic.trail.length > 7) vic.trail.shift();
+              }
+            } else if (u < 0.96) {
+              // المنبطح يحاول الوقوف على الأرض قبل لحظة ارتطام المهاجم به!
+              vic.kdState = 'getting_up';
+              vic.kdTimer = 0.12 + u * 0.28;
+              vic.pose = 'knockdown';
+            }
+
+            if (u >= 0.96 && !ev._diveImpactDone) {
+              ev._diveImpactDone = true;
+              const landG = getGroundYAt(tX) + (att.zLaneOffset || 0);
+              att.x = tX;
+              att.y = landG;
+              spawnShockwave(tX, landG - 15, '#ef4444', 105);
+              spawnGroundCrackAndRocks(tX, landG);
+              state.cameraShake = 15;
+              playSfx('explosion');
+              if (!ev.targetEscapes) {
+                vic.hitFlashTimer = 0.20;
+                if (ev.launchVictimOnHit) {
+                  triggerKnockdownSequence(vic, dir, 1.45);
+                } else {
+                  vic.kdState = 'prone';
+                  vic.kdTimer = 0;
+                  vic.pose = 'knockdown';
+                }
+              }
+            }
+          }
         } else if (ev.type === 'stand') {
           (ev.actors || [0]).forEach(slot => {
             const c = state.characters[slot];
@@ -6468,10 +7195,13 @@
                   playSfx('fall');
                   vic.x = destX;
                   vic.y = getGroundYAt(destX) + laneOff;
-                  vic.kdState = 'prone';
-                  vic.kdTimer = 0;
+                  vic.kdState = ev.keepVictimStrugglingForNext ? 'getting_up' : 'prone';
+                  vic.kdTimer = ev.keepVictimStrugglingForNext ? 0.10 : 0;
                   vic.isDead = Boolean(ev.victimDies);
                   vic.stayProne = Boolean(ev.victimDies);
+                  if (vic.isDead && (!vic.deathHideCountdown || vic.deathHideCountdown <= 0)) {
+                    vic.deathHideCountdown = 30.0;
+                  }
                   spawnGroundCrackAndRocks(vic.x, vic.y);
                   spawnShockwave(vic.x, vic.y, '#94a3b8', 75);
                   state.cameraShake = 11;
@@ -6533,10 +7263,47 @@
         }
       }
 
+      if (state.buildingShakeTimer && state.buildingShakeTimer > 0) {
+        state.buildingShakeTimer = Math.max(0, state.buildingShakeTimer - dt);
+      }
+      if (Array.isArray(state.uprootedTrees) && state.uprootedTrees.length > 0) {
+        state.uprootedTrees.forEach(ut => {
+          if (!ut.landed) {
+            ut.x += ut.vx;
+            ut.y += ut.vy;
+            ut.vy += 0.34;
+            ut.rot += ut.vRot;
+            const gY = getGroundYAt(ut.x);
+            if (ut.y >= gY && ut.vy > 0) {
+              ut.y = gY;
+              ut.vy = 0;
+              ut.vx *= 0.3;
+              ut.rot = (ut.vx >= 0 ? 1 : -1) * 1.38;
+              ut.landed = true;
+            }
+          }
+        });
+      }
+
       // Update active characters physics, terrain elevation & superpowers
       for (let i = 0; i < state.activeCharCount; i++) {
         const c = state.characters[i];
         if (!c.visible || c.inVehicle) continue;
+        if (c.isDead) {
+          c.kdState = 'prone';
+          c.stayProne = true;
+          c.pose = 'knockdown';
+          c.vx = 0;
+          if (c.deathHideCountdown && c.deathHideCountdown > 0) {
+            c.deathHideCountdown -= dt;
+            if (c.deathHideCountdown <= 0) {
+              c.deathHideCountdown = 0;
+              c.visible = false;
+              spawnShockwave(c.x, c.y - 15, '#94a3b8', 48);
+              continue;
+            }
+          }
+        }
         c.poseTimer += dt * 9.5;
         if (c.hitFlashTimer > 0) c.hitFlashTimer = Math.max(0, c.hitFlashTimer - rawDt);
         c.scale += (c.targetScale - c.scale) * 0.12;
@@ -6610,10 +7377,17 @@
                 c.kdTimer = 0;
               }
             } else if (c.kdState === 'getting_up') {
-              // ينهض بارتكاز اليدين والركبة ثم يقف ساكناً لا يفعل شيئاً ('idle') إلا إذا كان في حدث عراك متبادل!
+              // ينهض بارتكاز اليدين والركبة ثم يقف ساكناً لا يفعل شيئاً ('idle') إلا إذا كان يتعرض الآن لضربة منبطح أو انقضاض جوي فيبقى يحاول الوقوف!
               c.y = groundHere;
               c.vx = 0;
-              if (c.kdTimer >= 0.62) {
+              const isStrugglingUnderFollowup = ev && (
+                (ev.type === 'knockout' && ev.victimSlot === c.slot && ev.keepVictimStrugglingForNext) ||
+                ((ev.type === 'ground_strike_2d' || ev.type === 'dive_on_downed_2d') && ev.victimSlot === c.slot)
+              );
+              if (isStrugglingUnderFollowup && c.kdTimer > 0.38) {
+                c.kdTimer = 0.22;
+              }
+              if (!isStrugglingUnderFollowup && c.kdTimer >= 0.62) {
                 c.kdState = null;
                 c.kdTimer = 0;
                 const isMutualFightNow = ev && (ev.type === 'brawl' || ev.type === 'gang_war' || ev.type === 'brawl_2v2' || ev.type === 'beatdown_knockback');
@@ -7028,9 +7802,13 @@
           ? cfg.buildingsList
           : Array.from({ length: 11 }, (_, i) => ({ x: CITY_START_X - 60 + i * 84, w: 74, h: 165 + ((i * 53) % 125), idx: i }));
 
+        const bShakeAmp = (state.buildingShakeTimer && state.buildingShakeTimer > 0)
+          ? Math.min(10, state.buildingShakeTimer * 3.4)
+          : 0;
         for (let k = 0; k < bList.length; k++) {
           const b = bList[k];
-          const bx = b.x;
+          const shakeOffX = bShakeAmp > 0 ? Math.sin(time * 32 + k * 1.9) * bShakeAmp : 0;
+          const bx = b.x + shakeOffX;
           const bw = b.w || 74;
           const bh = b.h || 180;
           const i = b.idx !== undefined ? b.idx : k;
@@ -7298,6 +8076,34 @@
           ctx.fill();
         }
         }
+      }
+
+      // 5-ب. رسم الأشجار المقتلعة المتطايرة عند الاصطدام والهزة الأرضية ("قلع الأشجار")!
+      if (Array.isArray(state.uprootedTrees) && state.uprootedTrees.length > 0) {
+        state.uprootedTrees.forEach(ut => {
+          if (ut.x + 140 < minVisX || ut.x - 140 > maxVisX) return;
+          ctx.save();
+          ctx.translate(ut.x, ut.y - 18);
+          ctx.rotate(ut.rot || 0);
+          const sc = ut.scale || 1.0;
+          const th = 120 * sc;
+          // جذور التربة المقتلعة أسفل الجذع
+          ctx.fillStyle = '#451a03';
+          ctx.beginPath();
+          ctx.ellipse(0, 10, 18 * sc, 9 * sc, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // جذع الشجرة المقتلعة
+          ctx.fillStyle = '#582f0e';
+          ctx.fillRect(-8 * sc, -th * 0.55, 16 * sc, th * 0.55 + 8);
+          // أوراق الشجرة المقتلعة
+          ctx.fillStyle = '#15803d';
+          ctx.beginPath();
+          ctx.arc(0, -th * 0.72, 38 * sc, 0, Math.PI * 2);
+          ctx.arc(-15 * sc, -th * 0.84, 28 * sc, 0, Math.PI * 2);
+          ctx.arc(15 * sc, -th * 0.84, 28 * sc, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
       }
 
       // 6. رسم المعالم المخصصة المرتبطة بمركز العالم (نقطة الصفر 0) والاتجاهات (شجر، حجر، جبل، منازل، مقهى)!
@@ -7903,6 +8709,9 @@
       if (char.invisibleActive) {
         ctx.globalAlpha = 0.24 + Math.sin(t * 5) * 0.08;
       }
+      if (char.isDead && char.deathHideCountdown && char.deathHideCountdown > 0 && char.deathHideCountdown < 2.2) {
+        ctx.globalAlpha = Math.max(0.05, char.deathHideCountdown / 2.2);
+      }
       ctx.translate(char.x, char.y);
       ctx.scale(sc, sc);
 
@@ -8260,6 +9069,17 @@
             footFrontAngle = -dir * 0.55;
             handFrontX = dir * 16; handFrontY = -72 + jumpOff;
             handBackX = -dir * 18; handBackY = -64 + jumpOff;
+          } else if (char.attackType === 'ground_smash') {
+            // 💥⬇️ ضربة موجهة للأسفل على الخصم المنبطح على الأرض!
+            torsoTilt = dir * 0.42;
+            headAngle = dir * 0.28;
+            hipX = -dir * 4; hipY = -31;
+            shoulderX = dir * 16; shoulderY = -60;
+            headX = dir * 22; headY = -74;
+            footFrontX = dir * 24; footFrontY = 0;
+            footBackX = -dir * 20; footBackY = 0;
+            handFrontX = dir * 34; handFrontY = -18;
+            handBackX = -dir * 8; handBackY = -52;
           } else if (char.attackType === 'uppercut') {
             torsoTilt = dir * 0.18;
             headAngle = dir * 0.10;
@@ -8290,6 +9110,39 @@
           handFrontX = dir * 24; handFrontY = -72;
           handBackX = dir * 8; handBackY = -66;
         }
+      } else if (char.pose === 'lift_carry') {
+        // 🏋️‍♂️ وقفة حمل الخصم عالياً فوق الرأس بكلتا اليدين استعداداً لقذفه بعيداً!
+        torsoTilt = -dir * 0.08;
+        headAngle = -dir * 0.12;
+        hipX = 0; hipY = -41;
+        shoulderX = -dir * 2; shoulderY = -81;
+        headX = 0; headY = -99;
+        footFrontX = dir * 18; footFrontY = 0;
+        footBackX = -dir * 18; footBackY = 0;
+        handFrontX = dir * 12; handFrontY = -120;
+        handBackX = -dir * 10; handBackY = -118;
+      } else if (char.pose === 'post_collision_fly_forward') {
+        // 🦶💨 الطيران للخلف بعد الاصطدام المتكافئ ووجهه للأمام باتجاه الخصم (وليس مضروباً على ظهره) استعداداً للهبوط على قدميه!
+        torsoTilt = dir * 0.18;
+        headAngle = dir * 0.08;
+        hipX = -dir * 4; hipY = -42;
+        shoulderX = dir * 5; shoulderY = -80;
+        headX = dir * 8; headY = -97;
+        footFrontX = dir * 18; footFrontY = -10; footFrontAngle = dir * 0.15;
+        footBackX = -dir * 14; footBackY = -14; footBackAngle = 0;
+        handFrontX = dir * 24; handFrontY = -74;
+        handBackX = -dir * 12; handBackY = -68;
+      } else if (char.pose === 'feet_slide_land') {
+        // 🦶 الهبوط المتوازن على القدمين مع انزلاق قتالي على الأرض بعد الاصطدام!
+        torsoTilt = dir * 0.24;
+        headAngle = dir * 0.10;
+        hipX = -dir * 5; hipY = -33;
+        shoulderX = dir * 7; shoulderY = -68;
+        headX = dir * 10; headY = -85;
+        footFrontX = dir * 22; footFrontY = 0; footFrontAngle = 0;
+        footBackX = -dir * 20; footBackY = 0; footBackAngle = 0;
+        handFrontX = dir * 26; handFrontY = -58;
+        handBackX = -dir * 10; handBackY = -22;
       } else if (char.pose === 'beam_cast') {
         // ⚡ وقفة إطلاق الشعاع الخارق بكلتا اليدين للأمام باتجاه الخصم!
         const recoilVib = Math.sin(t * 14) * 1.5;
@@ -8772,17 +9625,35 @@
           }
         }
       } else {
-        // عيون وتعابير وجه الشخصيات البشرية والوحوش
-        const eyeX = dir * 6;
-        const eyeY = -1;
+        // عيون وملامح الوجه الكاملة (شخصيات ستيك مان بملامح الوجه التعبيرية + المقاتلين البشريين)
+        const isPureStickmanFace = isStickmanFaceType(char.creatureType, arch) || Boolean(char.customHasStickmanFace);
+        const faceMood = arch.faceMood || (char.creatureType === 'stickman_face_fierce' ? 'fierce' : (char.creatureType === 'stickman_face_smirk' ? 'smirk' : (char.creatureType === 'stickman_face_scar' ? 'scar' : (char.creatureType === 'stickman_face_shock' ? 'shock' : 'hero'))));
+        const eyeX = dir * 4.5;
+        const eye2X = dir * 10.6;
+        const eyeY = -1.5;
+
         if (isRecoilPose) {
-          // تعبير الألم والصدمة عند تلقي الضرب (> <) مع فم متألم!
+          // تعبير الألم والصدمة عند تلقي الضرب (> <) مع أنف وفم صرخة متألم!
           ctx.strokeStyle = '#090d16';
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = 2.4;
           ctx.beginPath();
-          ctx.moveTo(eyeX - dir * 3.8, eyeY - 3.2);
-          ctx.lineTo(eyeX + dir * 3.2, eyeY);
-          ctx.lineTo(eyeX - dir * 3.8, eyeY + 3.2);
+          ctx.moveTo(eyeX - dir * 3.5, eyeY - 3.0);
+          ctx.lineTo(eyeX + dir * 2.8, eyeY);
+          ctx.lineTo(eyeX - dir * 3.5, eyeY + 3.0);
+          if (isPureStickmanFace) {
+            ctx.moveTo(eye2X + dir * 2.6, eyeY - 2.6);
+            ctx.lineTo(eye2X - dir * 1.8, eyeY);
+            ctx.lineTo(eye2X + dir * 2.6, eyeY + 2.6);
+          }
+          ctx.stroke();
+
+          // الأنف المرسوم بوضوح
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 1.7;
+          ctx.beginPath();
+          ctx.moveTo(dir * 7.8, -0.5);
+          ctx.lineTo(dir * 10.4, 2.2);
+          ctx.lineTo(dir * 7.5, 3.0);
           ctx.stroke();
 
           // فم الصرخة والألم عند الضرب
@@ -8790,62 +9661,136 @@
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 1.6;
           ctx.beginPath();
-          ctx.ellipse(dir * 5.5, 6.5, 3.8, 2.8, 0, 0, Math.PI * 2);
+          ctx.ellipse(dir * 6.0, 7.2, 4.0, 3.0, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = '#ffffff';
-          ctx.fillRect(dir * 5.5 - 2.2, 4.4, 4.4, 1.4);
+          ctx.fillRect(dir * 6.0 - 2.4, 4.8, 4.8, 1.5);
         } else {
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.ellipse(eyeX, eyeY, 4.2, 3.2, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = char.customEyeColor || (char.auraActive ? aCol : mainCol);
-          ctx.beginPath();
-          ctx.arc(eyeX + dir * 1.0, eyeY, 2.1, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#090d16';
-          ctx.beginPath();
-          ctx.arc(eyeX + dir * 1.2, eyeY, 1.0, 0, Math.PI * 2);
-          ctx.fill();
+          // 1. العينان التعبيريتان (عين أمامية + عين جانبية لإبراز ملامح وجه ستيك مان الكاملة!)
+          const drawExpressiveEye = (ex, ey, rx, ry) => {
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#090d16';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.ellipse(ex, ey, rx, ry, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = char.customEyeColor || (char.auraActive ? aCol : mainCol);
+            ctx.beginPath();
+            ctx.arc(ex + dir * 0.8, ey, ry * 0.65, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#090d16';
+            ctx.beginPath();
+            ctx.arc(ex + dir * 1.0, ey, ry * 0.34, 0, Math.PI * 2);
+            ctx.fill();
+            // لمعة العين الحية
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(ex + dir * 0.3, ey - ry * 0.32, Math.max(0.7, ry * 0.24), 0, Math.PI * 2);
+            ctx.fill();
+          };
 
-          // الحاجب التعبيري
+          const eyeRY = (faceMood === 'shock') ? 4.0 : 3.3;
+          drawExpressiveEye(eyeX, eyeY, 3.8, eyeRY);
+          if (isPureStickmanFace) {
+            drawExpressiveEye(eye2X, eyeY - 0.2, 2.7, eyeRY * 0.88);
+          }
+
+          // 2. الحواجب التعبيرية المتحركة فوق العينين
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 2.4;
           ctx.beginPath();
-          if (char.pose === 'brawl' || char.auraActive) {
-            ctx.moveTo(eyeX - dir * 4, eyeY - 7);
-            ctx.lineTo(eyeX + dir * 4, eyeY - 4);
+          const isAngryMood = (char.pose === 'brawl' || char.auraActive || faceMood === 'fierce' || faceMood === 'scar');
+          if (isAngryMood) {
+            ctx.moveTo(eyeX - dir * 3.8, eyeY - 6.8);
+            ctx.lineTo(eyeX + dir * 3.8, eyeY - 4.0);
+            if (isPureStickmanFace) {
+              ctx.moveTo(eye2X - dir * 2.2, eyeY - 4.2);
+              ctx.lineTo(eye2X + dir * 2.8, eyeY - 6.6);
+            }
+          } else if (faceMood === 'shock') {
+            ctx.moveTo(eyeX - dir * 3.5, eyeY - 6.8);
+            ctx.quadraticCurveTo(eyeX, eyeY - 9.2, eyeX + dir * 3.5, eyeY - 6.5);
+            if (isPureStickmanFace) {
+              ctx.moveTo(eye2X - dir * 2.2, eyeY - 6.5);
+              ctx.quadraticCurveTo(eye2X, eyeY - 8.8, eye2X + dir * 2.5, eyeY - 6.2);
+            }
           } else {
-            ctx.moveTo(eyeX - dir * 4, eyeY - 5.5);
-            ctx.lineTo(eyeX + dir * 4, eyeY - 5.5);
+            ctx.moveTo(eyeX - dir * 3.6, eyeY - 5.5);
+            ctx.lineTo(eyeX + dir * 3.6, eyeY - 5.2);
+            if (isPureStickmanFace) {
+              ctx.moveTo(eye2X - dir * 2.2, eyeY - 5.2);
+              ctx.lineTo(eye2X + dir * 2.5, eyeY - 5.5);
+            }
           }
           ctx.stroke();
 
-          // الفم والكلام (يفتح ويقفل فم المتكلم فقط!)
+          // 3. الأنف المرسوم بوضوح في ملامح الوجه
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(dir * 7.8, -0.4);
+          ctx.lineTo(dir * 10.3, 2.3);
+          ctx.lineTo(dir * 7.6, 3.1);
+          ctx.stroke();
+
+          // 4. ندبة الوجه القتالية (للمحارب ذي الندبة أو عند كتابة "ندبة" في الوصف)
+          if (faceMood === 'scar' || char.customHasFaceScar) {
+            ctx.strokeStyle = '#be123c';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(eyeX - dir * 1.2, eyeY - 6.5);
+            ctx.lineTo(eyeX - dir * 2.0, eyeY + 6.5);
+            ctx.moveTo(eyeX - dir * 3.2, eyeY + 2.5);
+            ctx.lineTo(eyeX + dir * 0.2, eyeY + 3.0);
+            ctx.stroke();
+          }
+
+          // 5. الفم التعبيري والكلام (يفتح ويقفل فم المتكلم فقط، ويتفاعل مع القتال والابتسامة!)
           ctx.fillStyle = '#991b1b';
           ctx.strokeStyle = '#090d16';
           ctx.lineWidth = 1.8;
           if (isThisCharSpeaking) {
             const talkCycle = (Math.sin(time * 16.5) + 1) * 0.5;
             if (talkCycle > 0.28) {
-              const openH = 1.2 + talkCycle * 4.2;
+              const openH = 1.3 + talkCycle * 4.3;
               ctx.beginPath();
-              ctx.ellipse(dir * 5.5, 6.5, 3.6, openH, 0, 0, Math.PI * 2);
+              ctx.ellipse(dir * 6.0, 7.2, 3.8, openH, 0, 0, Math.PI * 2);
               ctx.fill();
               ctx.stroke();
               ctx.fillStyle = '#ffffff';
-              ctx.fillRect(dir * 5.5 - 2.2, 6.5 - openH * 0.7, 4.4, 1.5);
+              ctx.fillRect(dir * 6.0 - 2.3, 7.2 - openH * 0.72, 4.6, 1.5);
             } else {
               ctx.beginPath();
-              ctx.moveTo(dir * 2.5, 6.5);
-              ctx.lineTo(dir * 8.8, 6.5);
+              ctx.moveTo(dir * 2.6, 7.2);
+              ctx.lineTo(dir * 9.2, 7.2);
               ctx.stroke();
             }
-          } else {
+          } else if (char.pose === 'brawl' && char.combatPhase === 'strike') {
+            // فم صرخة القتال وتكشير الأسنان أثناء تسديد الضربة!
+            ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.moveTo(dir * 3, 6.5);
-            ctx.lineTo(dir * 8.5, 6);
+            ctx.roundRect(dir * 2.5, 5.2, dir * 6.8, 3.6, 1.5);
+            ctx.fill();
+            ctx.stroke();
+          } else if (faceMood === 'smirk') {
+            // ابتسامة الزعيم الواثق
+            ctx.beginPath();
+            ctx.moveTo(dir * 2.2, 6.2);
+            ctx.quadraticCurveTo(dir * 6.0, 8.8, dir * 9.5, 5.2);
+            ctx.stroke();
+          } else if (faceMood === 'fierce') {
+            // تكشيرة المقاتل الشرس
+            ctx.beginPath();
+            ctx.moveTo(dir * 2.5, 7.8);
+            ctx.quadraticCurveTo(dir * 6.0, 5.6, dir * 9.2, 7.8);
+            ctx.stroke();
+          } else {
+            // ابتسامة البطل الهادئة الواضحة
+            ctx.beginPath();
+            ctx.moveTo(dir * 2.6, 6.6);
+            ctx.quadraticCurveTo(dir * 6.0, 8.4, dir * 9.0, 6.2);
             ctx.stroke();
           }
         }
@@ -8870,9 +9815,9 @@
           ctx.stroke();
         }
 
-        // الشعر أو الخوذة أو القبعة أو الصلع حسب الوصف
-        if (char.customHairStyle === 'bald') {
-          // أصلع / بلا شعر حسب الوصف!
+        // الشعر أو الخوذة أو القبعة أو رأس ستيك مان الصافي بملامح الوجه حسب الوصف
+        if (char.customHairStyle === 'bald' || (isPureStickmanFace && !char.customHairStyle && !char.customHatType)) {
+          // رأس ستيك مان دائري صافي مع ملامح الوجه الكاملة (أو أصلع حسب الوصف)!
         } else if (char.isMonster || arch.headType === 'horns') {
           ctx.fillStyle = '#ef4444';
           ctx.strokeStyle = '#090d16';
